@@ -1,0 +1,38 @@
+// C:\Users\meciz\Documents\armonia\frontend\cypress\fixtures\example.json
+{
+    "testUser": {
+      "email": "admin@test.com",
+      "password": "password123"
+    },
+    "residentUser": {
+      "email": "resident@test.com",
+      "password": "password123"
+    },
+    "testUnit": {
+      "number": "101",
+      "type": "apartment",
+      "area": 75
+    },
+    "testRequest": {
+      "type": "petition",
+      "subject": "Mantenimiento",
+      "description": "Se requiere mantenimiento en área común",
+      "priority": "medium"
+    },
+    "testAssembly": {
+      "title": "Asamblea Ordinaria 2025",
+      "type": "ordinary",
+      "date": "2025-03-15",
+      "time": "10:00",
+      "description": "Asamblea ordinaria anual",
+      "quorum": 51
+    },
+    "testService": {
+      "name": "Salón Comunal",
+      "capacity": 50,
+      "startTime": "08:00",
+      "endTime": "22:00",
+      "description": "Salón para eventos sociales",
+      "rules": "Máximo 50 personas, reserva previa requerida"
+    }
+  }
