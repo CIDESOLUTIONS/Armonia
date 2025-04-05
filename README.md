@@ -1,114 +1,166 @@
-# Proyecto Armonía
+# Proyecto Armonía 👥🏢
 
-Plataforma integral para la gestión de conjuntos residenciales, diseñada para facilitar la administración, comunicación y coordinación entre administradores, residentes y personal.
+Plataforma integral para la gestión de conjuntos residenciales. Facilita la administración, comunicación y coordinación entre administradores, residentes y personal.
 
-## Características
+## Características Principales 🌟
 
-- Gestión completa de conjuntos residenciales
-- Sistema de autenticación y roles
-- Módulo financiero para presupuestos, cuotas y pagos
-- Sistema de PQR (Peticiones, Quejas y Reclamos)
-- Gestión de asambleas y votaciones
-- Panel de administrador, residente y personal
+- **Gestión de Asambleas**: Programación, convocatorias, quórum, votaciones y actas.
+- **Gestión de Inventario**: Propiedades, propietarios, residentes, vehículos y áreas comunes.
+- **Gestión Financiera**: Presupuestos, cuotas, pagos y reportes.
+- **Sistema PQR**: Peticiones, quejas y reclamos con seguimiento completo.
+- **Comunicaciones**: Anuncios, mensajería y notificaciones.
+- **Panel Residente**: Estado de cuenta, reservas y participación en asambleas.
+- **Panel Administrativo**: Configuración, métricas y reportes.
 
-## Tecnologías
+## Requisitos Técnicos 🔧
 
-- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS, Shadcn/UI
-- **Backend**: Next.js API Routes, Serverless Functions
-- **Base de Datos**: PostgreSQL con enfoque multi-tenant basado en esquemas
-- **ORM**: Prisma 6.5.0
-- **Autenticación**: JWT (JSON Web Tokens)
+- Node.js 18.x o superior
+- PostgreSQL 14.x o superior
+- npm 9.x o superior
 
-## Requisitos
+## Instalación 🚀
 
-- Node.js 18+
-- PostgreSQL 14+
-- npm o yarn
-
-## Configuración
-
-1. Clonar el repositorio
+### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/meciza/Armonia.git
+git clone https://github.com/YOUR_USERNAME/Armonia.git
 cd Armonia
 ```
 
-2. Instalar dependencias
+### 2. Configurar la base de datos
+
+1. Crear una base de datos PostgreSQL llamada `armonia`
+2. Ejecutar los scripts de configuración inicial:
+
+```bash
+cd frontend
+npx prisma db push
+npx prisma db seed
+```
+
+### 3. Configurar variables de entorno
+
+Copia el archivo de ejemplo `.env.example` a `.env`:
+
+```bash
+cp frontend/.env.example frontend/.env
+```
+
+Edita el archivo `.env` con tus configuraciones:
+
+```
+# Database Configuration
+DB_HOST=localhost
+DB_NAME=armonia
+DB_USER=tu_usuario_db
+DB_PASSWORD=tu_password_db
+DB_PORT=5432
+
+# Prisma Connection URL
+DATABASE_URL="postgresql://tu_usuario_db:tu_password_db@localhost:5432/armonia?schema=public"
+
+# JWT Secret
+JWT_SECRET="tu_jwt_secret_seguro"
+
+# Email Configuration (opcional)
+EMAIL_USER=tu_email@ejemplo.com
+EMAIL_PASS=tu_password_email
+```
+
+### 4. Instalar dependencias
 
 ```bash
 cd frontend
 npm install
 ```
 
-3. Configurar variables de entorno
-
-Copia `.env.example` a `.env` y actualiza las variables según tu configuración:
+### 5. Ejecutar migraciones de la base de datos
 
 ```bash
-cp .env.example .env
+npx prisma migrate dev
 ```
 
-4. Ejecutar migraciones de base de datos
-
-```bash
-npx prisma migrate deploy
-```
-
-5. Poblar la base de datos con datos iniciales
-
-```bash
-npx prisma db seed
-```
-
-6. Iniciar el servidor de desarrollo
+### 6. Ejecutar en modo desarrollo
 
 ```bash
 npm run dev
 ```
 
-## Scripts Disponibles
+## Scripts Disponibles 📜
 
-- `npm run dev`: Inicia el servidor de desarrollo
-- `npm run build`: Construye la aplicación para producción
-- `npm run start`: Inicia el servidor en modo producción
-- `npm run lint`: Ejecuta ESLint para verificar el código
-- `npm run test`: Ejecuta pruebas unitarias
-- `npm run cypress:open`: Abre Cypress para pruebas e2e
-- `npm run prisma:generate`: Genera el cliente Prisma
-- `npm run prisma:seed`: Ejecuta el script de seed
+- `npm run dev`: Inicia el servidor de desarrollo.
+- `npm run build`: Construye la aplicación para producción.
+- `npm run start`: Inicia la aplicación en modo producción.
+- `npm run lint`: Ejecuta el linter para detectar problemas de código.
+- `npm test`: Ejecuta las pruebas unitarias.
+- `npx prisma studio`: Abre una interfaz para explorar la base de datos.
 
-## Scripts de PowerShell para automatización
+## Scripts de Utilidad 🛠️
 
-- `actualizar-y-ejecutar.ps1`: Actualiza dependencias y ejecuta la aplicación
-- `sincronizar-con-github.ps1`: Sincroniza cambios con GitHub
-- `ejecutar-pruebas.ps1`: Ejecuta todas las pruebas
+- `./ejecutar-pruebas.ps1`: Script PowerShell para ejecutar todas las pruebas del proyecto.
+- `./sincronizar-con-github.ps1`: Script PowerShell para sincronizar cambios locales con GitHub.
+- `./actualizar-y-ejecutar.ps1`: Script PowerShell para actualizar dependencias y ejecutar la aplicación.
 
-## Estructura del Proyecto
+## Estructura del Proyecto 📁
 
 ```
 frontend/
-├── prisma/            # Esquema de la base de datos y migraciones
-├── public/            # Archivos estáticos
+├── prisma/               # Esquema y migraciones de Prisma
+├── public/               # Archivos estáticos
 ├── src/
-│   ├── app/           # Rutas de Next.js App Router
-│   ├── components/    # Componentes React reutilizables
-│   ├── context/       # Contextos de React
-│   ├── hooks/         # Custom hooks
-│   ├── lib/           # Utilidades y servicios
-│   ├── models/        # Tipos y modelos
-│   └── utils/         # Funciones utilitarias
-├── .env               # Variables de entorno
-└── package.json       # Dependencias y scripts
+│   ├── app/              # Rutas y páginas de Next.js
+│   │   ├── (auth)/       # Rutas protegidas (dashboard, admin)
+│   │   ├── (public)/     # Rutas públicas (landing, login)
+│   │   └── api/          # API Routes de Next.js
+│   ├── components/       # Componentes React reutilizables
+│   ├── context/          # Contextos de React (Auth, Theme)
+│   ├── hooks/            # Hooks personalizados
+│   ├── lib/              # Utilidades y servicios
+│   │   ├── api/          # Cliente HTTP para API
+│   │   ├── logging/      # Utilidades de logging
+│   │   └── services/     # Servicios para diferentes módulos
+│   ├── models/           # Definiciones de tipos y modelos
+│   └── utils/            # Funciones utilitarias
+└── tailwind.config.js    # Configuración de Tailwind CSS
 ```
 
-## Documentación
+## Modelo Multi-tenant 🏢
 
-Para más información, consulta los siguientes documentos:
+La aplicación está diseñada con una arquitectura multi-tenant basada en esquemas de PostgreSQL:
 
-- [Pruebas realizadas](./pruebas-realizadas.md)
-- [Informe final](./informe-final.md)
+- Esquema `armonia`: Tablas globales como usuarios y conjuntos residenciales
+- Esquema `tenant_cjXXXX`: Esquema dedicado para cada conjunto residencial (donde XXXX es el ID del conjunto)
 
-## Licencia
+## Convenciones de Código 📝
 
-Este proyecto es privado y confidencial.
+- **Archivos**: PascalCase para componentes React (.tsx), camelCase para utilidades (.ts)
+- **Funciones**: camelCase (ej. getUserData)
+- **Componentes React**: PascalCase (ej. UserProfile)
+- **Variables**: camelCase (ej. userData)
+- **Constantes**: UPPER_SNAKE_CASE (ej. API_BASE_URL)
+- **Interfaces/Types**: PascalCase con prefijo I para interfaces (ej. IUserData)
+- **Endpoints API**: kebab-case (ej. /api/user-profile)
+
+## Despliegue 🚀
+
+Para desplegar en producción:
+
+1. Construir la aplicación:
+```bash
+npm run build
+```
+
+2. Iniciar el servidor:
+```bash
+npm start
+```
+
+Para despliegue con Docker, consulta el archivo `Dockerfile` en la raíz del proyecto.
+
+## Licencia 📄
+
+Este proyecto está bajo Licencia Privada - ver el archivo LICENSE.md para detalles.
+
+## Contacto 📧
+
+Para preguntas o soporte, contacta a: [email@ejemplo.com]

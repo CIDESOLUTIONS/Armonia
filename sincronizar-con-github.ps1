@@ -1,76 +1,33 @@
+# sincronizar-con-github.ps1
 # Script para sincronizar los cambios con GitHub
-# Este script debe ejecutarse desde PowerShell
 
-# Definimos colores para mejor legibilidad
-$colorSuccess = "Green"
-$colorWarning = "Yellow"
-$colorError = "Red"
-$colorInfo = "Cyan"
+Write-Host "Sincronizando cambios con GitHub..." -ForegroundColor Cyan
 
-# Función para mostrar mensajes con formato
-function Write-Step {
-    param (
-        [string]$Message,
-        [string]$Color = "White"
-    )
-    Write-Host ""
-    Write-Host "===> $Message" -ForegroundColor $Color
-}
+# Obtener la fecha actual para el mensaje de commit
+$fecha = Get-Date -Format "yyyy-MM-dd HH:mm"
+$mensaje = "Actualización automática: $fecha"
 
-# Obtener la fecha y hora actual para el mensaje de commit
-$fechaHora = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-
-# Paso 1: Verificar el estado actual
-Write-Step "Verificando estado actual del repositorio..." $colorInfo
+# Verificar si hay cambios para commit
 git status
+$hayNuevosCambios = (git status --porcelain).Length -gt 0
 
-# Paso 2: Agregar archivos modificados
-Write-Step "¿Desea agregar todos los archivos modificados? (S/N)" $colorInfo
-$respuesta = Read-Host
-if ($respuesta -eq "S" -or $respuesta -eq "s") {
+if ($hayNuevosCambios) {
+    # Agregar todos los cambios
+    Write-Host "Agregando cambios al staging..." -ForegroundColor Yellow
     git add .
-    Write-Host "✓ Archivos agregados al staging" -ForegroundColor $colorSuccess
+
+    # Realizar commit
+    Write-Host "Creando commit con los cambios..." -ForegroundColor Yellow
+    git commit -m "$mensaje"
+
+    # Sincronizar con el repositorio remoto
+    Write-Host "Subiendo cambios a GitHub..." -ForegroundColor Green
+    git push
+    
+    Write-Host "Sincronización completada exitosamente." -ForegroundColor Cyan
 } else {
-    Write-Host "Operación cancelada por el usuario." -ForegroundColor $colorWarning
-    exit 0
+    Write-Host "No hay cambios para sincronizar." -ForegroundColor Cyan
 }
 
-# Paso 3: Solicitar mensaje de commit
-Write-Step "Ingrese un mensaje para el commit (deje en blanco para usar mensaje predeterminado):" $colorInfo
-$mensajeCommit = Read-Host
-if ([string]::IsNullOrWhiteSpace($mensajeCommit)) {
-    $mensajeCommit = "Actualización automática - $fechaHora - Correcciones de código"
-}
-
-# Paso 4: Crear commit
-Write-Step "Creando commit con mensaje: '$mensajeCommit'..." $colorInfo
-try {
-    git commit -m $mensajeCommit
-    Write-Host "✓ Commit creado correctamente" -ForegroundColor $colorSuccess
-} catch {
-    Write-Host "✗ Error creando commit: $_" -ForegroundColor $colorError
-    exit 1
-}
-
-# Paso 5: Subir cambios a GitHub
-Write-Step "¿Desea subir los cambios a GitHub ahora? (S/N)" $colorInfo
-$respuesta = Read-Host
-if ($respuesta -eq "S" -or $respuesta -eq "s") {
-    Write-Step "Enviando cambios a GitHub..." $colorInfo
-    try {
-        git push origin main
-        Write-Host "✓ Cambios enviados correctamente a GitHub" -ForegroundColor $colorSuccess
-    } catch {
-        Write-Host "✗ Error enviando cambios a GitHub: $_" -ForegroundColor $colorError
-        
-        # Ofrecer instrucciones para resolver manualmente
-        Write-Step "Para enviar los cambios manualmente, ejecute:" $colorWarning
-        Write-Host "git push origin main" -ForegroundColor $colorInfo
-    }
-} else {
-    Write-Step "Commit realizado localmente. Para subir los cambios manualmente, ejecute:" $colorInfo
-    Write-Host "git push origin main" -ForegroundColor $colorWarning
-}
-
-# Mensaje final
-Write-Step "Proceso completado." $colorSuccess
+# Mostrar el estado final
+git status

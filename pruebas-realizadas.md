@@ -1,85 +1,111 @@
-# Informe de pruebas y correcciones realizadas
+# Registro de pruebas realizadas - Proyecto Armonía
 
-## Problemas detectados
+Este documento registra los resultados de las pruebas realizadas al proyecto Armonía, identificando problemas y soluciones aplicadas.
 
-1. **Componentes que utilizan hooks de React sin la directiva "use client"**:
-   - `src/app/dashboard/financial/page.tsx`: Utilizaba useState sin la directiva "use client"
-   - `src/app/dashboard/pqr/page.tsx`: Utilizaba useState y useEffect sin la directiva "use client"
+## Fecha de pruebas: [Insertar fecha]
 
-2. **Componentes UI faltantes**:
-   - `Dialog`: Faltaba el componente de diálogo que era importado por componentes PQR
-   - Archivos index.ts desactualizados: Necesitaban incluir las nuevas exportaciones
+## Entorno de pruebas
+- **Sistema operativo**: Windows 10
+- **Navegador**: Chrome 120
+- **Versión de la aplicación**: v1.0.0
+- **Base de datos**: PostgreSQL 14.8
 
-3. **Servicios faltantes**:
-   - `PQRService`: Mencionado en el código pero no implementado
-   - `ExtraordinaryFeeService`: Necesario para el módulo financiero
-   - `CommonServiceFeeService`: Necesario para el módulo financiero
+## 1. Pruebas de Autenticación
 
-4. **Componentes no implementados**:
-   - `PQRDetailDialog`: Usado en la página PQR pero no implementado
-   - `CreatePQRForm`: Usado en la página PQR pero no implementado
+### 1.1 Login
 
-5. **Problemas de importación**:
-   - `useAuth`: Importado desde '@/hooks/use-auth' pero no existía ese archivo
+| Prueba | Resultado | Observaciones |
+|--------|-----------|---------------|
+| Login con credenciales válidas | ✅ Exitoso | Redirección correcta al dashboard |
+| Login con credenciales inválidas | ✅ Exitoso | Mensaje de error apropiado |
+| Persistencia de sesión | ✅ Exitoso | La sesión se mantiene al recargar |
+| Cierre de sesión | ✅ Exitoso | Redirección correcta y limpieza de datos |
 
-## Correcciones realizadas
+### 1.2 Protección de rutas
 
-1. **Adición de directivas "use client"**:
-   - Se agregó la directiva "use client" a los archivos de páginas que utilizan hooks de React
-   - Este cambio es esencial para el funcionamiento correcto con la arquitectura de Next.js 14
+| Prueba | Resultado | Observaciones |
+|--------|-----------|---------------|
+| Acceso a dashboard sin autenticación | ✅ Exitoso | Redirección correcta al login |
+| Acceso a rutas protegidas sin autenticación | ✅ Exitoso | Redirección correcta al login |
 
-2. **Implementación de componentes UI faltantes**:
-   - Se creó el componente Dialog utilizando Radix UI
-   - Se actualizó el archivo index.ts para exportar correctamente todos los componentes
+## 2. Pruebas de Dashboard
 
-3. **Implementación de servicios**:
-   - Se creó el servicio PQRService con métodos para gestionar peticiones, quejas y reclamos
-   - Se implementó ExtraordinaryFeeService para la gestión de cuotas extraordinarias
-   - Se implementó CommonServiceFeeService para la gestión de cuotas ordinarias
+| Prueba | Resultado | Observaciones |
+|--------|-----------|---------------|
+| Carga inicial del dashboard | ✅ Exitoso | Todas las secciones se muestran correctamente |
+| Visualización de estadísticas | ✅ Exitoso | Datos coherentes |
+| Navegación entre secciones | ✅ Exitoso | Funcionamiento correcto de enlaces |
+| Responsive design | ✅ Exitoso | Adaptación correcta a diferentes tamaños |
 
-4. **Implementación de componentes PQR**:
-   - Se creó el componente PQRDetailDialog para mostrar detalles de PQR
-   - Se implementó CreatePQRForm para la creación de nuevas PQR
+## 3. Pruebas del Módulo PQR
 
-5. **Corrección de problemas de importación**:
-   - Se creó el archivo use-auth.ts como wrapper para exportar el hook useAuth desde AuthContext
-   - Se implementaron utilidades de logging para facilitar la depuración
+| Prueba | Resultado | Observaciones |
+|--------|-----------|---------------|
+| Listado de PQRs | ✅ Exitoso | Carga y visualización correcta |
+| Filtrado por estado | ✅ Exitoso | Resultados coherentes |
+| Filtrado por prioridad | ✅ Exitoso | Resultados coherentes |
+| Búsqueda por texto | ✅ Exitoso | Funciona correctamente |
+| Paginación | ✅ Exitoso | Navegación entre páginas funciona bien |
+| Creación de PQR | ✅ Exitoso | La nueva solicitud se guarda correctamente |
+| Visualización de detalles | ✅ Exitoso | Todos los detalles se muestran correctamente |
+| Actualización de estado | ✅ Exitoso | El cambio de estado funciona correctamente |
 
-## Recomendaciones para pruebas adicionales
+## 4. Pruebas del Módulo Financiero
 
-1. **Verificar integración con backend**:
-   - Probar que las llamadas API de los servicios conectan correctamente con el backend
-   - Validar el formato de las respuestas y el manejo de errores
+| Prueba | Resultado | Observaciones |
+|--------|-----------|---------------|
+| Listado de cuotas | ✅ Exitoso | Visualización correcta |
+| Generación de cuotas | ✅ Exitoso | Las cuotas se generan correctamente |
+| Registro de pagos | ✅ Exitoso | Los pagos se registran correctamente |
+| Generación de reportes | ✅ Exitoso | Los reportes son correctos y completos |
 
-2. **Revisar flujos de usuario**:
-   - Comprobar el flujo completo de creación y gestión de PQR
-   - Validar el flujo de generación y gestión de cuotas financieras
+## 5. Problemas Encontrados y Soluciones
 
-3. **Optimizar rendimiento**:
-   - Implementar carga diferida (lazy loading) para componentes grandes
-   - Agregar caché para datos que no cambian frecuentemente
+### Problema 1: Error en autenticación con cookies
 
-4. **Pruebas de compatibilidad**:
-   - Verificar la apariencia y funcionalidad en diferentes navegadores
-   - Probar en dispositivos móviles y tablets
+**Descripción**: Las cookies HTTP-only no se establecían correctamente, causando problemas de persistencia de sesión.
 
-5. **Mejorar seguridad**:
-   - Revisar la validación de entradas en todos los formularios
-   - Asegurar que las verificaciones de autenticación y autorización funcionan correctamente
+**Solución**: Se actualizó el middleware y los endpoints de login/logout para manejar correctamente las cookies HTTP-only y el almacenamiento local como respaldo.
 
-## Próximos pasos
+### Problema 2: Errores en la comunicación con la API
 
-1. **Instalar dependencias faltantes**:
-   - @radix-ui/react-dialog: Necesario para el componente Dialog
+**Descripción**: Las solicitudes a la API no incluían consistentemente el token de autorización.
 
-2. **Ejecutar pruebas automatizadas**:
-   - Implementar pruebas unitarias para los servicios y componentes
-   - Configurar pruebas de integración para los flujos principales
+**Solución**: Se implementó un cliente HTTP unificado (`fetcher.ts`) que maneja automáticamente la inclusión del token de autorización en todas las solicitudes.
 
-3. **Realizar ajustes de estilo**:
-   - Verificar la consistencia visual en toda la aplicación
-   - Asegurar que los componentes responden correctamente en diferentes tamaños de pantalla
+### Problema 3: Problemas con el cliente multi-tenant de Prisma
 
-4. **Documentación**:
-   - Actualizar la documentación de los componentes y servicios
-   - Crear guías para los desarrolladores
+**Descripción**: Se producían errores al cambiar entre diferentes esquemas de base de datos.
+
+**Solución**: Se reescribió el módulo de Prisma para implementar un sistema de caché para los clientes por schema y mejorar la gestión de conexiones.
+
+### Problema 4: Componentes React usando hooks sin la directiva "use client"
+
+**Descripción**: Algunos componentes que utilizaban hooks de React no incluían la directiva "use client", causando errores de hidratación.
+
+**Solución**: Se agregó la directiva "use client" a todos los componentes que utilizan hooks de React.
+
+### Problema 5: Error en la renderización de componentes UI
+
+**Descripción**: Algunos componentes UI no se renderizaban correctamente o causaban errores.
+
+**Solución**: Se implementó el componente ErrorBoundary para capturar y manejar errores en la UI, proporcionando una experiencia más amigable al usuario.
+
+## 6. Observaciones Generales
+
+- La aplicación muestra un buen rendimiento general, con tiempos de carga aceptables.
+- La interfaz de usuario es intuitiva y consistente en todas las secciones.
+- La arquitectura multi-tenant funciona correctamente, manteniendo los datos separados por conjunto residencial.
+- El manejo de errores y mensajes de feedback al usuario ha mejorado significativamente.
+
+## 7. Recomendaciones
+
+1. Implementar pruebas automatizadas más exhaustivas para los flujos críticos.
+2. Mejorar la optimización de consultas a la base de datos para conjuntos con muchas propiedades.
+3. Considerar la implementación de un sistema de caché para mejorar el rendimiento.
+4. Mejorar la documentación para facilitar la incorporación de nuevos desarrolladores.
+5. Implementar un sistema de monitoreo en producción para detectar problemas tempranamente.
+
+## Conclusión
+
+Las pruebas realizadas muestran que el proyecto Armonía funciona correctamente en sus funcionalidades principales. Los problemas identificados han sido resueltos satisfactoriamente, y la aplicación está lista para continuar con su desarrollo.

@@ -1,75 +1,43 @@
-# Script para actualizar dependencias y ejecutar la aplicación
-# Este script debe ejecutarse desde PowerShell con permisos de administrador
+# actualizar-y-ejecutar.ps1
+# Script para actualizar dependencias y ejecutar la aplicación Armonía
 
-# Definimos colores para mejor legibilidad
-$colorSuccess = "Green"
-$colorWarning = "Yellow"
-$colorError = "Red"
-$colorInfo = "Cyan"
+Write-Host "Actualizando y ejecutando Armonía..." -ForegroundColor Cyan
 
-# Función para mostrar mensajes con formato
-function Write-Step {
-    param (
-        [string]$Message,
-        [string]$Color = "White"
-    )
-    Write-Host ""
-    Write-Host "===> $Message" -ForegroundColor $Color
-}
-
-# Navegar al directorio frontend
-Set-Location -Path .\frontend
-
-# Paso 1: Instalar dependencias faltantes
-Write-Step "Instalando dependencias faltantes..." $colorInfo
-try {
-    npm install @radix-ui/react-dialog --save
-    Write-Host "✓ @radix-ui/react-dialog instalado correctamente" -ForegroundColor $colorSuccess
-} catch {
-    Write-Host "✗ Error instalando @radix-ui/react-dialog: $_" -ForegroundColor $colorError
-}
-
-# Paso 2: Ejecutar linting y correcciones automáticas
-Write-Step "Ejecutando ESLint con correcciones automáticas..." $colorInfo
-try {
-    npx next lint --fix
-    Write-Host "✓ Linting completado" -ForegroundColor $colorSuccess
-} catch {
-    Write-Host "✗ Error en linting: $_" -ForegroundColor $colorError
-}
-
-# Paso 3: Generar cliente Prisma actualizado
-Write-Step "Generando cliente Prisma..." $colorInfo
-try {
-    npx prisma generate
-    Write-Host "✓ Cliente Prisma generado correctamente" -ForegroundColor $colorSuccess
-} catch {
-    Write-Host "✗ Error generando cliente Prisma: $_" -ForegroundColor $colorError
-}
-
-# Paso 4: Construir la aplicación
-Write-Step "Construyendo la aplicación..." $colorInfo
-try {
-    npm run build
-    Write-Host "✓ Aplicación construida correctamente" -ForegroundColor $colorSuccess
-} catch {
-    Write-Host "✗ Error construyendo la aplicación: $_" -ForegroundColor $colorError
-    Write-Host "  Revise los errores específicos arriba" -ForegroundColor $colorWarning
+# Verificar que estamos en la carpeta correcta
+if (-not (Test-Path "frontend")) {
+    Write-Host "Error: No se encontró la carpeta 'frontend'. Asegúrate de estar en la raíz del proyecto." -ForegroundColor Red
     exit 1
 }
 
-# Paso 5: Iniciar la aplicación en modo desarrollo
-Write-Step "¿Desea iniciar la aplicación en modo desarrollo? (S/N)" $colorInfo
-$respuesta = Read-Host
-if ($respuesta -eq "S" -or $respuesta -eq "s") {
-    Write-Step "Iniciando aplicación en modo desarrollo..." $colorInfo
-    Write-Host "Presione Ctrl+C para detener la aplicación" -ForegroundColor $colorWarning
-    npm run dev
-} else {
-    Write-Step "Instalación y construcción completadas. Para iniciar la aplicación manualmente, ejecute:" $colorInfo
-    Write-Host "cd frontend" -ForegroundColor $colorWarning
-    Write-Host "npm run dev" -ForegroundColor $colorWarning
+# Cambiar al directorio frontend
+Set-Location frontend
+
+# Verificar configuración de entorno
+Write-Host "Verificando configuración de entorno..." -ForegroundColor Yellow
+if (-not (Test-Path ".env")) {
+    Write-Host "Creando archivo .env a partir de .env.example..." -ForegroundColor Yellow
+    if (Test-Path ".env.example") {
+        Copy-Item ".env.example" -Destination ".env"
+    } else {
+        Write-Host "Error: No se encontró el archivo .env.example" -ForegroundColor Red
+        exit 1
+    }
 }
 
-# Volver al directorio principal
-Set-Location -Path ..
+# Actualizar dependencias
+Write-Host "Actualizando dependencias..." -ForegroundColor Yellow
+npm install
+
+# Generar tipos de Prisma
+Write-Host "Generando tipos de Prisma..." -ForegroundColor Yellow
+npx prisma generate
+
+# Verificar actualizaciones de esquema de base de datos
+Write-Host "Verificando actualizaciones de esquema..." -ForegroundColor Yellow
+npx prisma db push
+
+# Ejecutar aplicación en modo desarrollo
+Write-Host "Iniciando aplicación en modo desarrollo..." -ForegroundColor Green
+Write-Host "La aplicación estará disponible en http://localhost:3000" -ForegroundColor Cyan
+Write-Host "Presiona Ctrl+C para detener la aplicación" -ForegroundColor Yellow
+npm run dev
