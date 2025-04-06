@@ -552,7 +552,7 @@ export default function BudgetPage() {
                   {language === 'Español' ? '-- Nuevo Presupuesto --' : '-- New Budget --'}
                 </SelectItem>
                 {budgets.map(budget => (
-                  <SelectItem key={budget.id} value={budget.id?.toString() || ''}>
+                  <SelectItem key={budget.id} value={budget.id?.toString() || `draft-${Math.random().toString(36).substring(7)}`}>
                     {`${budget.year} - ${
                       budget.status === 'DRAFT' 
                         ? language === 'Español' ? 'Borrador' : 'Draft'
