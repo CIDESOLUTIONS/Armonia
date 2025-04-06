@@ -4,7 +4,7 @@
 
 ## Descripción
 
-Armonía es una plataforma integral para la gestión de conjuntos residenciales, diseñada para facilitar la administración, comunicación y coordinación entre administradores, residentes y personal. La plataforma permite gestionar eficientemente todos los aspectos de la vida en comunidad, desde asambleas y administración de espacios comunes, hasta la gestión de finanzas y solicitudes.
+Armonía es una plataforma integral para la gestión de conjuntos residenciales, diseñada para facilitar la administración, comunicación y coordinación entre administradores, residentes y personal administrativo. La plataforma permite gestionar eficientemente todos los aspectos de la vida en comunidad, desde asambleas y administración de espacios comunes, hasta la gestión de finanzas y solicitudes.
 
 ## Características Principales
 
@@ -172,5 +172,5 @@ Este proyecto está bajo licencia privada. Todos los derechos reservados.
 ## Contacto
 
 Para obtener más información, contactar a través de:
-- Email: info@cidesolutions.com
-- Web: [CIDE Solutions](https://cidesolutions.com)
+- Email: custumers@cidesolutions.com
+- Web: [CIDE Solutions](https://cidesas.com)
