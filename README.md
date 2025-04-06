@@ -1,166 +1,176 @@
-# Proyecto Armonía 👥🏢
+# Proyecto Armonía
 
-Plataforma integral para la gestión de conjuntos residenciales. Facilita la administración, comunicación y coordinación entre administradores, residentes y personal.
+![Armonía Logo](./frontend/public/logo.png)
 
-## Características Principales 🌟
+## Descripción
 
-- **Gestión de Asambleas**: Programación, convocatorias, quórum, votaciones y actas.
-- **Gestión de Inventario**: Propiedades, propietarios, residentes, vehículos y áreas comunes.
-- **Gestión Financiera**: Presupuestos, cuotas, pagos y reportes.
-- **Sistema PQR**: Peticiones, quejas y reclamos con seguimiento completo.
-- **Comunicaciones**: Anuncios, mensajería y notificaciones.
-- **Panel Residente**: Estado de cuenta, reservas y participación en asambleas.
-- **Panel Administrativo**: Configuración, métricas y reportes.
+Armonía es una plataforma integral para la gestión de conjuntos residenciales, diseñada para facilitar la administración, comunicación y coordinación entre administradores, residentes y personal. La plataforma permite gestionar eficientemente todos los aspectos de la vida en comunidad, desde asambleas y administración de espacios comunes, hasta la gestión de finanzas y solicitudes.
 
-## Requisitos Técnicos 🔧
+## Características Principales
 
-- Node.js 18.x o superior
-- PostgreSQL 14.x o superior
-- npm 9.x o superior
+### Dashboard
+- Panel principal con indicadores y estadísticas clave
+- Visualización gráfica de estado financiero
+- Resumen de actividades y eventos próximos
 
-## Instalación 🚀
+### Gestión de Inventario
+- **Propiedades**: Registro y administración de inmuebles
+- **Vehículos**: Control de vehículos registrados en el conjunto
+- **Mascotas**: Registro de mascotas por unidad residencial
+- **Servicios Comunes**: Administración de zonas y servicios del conjunto
 
-### 1. Clonar el repositorio
+### Gestión de Asambleas
+- Programación y convocatoria de asambleas
+- Control de asistencia y cálculo de quórum
+- Sistema de votaciones en tiempo real
+- Gestión de actas y documentos asociados
 
+### Gestión Financiera
+- Presupuestos anuales y seguimiento
+- Cuotas ordinarias y extraordinarias
+- Registro y seguimiento de pagos
+- Generación de recibos y facturas
+- Reportes financieros personalizables
+
+### Gestión de Residentes
+- Registro de propietarios y arrendatarios
+- Asociación de residentes a inmuebles
+- Control de residentes principales
+- Directorio de residentes
+
+### Sistema de PQR (Peticiones, Quejas y Reclamos)
+- Creación y seguimiento de solicitudes
+- Categorización por tipo y prioridad
+- Asignación de responsables
+- Historial de comunicaciones
+
+### Módulo de Comunicaciones
+- Tablón de anuncios
+- Mensajería interna
+- Notificaciones por correo electrónico
+- Comunicados oficiales
+
+### Configuración del Sistema
+- Personalización de la plataforma
+- Integración con pasarelas de pago
+- Conexión a cámaras de seguridad
+- Integración con WhatsApp
+
+## Tecnologías Utilizadas
+
+### Frontend
+- Next.js 14
+- React 18
+- TypeScript
+- Tailwind CSS
+- Shadcn/UI
+- Recharts (visualización de datos)
+
+### Backend
+- Next.js API Routes
+- Serverless Functions
+- Prisma ORM
+- JWT (autenticación)
+- Zod (validación)
+
+### Base de Datos
+- PostgreSQL con enfoque multi-tenant
+
+## Modelos de Suscripción
+
+La plataforma ofrece tres planes de suscripción:
+
+### Plan Básico (Gratuito)
+- Hasta 30 unidades residenciales
+- Gestión de propiedades y residentes
+- Portal básico de comunicaciones
+- Históricos limitados a 1 año
+
+### Plan Estándar ($USD 25/mes)
+- Hasta 50 unidades residenciales
+- Todas las funcionalidades básicas
+- Gestión completa de asambleas y votaciones
+- Sistema de PQR avanzado
+- Históricos de hasta 3 años
+
+### Plan Premium ($USD 50/mes)
+- Hasta 120 unidades residenciales
+- Todas las funcionalidades estándar
+- Módulo financiero avanzado
+- Personalización de la plataforma
+- Históricos completos e ilimitados
+- API para integración con otros sistemas
+- Soporte prioritario 24/7
+
+## Instalación y Configuración
+
+### Requisitos Previos
+- Node.js 18 o superior
+- PostgreSQL 14 o superior
+- npm o yarn
+
+### Pasos de Instalación
+
+1. Clonar el repositorio:
 ```bash
-git clone https://github.com/YOUR_USERNAME/Armonia.git
-cd Armonia
+git clone https://github.com/CIDESOLUTIONS/Armonia.git
+cd Armonia/frontend
 ```
 
-### 2. Configurar la base de datos
-
-1. Crear una base de datos PostgreSQL llamada `armonia`
-2. Ejecutar los scripts de configuración inicial:
-
+2. Instalar dependencias:
 ```bash
-cd frontend
-npx prisma db push
-npx prisma db seed
-```
-
-### 3. Configurar variables de entorno
-
-Copia el archivo de ejemplo `.env.example` a `.env`:
-
-```bash
-cp frontend/.env.example frontend/.env
-```
-
-Edita el archivo `.env` con tus configuraciones:
-
-```
-# Database Configuration
-DB_HOST=localhost
-DB_NAME=armonia
-DB_USER=tu_usuario_db
-DB_PASSWORD=tu_password_db
-DB_PORT=5432
-
-# Prisma Connection URL
-DATABASE_URL="postgresql://tu_usuario_db:tu_password_db@localhost:5432/armonia?schema=public"
-
-# JWT Secret
-JWT_SECRET="tu_jwt_secret_seguro"
-
-# Email Configuration (opcional)
-EMAIL_USER=tu_email@ejemplo.com
-EMAIL_PASS=tu_password_email
-```
-
-### 4. Instalar dependencias
-
-```bash
-cd frontend
 npm install
 ```
 
-### 5. Ejecutar migraciones de la base de datos
+3. Crear archivo `.env` basado en `.env.example`:
+```bash
+cp .env.example .env
+```
 
+4. Configurar variables de entorno (edita el archivo `.env`):
+```
+DATABASE_URL=postgresql://username:password@localhost:5432/armonia
+JWT_SECRET=your_secret_key
+```
+
+5. Ejecutar migraciones de base de datos:
 ```bash
 npx prisma migrate dev
 ```
 
-### 6. Ejecutar en modo desarrollo
-
+6. Iniciar el servidor de desarrollo:
 ```bash
 npm run dev
 ```
 
-## Scripts Disponibles 📜
+7. Acceder a la aplicación en [http://localhost:3000](http://localhost:3000)
 
-- `npm run dev`: Inicia el servidor de desarrollo.
-- `npm run build`: Construye la aplicación para producción.
-- `npm run start`: Inicia la aplicación en modo producción.
-- `npm run lint`: Ejecuta el linter para detectar problemas de código.
-- `npm test`: Ejecuta las pruebas unitarias.
-- `npx prisma studio`: Abre una interfaz para explorar la base de datos.
-
-## Scripts de Utilidad 🛠️
-
-- `./ejecutar-pruebas.ps1`: Script PowerShell para ejecutar todas las pruebas del proyecto.
-- `./sincronizar-con-github.ps1`: Script PowerShell para sincronizar cambios locales con GitHub.
-- `./actualizar-y-ejecutar.ps1`: Script PowerShell para actualizar dependencias y ejecutar la aplicación.
-
-## Estructura del Proyecto 📁
+## Estructura del Proyecto
 
 ```
 frontend/
-├── prisma/               # Esquema y migraciones de Prisma
-├── public/               # Archivos estáticos
+├── prisma/           # Esquema y migraciones de Prisma
+├── public/           # Archivos estáticos
 ├── src/
-│   ├── app/              # Rutas y páginas de Next.js
-│   │   ├── (auth)/       # Rutas protegidas (dashboard, admin)
-│   │   ├── (public)/     # Rutas públicas (landing, login)
-│   │   └── api/          # API Routes de Next.js
-│   ├── components/       # Componentes React reutilizables
-│   ├── context/          # Contextos de React (Auth, Theme)
-│   ├── hooks/            # Hooks personalizados
-│   ├── lib/              # Utilidades y servicios
-│   │   ├── api/          # Cliente HTTP para API
-│   │   ├── logging/      # Utilidades de logging
-│   │   └── services/     # Servicios para diferentes módulos
-│   ├── models/           # Definiciones de tipos y modelos
-│   └── utils/            # Funciones utilitarias
-└── tailwind.config.js    # Configuración de Tailwind CSS
+│   ├── app/          # Rutas y páginas (Next.js App Router)
+│   │   ├── (auth)/   # Rutas protegidas
+│   │   ├── (public)/ # Rutas públicas
+│   │   └── api/      # API Routes
+│   ├── components/   # Componentes React
+│   ├── context/      # Contextos de React
+│   ├── hooks/        # Custom hooks
+│   ├── lib/          # Utilidades y servicios
+│   ├── styles/       # Estilos globales
+│   └── types/        # Definiciones de tipos
+└── tests/            # Pruebas
 ```
 
-## Modelo Multi-tenant 🏢
+## Licencia
 
-La aplicación está diseñada con una arquitectura multi-tenant basada en esquemas de PostgreSQL:
+Este proyecto está bajo licencia privada. Todos los derechos reservados.
 
-- Esquema `armonia`: Tablas globales como usuarios y conjuntos residenciales
-- Esquema `tenant_cjXXXX`: Esquema dedicado para cada conjunto residencial (donde XXXX es el ID del conjunto)
+## Contacto
 
-## Convenciones de Código 📝
-
-- **Archivos**: PascalCase para componentes React (.tsx), camelCase para utilidades (.ts)
-- **Funciones**: camelCase (ej. getUserData)
-- **Componentes React**: PascalCase (ej. UserProfile)
-- **Variables**: camelCase (ej. userData)
-- **Constantes**: UPPER_SNAKE_CASE (ej. API_BASE_URL)
-- **Interfaces/Types**: PascalCase con prefijo I para interfaces (ej. IUserData)
-- **Endpoints API**: kebab-case (ej. /api/user-profile)
-
-## Despliegue 🚀
-
-Para desplegar en producción:
-
-1. Construir la aplicación:
-```bash
-npm run build
-```
-
-2. Iniciar el servidor:
-```bash
-npm start
-```
-
-Para despliegue con Docker, consulta el archivo `Dockerfile` en la raíz del proyecto.
-
-## Licencia 📄
-
-Este proyecto está bajo Licencia Privada - ver el archivo LICENSE.md para detalles.
-
-## Contacto 📧
-
-Para preguntas o soporte, contacta a: [email@ejemplo.com]
+Para obtener más información, contactar a través de:
+- Email: info@cidesolutions.com
+- Web: [CIDE Solutions](https://cidesolutions.com)
