@@ -83,7 +83,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       <div className={`fixed z-20 h-full ${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
         <Sidebar
           language={language}
@@ -96,7 +96,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           setIsCollapsed={setIsSidebarCollapsed}
         />
       </div>
-      <div className={`flex-1 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300`}>
+      <div className={`flex-1 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'} transition-all duration-300 flex flex-col min-h-screen`}>
         <Header
           theme={theme}
           setTheme={setTheme}
@@ -109,7 +109,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           complexName={complexName}
           adminName={adminName}
         />
-        <main className="pt-16 px-6">
+        <main className="pt-16 px-6 flex-1 overflow-y-auto">
           {children}
         </main>
       </div>
