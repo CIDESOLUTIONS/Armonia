@@ -527,9 +527,9 @@ export default function BudgetPage() {
           </CardHeader>
           <CardContent>
             <Select
-              value={selectedBudget?.id?.toString() || ''}
+              value={selectedBudget?.id?.toString() || 'new-budget'}
               onValueChange={(value) => {
-                if (value === '') {
+                if (value === 'new-budget') {
                   handleCreateNewBudget();
                   return;
                 }
@@ -548,7 +548,7 @@ export default function BudgetPage() {
                 <SelectValue placeholder={language === 'Español' ? '-- Nuevo Presupuesto --' : '-- New Budget --'} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">
+                <SelectItem value="new-budget">
                   {language === 'Español' ? '-- Nuevo Presupuesto --' : '-- New Budget --'}
                 </SelectItem>
                 {budgets.map(budget => (
