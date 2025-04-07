@@ -18,6 +18,12 @@ function getToken(request: NextRequest): string | null {
     return tokenCookie.value;
   }
   
+  // Como última opción, revisar en localStorage (para clientes)
+  // Este código solo se ejecutará en el navegador
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('token');
+  }
+  
   return null;
 }
 
@@ -70,7 +76,14 @@ export async function middleware(request: NextRequest) {
       } catch (error) {
         ServerLogger.security('Token inválido', { path, ip, error: (error as Error).message });
         ServerLogger.debug('[Middleware] Token inválido - redirigiendo a login');
-        return NextResponse.redirect(loginUrl);
+        
+        // Crear una respuesta de redirección
+        const response = NextResponse.redirect(loginUrl);
+        
+        // Limpiar la cookie del token para evitar ciclos infinitos
+        response.cookies.delete('token');
+        
+        return response;
       }
     }
 

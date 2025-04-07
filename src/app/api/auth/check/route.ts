@@ -1,24 +1,49 @@
-// C:\Users\meciz\Documents\armonia\frontend\src\app\api\auth\check\route.ts
-import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
-import { getPrismaClient } from '@/lib/prisma';
+// src/app/api/auth/check/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/auth";
+import { ServerLogger } from "@/lib/logging/server-logger";
 
-export async function GET(request) {
-  const token = request.cookies.get('token')?.value;
-  if (!token) {
-    return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
-  }
+/**
+ * Endpoint para verificar si un token de autenticación es válido
+ * Se usa principalmente para validar si el usuario debe permanecer autenticado
+ */
+export async function GET(request: NextRequest) {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { email: string; complexId: number };
-    const prismaGlobal = new PrismaClient();
-    const user = await prismaGlobal.user.findUnique({ where: { email: decoded.email } });
-    if (!user) {
-      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 401 });
+    ServerLogger.debug('[API] Verificando sesión...');
+    
+    // Verificar la autenticación
+    const { auth, payload } = await verifyAuth(request);
+    
+    if (!auth || !payload) {
+      ServerLogger.debug('[API] Sesión inválida');
+      return NextResponse.json({ 
+        valid: false,
+        message: "Sesión inválida o expirada" 
+      }, { status: 401 });
     }
-    return NextResponse.json({ email: user.email, role: user.role, complexId: user.complexId });
-  } catch (err) {
-    console.error('Error en /api/auth/check:', err);
-    return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    
+    // Si llegamos aquí, la sesión es válida
+    ServerLogger.debug('[API] Sesión válida para:', payload.email);
+    
+    return NextResponse.json({ 
+      valid: true,
+      user: {
+        id: payload.id,
+        email: payload.email,
+        role: payload.role,
+        complexId: payload.complexId,
+        name: payload.name,
+        schemaName: payload.schemaName,
+        complexName: payload.complexName,
+        isGlobalAdmin: payload.isGlobalAdmin
+      }
+    });
+  } catch (error) {
+    ServerLogger.error('[API] Error verificando sesión:', error);
+    
+    return NextResponse.json({ 
+      valid: false,
+      message: "Error al verificar la sesión" 
+    }, { status: 500 });
   }
 }

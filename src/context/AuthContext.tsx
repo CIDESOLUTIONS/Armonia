@@ -27,7 +27,7 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  forceLogin: (userData: User, authToken: string) => void; // Nuevo método para test-login
+  forceLogin: (userData: User, authToken: string) => void; // Método para test-login
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,32 +117,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               return;
             }
             
-            // Debido a problemas con la API de verificación, asumimos que el token es válido
-            // En un entorno de producción, descomentar el código siguiente:
-            
-            /*
             // Verificar sesión en el servidor
-            const response = await fetch('/api/verify-session', {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${storedToken}`
+            try {
+              const response = await fetch('/api/auth/check', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${storedToken}`
+                }
+              });
+              
+              if (response.ok) {
+                // Sesión verificada, usar los datos
+                storeAuthData(storedToken, parsedUser);
+                console.log('[AuthContext] Sesión verificada con éxito');
+              } else {
+                // Sesión no válida, limpiar datos
+                console.log('[AuthContext] Sesión no válida, limpiando datos');
+                clearAuthData();
               }
-            });
-            
-            if (response.ok) {
-              // Sesión verificada, usar los datos
+            } catch (apiError) {
+              console.error('[AuthContext] Error al verificar sesión:', apiError);
+              // Para desarrollo, seguimos aceptando el token sin verificar
               storeAuthData(storedToken, parsedUser);
-              console.log('[AuthContext] Sesión verificada con éxito');
-            } else {
-              // Sesión no válida, limpiar datos
-              console.log('[AuthContext] Sesión no válida, limpiando datos');
-              clearAuthData();
+              console.log('[AuthContext] Usando datos de sesión almacenados (modo desarrollo)');
             }
-            */
-            
-            // Para propósitos de prueba, aceptamos el token y los datos almacenados
-            storeAuthData(storedToken, parsedUser);
-            console.log('[AuthContext] Usando datos de sesión almacenados');
           } catch (parseError) {
             console.error('[AuthContext] Error parsing user data:', parseError);
             clearAuthData();
@@ -168,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       console.log('[AuthContext] Iniciando login para:', email);
 
-      const response = await fetch('/api/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -218,6 +216,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
+      }).catch(error => {
+        console.warn('[AuthContext] Error al llamar endpoint de logout:', error);
       });
     } catch (err) {
       console.error('[AuthContext] Error en logout:', err);

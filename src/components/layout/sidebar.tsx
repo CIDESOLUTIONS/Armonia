@@ -16,7 +16,8 @@ import {
   ChevronUp,
   Shield,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Coffee
 } from "lucide-react";
 
 interface SidebarProps {
@@ -92,8 +93,14 @@ export default function Sidebar({
         { label: language === "Español" ? "Proyectos" : "Projects", path: "/dashboard/finances/projects" },
         { label: language === "Español" ? "Cuotas Ordinarias" : "Regular Fees", path: "/dashboard/finances/regular-fees" },
         { label: language === "Español" ? "Cuotas Extraordinarias" : "Extraordinary Fees", path: "/dashboard/finances/extra-fees" },
-        { label: language === "Español" ? "Servicios Comunes" : "Common Services", path: "/dashboard/finances/common-services" },
-        { label: language === "Español" ? "Certificaciones" : "Certifications", path: "/dashboard/finances/certifications" },
+      ],
+    },
+    {
+      icon: <Coffee className="w-6 h-6" />,
+      label: language === "Español" ? "Servicios" : "Services",
+      subitems: [
+        { label: language === "Español" ? "Servicios Comunes" : "Common Services", path: "/dashboard/services/common" },
+        { label: language === "Español" ? "Reservas" : "Reservations", path: "/dashboard/services/reservations" },
       ],
     },
     {

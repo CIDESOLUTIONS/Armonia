@@ -1,16 +1,23 @@
-// src/components/ui/label.tsx
-import { ReactNode } from 'react';
+"use client"
 
-interface LabelProps {
-  htmlFor: string;
-  className?: string;
-  children: ReactNode;
+import React from "react"
+
+interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+  children: React.ReactNode;
 }
 
-export function Label({ htmlFor, className, children }: LabelProps) {
-  return (
-    <label htmlFor={htmlFor} className={className}>
-      {children}
-    </label>
-  );
-}
+export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <label
+        className={className}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </label>
+    )
+  }
+)
+
+Label.displayName = "Label"

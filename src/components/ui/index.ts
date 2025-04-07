@@ -14,3 +14,6 @@ export * from './data-table';
 export * from './dialog';
 export * from './tabs';
 export * from './alert';
+export * from './popover';
+export * from './calendar';
+export * from './label';

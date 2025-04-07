@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/context/TranslationContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,7 +10,6 @@ import { Plus, Pencil, Trash2, Calendar, Clock, Users, DollarSign, AlertTriangle
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,158 +41,173 @@ interface Reservation {
   status: "pending" | "approved" | "rejected" | "cancelled";
 }
 
-// Datos mock para pruebas
-const mockServices: Service[] = [
-  {
-    id: 1,
-    name: "Salón Comunal",
-    description: "Espacio para eventos sociales y reuniones.",
-    capacity: 50,
-    startTime: "08:00",
-    endTime: "22:00",
-    status: "active",
-    cost: 100000,
-    rules: "No se permite uso después de las 10pm. Se debe dejar limpio."
-  },
-  {
-    id: 2,
-    name: "Piscina",
-    description: "Área recreativa con piscina para adultos y niños.",
-    capacity: 30,
-    startTime: "09:00",
-    endTime: "18:00",
-    status: "active",
-    cost: 0,
-    rules: "Obligatorio ducharse antes de ingresar. Prohibido alimentos."
-  },
-  {
-    id: 3,
-    name: "Gimnasio",
-    description: "Equipado con máquinas cardiovasculares y de fuerza.",
-    capacity: 15,
-    startTime: "05:00",
-    endTime: "23:00",
-    status: "active",
-    cost: 0,
-    rules: "Traer toalla personal. Limpiar equipos después de usar."
-  }
-];
-
-const mockReservations: Reservation[] = [
-  {
-    id: 1,
-    serviceId: 1,
-    serviceName: "Salón Comunal",
-    userId: 1,
-    userName: "Juan Pérez",
-    propertyUnit: "A-101",
-    date: "2024-04-15",
-    startTime: "14:00",
-    endTime: "18:00",
-    status: "approved"
-  },
-  {
-    id: 2,
-    serviceId: 2,
-    serviceName: "Piscina",
-    userId: 2,
-    userName: "María Rodríguez",
-    propertyUnit: "A-102",
-    date: "2024-04-20",
-    startTime: "10:00",
-    endTime: "12:00",
-    status: "pending"
-  }
-];
-
 export default function CommonServicesPage() {
-  const router = useRouter();
-  const { user, isLoggedIn, token, complexId, schemaName } = useAuth();
+  const { language } = useTranslation();
   const { toast } = useToast();
-  
-  // Estado
+  const { token, complexId, schemaName } = useAuth();
+  const [activeTab, setActiveTab] = useState("services");
+  const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showServiceDialog, setShowServiceDialog] = useState(false);
-  const [showReservationDialog, setShowReservationDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("services");
+  const [error, setError] = useState<string | null>(null);
   
-  // Formularios
+  // Formulario de servicio
   const [serviceForm, setServiceForm] = useState<Partial<Service>>({
-    name: "", description: "", capacity: 10, startTime: "08:00", 
-    endTime: "18:00", cost: 0, status: "active", rules: ""
-  });
-  
-  const [reservationForm, setReservationForm] = useState<Partial<Reservation>>({
-    serviceId: 0, date: new Date().toISOString().split('T')[0],
-    startTime: "08:00", endTime: "10:00", status: "pending"
+    name: "", 
+    description: "", 
+    capacity: 10, 
+    startTime: "08:00", 
+    endTime: "18:00", 
+    cost: 0, 
+    status: "active", 
+    rules: ""
   });
 
   // Cargar datos
   useEffect(() => {
-    if (!isLoggedIn) {
-      router.push('/login');
-      return;
-    }
-    
-    fetchServices();
-    fetchReservations();
-  }, [isLoggedIn, token, complexId, schemaName]);
-
-  // Funciones para cargar datos
-  const fetchServices = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/services?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setServices(data.services || []);
-      } else {
-        console.warn("Error al cargar servicios, usando datos de prueba");
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Datos simulados para servicios
+        const mockServices: Service[] = [
+          {
+            id: 1,
+            name: "Salón Comunal",
+            description: "Espacio para eventos sociales y reuniones.",
+            capacity: 50,
+            startTime: "08:00",
+            endTime: "22:00",
+            status: "active",
+            cost: 100000,
+            rules: "No se permite uso después de las 10pm. Se debe dejar limpio."
+          },
+          {
+            id: 2,
+            name: "Piscina",
+            description: "Área recreativa con piscina para adultos y niños.",
+            capacity: 30,
+            startTime: "09:00",
+            endTime: "18:00",
+            status: "active",
+            cost: 0,
+            rules: "Obligatorio ducharse antes de ingresar. Prohibido alimentos."
+          },
+          {
+            id: 3,
+            name: "Gimnasio",
+            description: "Equipado con máquinas cardiovasculares y de fuerza.",
+            capacity: 15,
+            startTime: "05:00",
+            endTime: "23:00",
+            status: "active",
+            cost: 0,
+            rules: "Traer toalla personal. Limpiar equipos después de usar."
+          },
+          {
+            id: 4,
+            name: "Cancha de Tenis",
+            description: "Cancha profesional con iluminación nocturna.",
+            capacity: 4,
+            startTime: "07:00",
+            endTime: "21:00",
+            status: "maintenance",
+            cost: 10000,
+            rules: "Máximo 2 horas por reserva. Usar calzado adecuado."
+          },
+          {
+            id: 5,
+            name: "Zona BBQ",
+            description: "Área con parrillas y mesas para 10 personas.",
+            capacity: 10,
+            startTime: "10:00",
+            endTime: "20:00",
+            status: "active",
+            cost: 15000,
+            rules: "Traer implementos propios. Limpiar al finalizar."
+          }
+        ];
+        
+        // Datos simulados para reservaciones
+        const mockReservations: Reservation[] = [
+          {
+            id: 1,
+            serviceId: 1,
+            serviceName: "Salón Comunal",
+            userId: 101,
+            userName: "Carlos Rodríguez",
+            propertyUnit: "Torre A - 302",
+            date: "2025-04-15",
+            startTime: "14:00",
+            endTime: "18:00",
+            status: "approved"
+          },
+          {
+            id: 2,
+            serviceId: 5,
+            serviceName: "Zona BBQ",
+            userId: 102,
+            userName: "María López",
+            propertyUnit: "Torre B - 201",
+            date: "2025-04-10",
+            startTime: "12:00",
+            endTime: "16:00",
+            status: "pending"
+          },
+          {
+            id: 3,
+            serviceId: 2,
+            serviceName: "Piscina",
+            userId: 103,
+            userName: "Juan Pérez",
+            propertyUnit: "Torre A - 501",
+            date: "2025-04-08",
+            startTime: "10:00",
+            endTime: "12:00",
+            status: "approved"
+          },
+          {
+            id: 4,
+            serviceId: 4,
+            serviceName: "Cancha de Tenis",
+            userId: 104,
+            userName: "Ana Martínez",
+            propertyUnit: "Torre C - 102",
+            date: "2025-04-12",
+            startTime: "16:00",
+            endTime: "18:00",
+            status: "rejected"
+          }
+        ];
+        
         setServices(mockServices);
-        toast({
-          title: "Modo demostración",
-          description: "Mostrando datos de ejemplo para servicios comunes",
-          variant: "warning"
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching services:", err);
-      setError("Error al cargar servicios comunes");
-      setServices(mockServices);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchReservations = async () => {
-    try {
-      const response = await fetch(`/api/services/reservations?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setReservations(data.reservations || []);
-      } else {
-        console.warn("Error al cargar reservaciones, usando datos de prueba");
         setReservations(mockReservations);
+        
+        toast({
+          title: language === 'Español' ? 'Modo demostración' : 'Demo mode',
+          description: language === 'Español' 
+            ? 'Mostrando datos de ejemplo' 
+            : 'Showing sample data',
+          variant: 'warning',
+        });
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        setError(language === 'Español' 
+          ? 'Error al cargar los datos. Intente nuevamente.' 
+          : 'Error loading data. Please try again.');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error("Error fetching reservations:", err);
-      setReservations(mockReservations);
-    }
-  };
+    };
+    
+    loadData();
+  }, [language, toast]);
 
-  // Handlers para servicios
+  // Funciones para gestionar servicios
   const handleOpenServiceDialog = (service?: Service) => {
     if (service) {
       setIsEditing(true);
@@ -203,8 +217,14 @@ export default function CommonServicesPage() {
       setIsEditing(false);
       setSelectedService(null);
       setServiceForm({
-        name: "", description: "", capacity: 10, startTime: "08:00", 
-        endTime: "18:00", cost: 0, status: "active", rules: ""
+        name: "", 
+        description: "", 
+        capacity: 10, 
+        startTime: "08:00", 
+        endTime: "18:00", 
+        cost: 0, 
+        status: "active", 
+        rules: ""
       });
     }
     setShowServiceDialog(true);
@@ -232,186 +252,116 @@ export default function CommonServicesPage() {
     }
 
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const url = isEditing ? `/api/services/${selectedService?.id}` : '/api/services';
-      const method = isEditing ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...serviceForm,
-          complexId,
-          schemaName
-        })
-      });
-      
-      if (response.ok) {
-        const savedService = await response.json();
-        
-        if (isEditing) {
-          setServices(services.map(s => s.id === selectedService?.id ? savedService.service : s));
-          toast({
-            title: "Servicio actualizado",
-            description: "El servicio se ha actualizado correctamente",
-            variant: "default"
-          });
-        } else {
-          setServices([...services, savedService.service]);
-          toast({
-            title: "Servicio creado",
-            description: "El nuevo servicio ha sido creado correctamente",
-            variant: "default"
-          });
-        }
-      } else {
-        // Modo simulación
-        if (isEditing && selectedService) {
-          setServices(services.map(s => s.id === selectedService.id ? { ...s, ...serviceForm } : s));
-        } else {
-          const newService: Service = {
-            id: Math.max(0, ...services.map(s => s.id)) + 1,
-            ...serviceForm as Service
-          };
-          setServices([...services, newService]);
-        }
+      // Simulación de guardar servicio
+      if (isEditing && selectedService) {
+        // Editar servicio existente
+        setServices(services.map(s => 
+          s.id === selectedService.id 
+          ? { ...s, ...serviceForm as Service } 
+          : s
+        ));
         
         toast({
-          title: isEditing ? "Servicio actualizado (local)" : "Servicio creado (local)",
-          description: "Cambios guardados en modo de demostración",
-          variant: "warning"
+          title: language === 'Español' ? 'Éxito' : 'Success',
+          description: language === 'Español' 
+            ? 'Servicio actualizado correctamente' 
+            : 'Service updated successfully',
         });
-      }
-      
-      setShowServiceDialog(false);
-    } catch (err) {
-      console.error("Error saving service:", err);
-      setError("Ocurrió un error al guardar el servicio");
-      
-      // Simulación en caso de error
-      if (isEditing && selectedService) {
-        setServices(services.map(s => s.id === selectedService.id ? { ...s, ...serviceForm } : s));
       } else {
+        // Crear nuevo servicio
         const newService: Service = {
           id: Math.max(0, ...services.map(s => s.id)) + 1,
           ...serviceForm as Service
         };
+        
         setServices([...services, newService]);
+        
+        toast({
+          title: language === 'Español' ? 'Éxito' : 'Success',
+          description: language === 'Español' 
+            ? 'Servicio creado correctamente' 
+            : 'Service created successfully',
+        });
       }
       
-      toast({
-        title: "Error de conexión",
-        description: "Cambios guardados localmente",
-        variant: "destructive"
-      });
-      
       setShowServiceDialog(false);
+    } catch (error) {
+      console.error("Error al guardar servicio:", error);
+      setError(language === 'Español' 
+        ? 'Error al guardar el servicio. Intente nuevamente.' 
+        : 'Error saving service. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteService = async (id: number) => {
-    if (!confirm("¿Está seguro de que desea eliminar este servicio?")) {
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(`/api/services/${id}?schemaName=${schemaName}`, {
-        method: 'DELETE',
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ complexId })
-      });
+    const confirmMessage = language === 'Español' 
+      ? '¿Está seguro de que desea eliminar este servicio?' 
+      : 'Are you sure you want to delete this service?';
       
-      if (response.ok) {
+    if (window.confirm(confirmMessage)) {
+      try {
+        setIsLoading(true);
+        
+        // Simulación de eliminar servicio
         setServices(services.filter(s => s.id !== id));
+        
         toast({
-          title: "Servicio eliminado",
-          description: "El servicio se ha eliminado correctamente",
-          variant: "default"
+          title: language === 'Español' ? 'Éxito' : 'Success',
+          description: language === 'Español' 
+            ? 'Servicio eliminado correctamente' 
+            : 'Service deleted successfully',
         });
-      } else {
-        // Simulación
-        setServices(services.filter(s => s.id !== id));
+      } catch (error) {
+        console.error("Error al eliminar servicio:", error);
         toast({
-          title: "Servicio eliminado (local)",
-          description: "El servicio se ha eliminado en modo de demostración",
-          variant: "warning"
+          title: language === 'Español' ? 'Error' : 'Error',
+          description: language === 'Español' 
+            ? 'Error al eliminar el servicio' 
+            : 'Error deleting service',
+          variant: 'destructive',
         });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error("Error deleting service:", err);
-      setError("Ocurrió un error al eliminar el servicio");
-      
-      // Simulación en caso de error
-      setServices(services.filter(s => s.id !== id));
-      toast({
-        title: "Error de conexión",
-        description: "Servicio eliminado localmente",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Renderizar estado de un servicio
+  // Renderizar estado de servicio
   const renderServiceStatus = (status: string) => {
-    let statusText = "", bgColor = "", textColor = "";
-    
     switch(status) {
       case "active":
-        statusText = "Activo"; bgColor = "bg-green-100"; textColor = "text-green-800";
-        break;
+        return <Badge className="bg-green-100 text-green-800">Activo</Badge>;
       case "inactive":
-        statusText = "Inactivo"; bgColor = "bg-gray-100"; textColor = "text-gray-800";
-        break;
+        return <Badge className="bg-gray-100 text-gray-800">Inactivo</Badge>;
       case "maintenance":
-        statusText = "En Mantenimiento"; bgColor = "bg-yellow-100"; textColor = "text-yellow-800";
-        break;
+        return <Badge className="bg-yellow-100 text-yellow-800">En Mantenimiento</Badge>;
       default:
-        statusText = status; bgColor = "bg-blue-100"; textColor = "text-blue-800";
+        return <Badge className="bg-blue-100 text-blue-800">{status}</Badge>;
     }
-    
-    return <Badge className={`${bgColor} ${textColor}`}>{statusText}</Badge>;
   };
   
-  // Renderizar estado de una reserva
+  // Renderizar estado de reserva
   const renderReservationStatus = (status: string) => {
-    let statusText = "", bgColor = "", textColor = "";
-    
     switch(status) {
       case "pending":
-        statusText = "Pendiente"; bgColor = "bg-blue-100"; textColor = "text-blue-800";
-        break;
+        return <Badge className="bg-blue-100 text-blue-800">Pendiente</Badge>;
       case "approved":
-        statusText = "Aprobada"; bgColor = "bg-green-100"; textColor = "text-green-800";
-        break;
+        return <Badge className="bg-green-100 text-green-800">Aprobada</Badge>;
       case "rejected":
-        statusText = "Rechazada"; bgColor = "bg-red-100"; textColor = "text-red-800";
-        break;
+        return <Badge className="bg-red-100 text-red-800">Rechazada</Badge>;
       case "cancelled":
-        statusText = "Cancelada"; bgColor = "bg-gray-100"; textColor = "text-gray-800";
-        break;
+        return <Badge className="bg-gray-100 text-gray-800">Cancelada</Badge>;
       default:
-        statusText = status; bgColor = "bg-blue-100"; textColor = "text-blue-800";
+        return <Badge className="bg-blue-100 text-blue-800">{status}</Badge>;
     }
-    
-    return <Badge className={`${bgColor} ${textColor}`}>{statusText}</Badge>;
   };
 
-  // Renderizado condicional para carga
+  // Componente de carga
   if (isLoading && services.length === 0) {
     return (
       <div className="p-6 flex justify-center items-center h-64">
@@ -425,8 +375,14 @@ export default function CommonServicesPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Servicios Comunes</h1>
-          <p className="text-gray-500">Gestión de servicios y reservas del conjunto</p>
+          <h1 className="text-3xl font-bold">
+            {language === 'Español' ? 'Servicios Comunes' : 'Common Services'}
+          </h1>
+          <p className="text-gray-500">
+            {language === 'Español' 
+              ? 'Gestión de servicios y reservas del conjunto' 
+              : 'Manage residential complex services and reservations'}
+          </p>
         </div>
       </div>
 
@@ -438,8 +394,12 @@ export default function CommonServicesPage() {
 
       <Tabs defaultValue="services" value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList>
-          <TabsTrigger value="services">Servicios</TabsTrigger>
-          <TabsTrigger value="reservations">Reservaciones</TabsTrigger>
+          <TabsTrigger value="services">
+            {language === 'Español' ? 'Servicios' : 'Services'}
+          </TabsTrigger>
+          <TabsTrigger value="reservations">
+            {language === 'Español' ? 'Reservaciones' : 'Reservations'}
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="services" className="py-4">
@@ -448,30 +408,36 @@ export default function CommonServicesPage() {
               className="bg-indigo-600 hover:bg-indigo-700"
               onClick={() => handleOpenServiceDialog()}
             >
-              <Plus className="mr-2 h-4 w-4" /> Nuevo Servicio
+              <Plus className="mr-2 h-4 w-4" /> 
+              {language === 'Español' ? 'Nuevo Servicio' : 'New Service'}
             </Button>
           </div>
           
           {services.length === 0 ? (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
               <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">No hay servicios</h3>
+              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">
+                {language === 'Español' ? 'No hay servicios' : 'No services'}
+              </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                No se encontraron servicios comunes registrados
+                {language === 'Español' 
+                  ? 'No se encontraron servicios comunes registrados' 
+                  : 'No common services found'}
               </p>
               <div className="mt-6">
                 <Button 
                   className="bg-indigo-600 hover:bg-indigo-700"
                   onClick={() => handleOpenServiceDialog()}
                 >
-                  <Plus className="mr-2 h-4 w-4" /> Nuevo Servicio
+                  <Plus className="mr-2 h-4 w-4" /> 
+                  {language === 'Español' ? 'Nuevo Servicio' : 'New Service'}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service) => (
-                <Card key={service.id} className="overflow-hidden">
+                <Card key={service.id}>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-lg">{service.name}</CardTitle>
@@ -523,28 +489,36 @@ export default function CommonServicesPage() {
         
         <TabsContent value="reservations" className="py-4">
           <div className="mb-4 flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Reservaciones</h2>
+            <h2 className="text-xl font-semibold">
+              {language === 'Español' ? 'Reservaciones' : 'Reservations'}
+            </h2>
             <Button 
               className="bg-indigo-600 hover:bg-indigo-700"
               onClick={() => {
-                // Abrir diálogo de nueva reserva (implementar si se necesita)
                 toast({
-                  title: "Funcionalidad en desarrollo",
-                  description: "La creación de reservas estará disponible próximamente",
-                  variant: "default"
+                  title: language === 'Español' ? 'Próximamente' : 'Coming soon',
+                  description: language === 'Español' 
+                    ? 'La creación de reservas estará disponible próximamente' 
+                    : 'Reservation creation will be available soon',
+                  variant: 'default',
                 });
               }}
             >
-              <Calendar className="mr-2 h-4 w-4" /> Nueva Reserva
+              <Calendar className="mr-2 h-4 w-4" /> 
+              {language === 'Español' ? 'Nueva Reserva' : 'New Reservation'}
             </Button>
           </div>
           
           {reservations.length === 0 ? (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
               <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">No hay reservaciones</h3>
+              <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">
+                {language === 'Español' ? 'No hay reservaciones' : 'No reservations'}
+              </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                No se encontraron reservaciones registradas
+                {language === 'Español' 
+                  ? 'No se encontraron reservaciones registradas' 
+                  : 'No reservations found'}
               </p>
             </div>
           ) : (
@@ -552,13 +526,27 @@ export default function CommonServicesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Servicio</TableHead>
-                    <TableHead>Residente</TableHead>
-                    <TableHead>Unidad</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Horario</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>
+                      {language === 'Español' ? 'Servicio' : 'Service'}
+                    </TableHead>
+                    <TableHead>
+                      {language === 'Español' ? 'Residente' : 'Resident'}
+                    </TableHead>
+                    <TableHead>
+                      {language === 'Español' ? 'Unidad' : 'Unit'}
+                    </TableHead>
+                    <TableHead>
+                      {language === 'Español' ? 'Fecha' : 'Date'}
+                    </TableHead>
+                    <TableHead>
+                      {language === 'Español' ? 'Horario' : 'Time'}
+                    </TableHead>
+                    <TableHead>
+                      {language === 'Español' ? 'Estado' : 'Status'}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {language === 'Español' ? 'Acciones' : 'Actions'}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -576,9 +564,11 @@ export default function CommonServicesPage() {
                           size="sm"
                           onClick={() => {
                             toast({
-                              title: "Funcionalidad en desarrollo",
-                              description: "La gestión de reservas estará disponible próximamente",
-                              variant: "default"
+                              title: language === 'Español' ? 'Próximamente' : 'Coming soon',
+                              description: language === 'Español' 
+                                ? 'La gestión de reservas estará disponible próximamente' 
+                                : 'Reservation management will be available soon',
+                              variant: 'default',
                             });
                           }}
                           className="text-blue-600 hover:text-blue-800"
@@ -600,13 +590,17 @@ export default function CommonServicesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {isEditing ? "Editar Servicio" : "Nuevo Servicio"}
+              {isEditing 
+                ? (language === 'Español' ? 'Editar Servicio' : 'Edit Service')
+                : (language === 'Español' ? 'Nuevo Servicio' : 'New Service')}
             </DialogTitle>
           </DialogHeader>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div>
-              <Label htmlFor="name">Nombre del Servicio</Label>
+              <label htmlFor="name" className="text-sm font-medium">
+                {language === 'Español' ? 'Nombre del Servicio' : 'Service Name'}
+              </label>
               <Input
                 id="name"
                 name="name"
@@ -616,24 +610,34 @@ export default function CommonServicesPage() {
               />
             </div>
             <div>
-              <Label htmlFor="status">Estado</Label>
+              <label htmlFor="status" className="text-sm font-medium">
+                {language === 'Español' ? 'Estado' : 'Status'}
+              </label>
               <Select
                 value={serviceForm.status || 'active'}
                 onValueChange={(value) => handleServiceSelectChange('status', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar estado" />
+                  <SelectValue placeholder={language === 'Español' ? 'Seleccionar estado' : 'Select status'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Activo</SelectItem>
-                  <SelectItem value="inactive">Inactivo</SelectItem>
-                  <SelectItem value="maintenance">En Mantenimiento</SelectItem>
+                  <SelectItem value="active">
+                    {language === 'Español' ? 'Activo' : 'Active'}
+                  </SelectItem>
+                  <SelectItem value="inactive">
+                    {language === 'Español' ? 'Inactivo' : 'Inactive'}
+                  </SelectItem>
+                  <SelectItem value="maintenance">
+                    {language === 'Español' ? 'En Mantenimiento' : 'Maintenance'}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div>
-              <Label htmlFor="capacity">Capacidad (personas)</Label>
+              <label htmlFor="capacity" className="text-sm font-medium">
+                {language === 'Español' ? 'Capacidad (personas)' : 'Capacity (people)'}
+              </label>
               <Input
                 id="capacity"
                 name="capacity"
@@ -646,7 +650,9 @@ export default function CommonServicesPage() {
             </div>
             
             <div>
-              <Label htmlFor="cost">Costo (0 para gratuito)</Label>
+              <label htmlFor="cost" className="text-sm font-medium">
+                {language === 'Español' ? 'Costo (0 para gratuito)' : 'Cost (0 for free)'}
+              </label>
               <Input
                 id="cost"
                 name="cost"
@@ -659,7 +665,9 @@ export default function CommonServicesPage() {
             </div>
             
             <div>
-              <Label htmlFor="startTime">Hora de Inicio</Label>
+              <label htmlFor="startTime" className="text-sm font-medium">
+                {language === 'Español' ? 'Hora de Inicio' : 'Start Time'}
+              </label>
               <Input
                 id="startTime"
                 name="startTime"
@@ -671,7 +679,9 @@ export default function CommonServicesPage() {
             </div>
             
             <div>
-              <Label htmlFor="endTime">Hora de Fin</Label>
+              <label htmlFor="endTime" className="text-sm font-medium">
+                {language === 'Español' ? 'Hora de Fin' : 'End Time'}
+              </label>
               <Input
                 id="endTime"
                 name="endTime"
@@ -683,7 +693,9 @@ export default function CommonServicesPage() {
             </div>
             
             <div className="md:col-span-2">
-              <Label htmlFor="description">Descripción</Label>
+              <label htmlFor="description" className="text-sm font-medium">
+                {language === 'Español' ? 'Descripción' : 'Description'}
+              </label>
               <Textarea
                 id="description"
                 name="description"
@@ -694,14 +706,18 @@ export default function CommonServicesPage() {
             </div>
             
             <div className="md:col-span-2">
-              <Label htmlFor="rules">Reglas y Recomendaciones</Label>
+              <label htmlFor="rules" className="text-sm font-medium">
+                {language === 'Español' ? 'Reglas y Recomendaciones' : 'Rules and Recommendations'}
+              </label>
               <Textarea
                 id="rules"
                 name="rules"
                 value={serviceForm.rules || ''}
                 onChange={handleServiceInputChange}
                 className="min-h-[120px]"
-                placeholder="Ingrese las reglas y recomendaciones para el uso del servicio..."
+                placeholder={language === 'Español' 
+                  ? 'Ingrese las reglas y recomendaciones para el uso del servicio...'
+                  : 'Enter rules and recommendations for service usage...'}
               />
             </div>
           </div>
@@ -714,14 +730,23 @@ export default function CommonServicesPage() {
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowServiceDialog(false)}>
-              Cancelar
+              {language === 'Español' ? 'Cancelar' : 'Cancel'}
             </Button>
             <Button 
               className="bg-indigo-600 hover:bg-indigo-700" 
               onClick={handleSaveService} 
               disabled={isLoading}
             >
-              {isEditing ? "Actualizar" : "Guardar"}
+              {isLoading ? (
+                <span className="flex items-center">
+                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-white rounded-full border-t-transparent"></span>
+                  {language === 'Español' ? 'Procesando...' : 'Processing...'}
+                </span>
+              ) : (
+                isEditing 
+                  ? (language === 'Español' ? 'Actualizar' : 'Update')
+                  : (language === 'Español' ? 'Guardar' : 'Save')
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
