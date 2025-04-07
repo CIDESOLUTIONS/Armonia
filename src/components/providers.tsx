@@ -1,20 +1,18 @@
-// src/components/providers.tsx
 'use client';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { TranslationProvider } from '@/context/TranslationContext';
 import { ToastProvider } from '@/components/ui/use-toast';
 import { ReactNode } from 'react';
-
-interface ProvidersProps {
-  children: ReactNode;
-}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <ToastProvider>
-        {children}
-      </ToastProvider>
+      <TranslationProvider>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </TranslationProvider>
     </AuthProvider>
   );
 }

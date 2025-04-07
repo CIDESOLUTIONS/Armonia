@@ -49,3 +49,19 @@ model User {
 
 // Los siguientes modelos se usarán como referencia para crear 
 // las tablas en cada esquema de tenant de manera dinámica
+
+// Modelo para Project (Proyectos del conjunto)
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  budget      Float
+  startDate   DateTime
+  endDate     DateTime?
+  status      String    // 'PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'
+  progress    Float     // Porcentaje de progreso (0-100)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@schema("tenant")
+}
