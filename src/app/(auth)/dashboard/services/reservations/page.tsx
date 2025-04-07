@@ -164,12 +164,12 @@ export default function ReservationsPage() {
       }
       
       // Filtro por estado
-      if (statusFilter && reservation.status !== statusFilter) {
+      if (statusFilter && statusFilter !== "all" && reservation.status !== statusFilter) {
         return false;
       }
       
       // Filtro por servicio
-      if (serviceFilter !== "" && reservation.serviceId !== serviceFilter) {
+      if (serviceFilter !== "" && serviceFilter !== "all" && reservation.serviceId !== serviceFilter) {
         return false;
       }
       
@@ -411,7 +411,7 @@ export default function ReservationsPage() {
                   <SelectValue placeholder={language === 'Español' ? 'Estado' : 'Status'}>{statusFilter ? (statusFilter === 'pending' ? (language === 'Español' ? 'Pendiente' : 'Pending') : statusFilter === 'approved' ? (language === 'Español' ? 'Aprobada' : 'Approved') : statusFilter === 'rejected' ? (language === 'Español' ? 'Rechazada' : 'Rejected') : statusFilter === 'cancelled' ? (language === 'Español' ? 'Cancelada' : 'Cancelled') : '') : ''}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value="all">
                     {language === 'Español' ? 'Todos los estados' : 'All statuses'}
                   </SelectItem>
                   <SelectItem value="pending">
@@ -439,7 +439,7 @@ export default function ReservationsPage() {
                   <SelectValue placeholder={language === 'Español' ? 'Servicio' : 'Service'}>{serviceFilter !== '' ? services.find(s => s.id === serviceFilter)?.name || '' : ''}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value="all">
                     {language === 'Español' ? 'Todos los servicios' : 'All services'}
                   </SelectItem>
                   {services.map(service => (
@@ -488,8 +488,8 @@ export default function ReservationsPage() {
                   className="mt-4"
                   onClick={() => {
                     setSearchQuery("");
-                    setStatusFilter("");
-                    setServiceFilter("");
+                    setStatusFilter("all");
+                    setServiceFilter("all");
                     setDateFilter("");
                   }}
                 >
