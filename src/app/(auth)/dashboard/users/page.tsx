@@ -7,9 +7,10 @@ export default function UsersPage() {
   const router = useRouter();
   
   useEffect(() => {
-    // Redirigir a la página de registro de usuarios
+    // Redirigir a la página principal de usuarios
     router.push('/dashboard/users/registry');
   }, [router]);
   
+  // Devolvemos null porque la redirección se hará en el useEffect
   return null;
 }

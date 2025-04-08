@@ -318,7 +318,7 @@ export default function UsersRegistryPage() {
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesRole = roleFilter === '' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'all' || roleFilter === '' || user.role === roleFilter;
     
     return matchesSearch && matchesRole;
   });
@@ -373,10 +373,10 @@ export default function UsersRegistryPage() {
             <UserIcon className="h-4 w-4 text-gray-500" />
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder={t.allRoles} />
+                <SelectValue placeholder={t.allRoles || "All roles"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t.allRoles}</SelectItem>
+                <SelectItem value="all">{t.allRoles}</SelectItem>
                 <SelectItem value="ADMIN">{t.admin}</SelectItem>
                 <SelectItem value="MANAGER">{t.manager}</SelectItem>
                 <SelectItem value="STAFF">{t.staff}</SelectItem>
@@ -518,7 +518,7 @@ export default function UsersRegistryPage() {
                 <div className="grid grid-cols-1 gap-2">
                   <Label htmlFor="role">{t.role}</Label>
                   <Select value={formData.role} onValueChange={(v) => handleSelectChange('role', v)}>
-                    <SelectTrigger><SelectValue placeholder={t.selectRole} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t.selectRole || "Select role"} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ADMIN">{t.admin}</SelectItem>
                       <SelectItem value="MANAGER">{t.manager}</SelectItem>
@@ -531,7 +531,7 @@ export default function UsersRegistryPage() {
                 <div className="grid grid-cols-1 gap-2">
                   <Label htmlFor="status">{t.status}</Label>
                   <Select value={formData.status} onValueChange={(v) => handleSelectChange('status', v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t.status || "Status"} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ACTIVE">{t.active}</SelectItem>
                       <SelectItem value="INACTIVE">{t.inactive}</SelectItem>

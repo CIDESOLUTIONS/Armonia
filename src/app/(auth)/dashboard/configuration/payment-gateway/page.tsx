@@ -1,412 +1,691 @@
 "use client";
 
-import { useState } from 'react';
-import { useTranslation } from '@/context/TranslationContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
-import { Label } from '@/components/ui/label';
-import { CreditCard, Key, Building, Check, CreditCardIcon, KeyIcon, LockIcon, DatabaseIcon } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Save, CreditCard, Check, AlertTriangle, Key, Link, ChevronRight } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function PaymentGatewayConfigPage() {
-  const { language } = useTranslation();
+  const { token, complexId, schemaName } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('paymentez');
-
-  // Form states
-  const [paymentezSettings, setPaymentezSettings] = useState({
-    enabled: true,
-    clientKey: 'stk-0123456789abcdef0123456789abcdef',
-    clientSecret: 'xyz-0123456789abcdef0123456789abcdef',
-    environment: 'sandbox',
-  });
   
-  const [paystackSettings, setPaystackSettings] = useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("paymentGateways");
+  
+  // PayU integration
+  const [payuSettings, setPayuSettings] = useState({
     enabled: false,
-    apiKey: '',
-    secretKey: '',
-    environment: 'sandbox',
+    merchantId: "",
+    apiKey: "",
+    apiLogin: "",
+    accountId: "",
+    testMode: true,
+    supportedCurrencies: ["COP", "USD"],
+    autoConfirm: true
   });
   
-  const [epaycoSettings, setEpaycoSettings] = useState({
+  // Bancolombia integration
+  const [bancolombiaSettings, setBancolombiaSettings] = useState({
     enabled: false,
-    apiKey: '',
-    privateKey: '',
-    publicKey: '',
-    environment: 'sandbox',
+    clientId: "",
+    clientSecret: "",
+    redirectUri: "",
+    testMode: true
+  });
+  
+  // Nequi integration
+  const [nequiSettings, setNequiSettings] = useState({
+    enabled: false,
+    apiKey: "",
+    phoneNumber: "",
+    testMode: true
+  });
+  
+  // Stripe integration
+  const [stripeSettings, setStripeSettings] = useState({
+    enabled: false,
+    publicKey: "",
+    secretKey: "",
+    webhookSecret: "",
+    supportedCurrencies: ["USD", "EUR"],
+    testMode: true
   });
 
-  // Handle form submission
-  const handleSaveSettings = () => {
-    toast({
-      title: language === 'Español' ? 'Configuración guardada' : 'Settings saved',
-      description: language === 'Español' 
-        ? 'La configuración de la pasarela de pago ha sido actualizada' 
-        : 'Payment gateway configuration has been updated',
-      variant: 'default',
-    });
+  useEffect(() => {
+    // Simulación de carga de datos
+    setIsLoading(true);
+    setTimeout(() => {
+      // Datos simulados
+      setPayuSettings({
+        enabled: true,
+        merchantId: "508029",
+        apiKey: "****",
+        apiLogin: "****",
+        accountId: "512322",
+        testMode: true,
+        supportedCurrencies: ["COP", "USD"],
+        autoConfirm: true
+      });
+      
+      setIsLoading(false);
+    }, 1000);
+  }, []);
+
+  const handleInputChange = (provider: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    switch (provider) {
+      case 'payu':
+        setPayuSettings({ ...payuSettings, [name]: value });
+        break;
+      case 'bancolombia':
+        setBancolombiaSettings({ ...bancolombiaSettings, [name]: value });
+        break;
+      case 'nequi':
+        setNequiSettings({ ...nequiSettings, [name]: value });
+        break;
+      case 'stripe':
+        setStripeSettings({ ...stripeSettings, [name]: value });
+        break;
+    }
   };
 
-  // Paymentez form handler
-  const handlePaymentezChange = (field: string, value: any) => {
-    setPaymentezSettings(prev => ({ ...prev, [field]: value }));
+  const handleSwitchChange = (provider: string, field: string, checked: boolean) => {
+    switch (provider) {
+      case 'payu':
+        setPayuSettings({ ...payuSettings, [field]: checked });
+        break;
+      case 'bancolombia':
+        setBancolombiaSettings({ ...bancolombiaSettings, [field]: checked });
+        break;
+      case 'nequi':
+        setNequiSettings({ ...nequiSettings, [field]: checked });
+        break;
+      case 'stripe':
+        setStripeSettings({ ...stripeSettings, [field]: checked });
+        break;
+    }
   };
-  
-  // Paystack form handler
-  const handlePaystackChange = (field: string, value: any) => {
-    setPaystackSettings(prev => ({ ...prev, [field]: value }));
+
+  const handleSavePaymentSettings = () => {
+    setIsSaving(true);
+    
+    // Simulación de guardado
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({
+        title: "Configuración guardada",
+        description: "La configuración de pasarelas de pago ha sido actualizada correctamente",
+        variant: "default"
+      });
+    }, 1000);
   };
-  
-  // Epayco form handler
-  const handleEpaycoChange = (field: string, value: any) => {
-    setEpaycoSettings(prev => ({ ...prev, [field]: value }));
+
+  const handleTestConnection = (provider: string) => {
+    setIsLoading(true);
+    
+    // Simulación de prueba de conexión
+    setTimeout(() => {
+      setIsLoading(false);
+      
+      if (provider === 'payu' || provider === 'stripe') {
+        toast({
+          title: "Conexión exitosa",
+          description: `La conexión con ${provider === 'payu' ? 'PayU' : 'Stripe'} ha sido verificada correctamente`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Error de conexión",
+          description: `No se pudo establecer conexión con ${provider === 'bancolombia' ? 'Bancolombia' : 'Nequi'}. Verifique sus credenciales.`,
+          variant: "destructive"
+        });
+      }
+    }, 1500);
   };
+
+  if (isLoading && !payuSettings.merchantId) {
+    return (
+      <div className="p-6 flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <span className="ml-2 text-lg text-gray-700">Cargando configuración de pagos...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <DashboardPageHeader
-        title={language === 'Español' ? 'Configuración de Pasarela de Pago' : 'Payment Gateway Configuration'}
-        description={language === 'Español'
-          ? 'Configure los proveedores de pasarela de pago para recibir pagos en línea'
-          : 'Configure payment gateway providers to receive online payments'}
-      />
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Configuración de Pasarelas de Pago</h1>
+        <p className="text-gray-500">Configure las integraciones con pasarelas de pago para recaudos</p>
+      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-6">
-          <TabsTrigger value="paymentez" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            <span>Paymentez</span>
-          </TabsTrigger>
-          <TabsTrigger value="paystack" className="flex items-center gap-2">
-            <Building className="h-4 w-4" />
-            <span>Paystack</span>
-          </TabsTrigger>
-          <TabsTrigger value="epayco" className="flex items-center gap-2">
-            <Key className="h-4 w-4" />
-            <span>ePayco</span>
-          </TabsTrigger>
+      <Alert className="mb-6">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Los cambios en la configuración de pagos afectarán inmediatamente a los procesos de recaudo. 
+          Asegúrese de probar las integraciones antes de activarlas en producción.
+        </AlertDescription>
+      </Alert>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="paymentGateways">Pasarelas de Pago</TabsTrigger>
+          <TabsTrigger value="banks">Bancos</TabsTrigger>
+          <TabsTrigger value="wallets">Billeteras Digitales</TabsTrigger>
+          <TabsTrigger value="international">Pagos Internacionales</TabsTrigger>
         </TabsList>
-
-        {/* Paymentez Configuration */}
-        <TabsContent value="paymentez">
-          <Card>
+        
+        {/* Pasarelas de Pago */}
+        <TabsContent value="paymentGateways">
+          <Card className="mb-6">
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Paymentez</CardTitle>
-                  <CardDescription>
-                    {language === 'Español'
-                      ? 'Configure las credenciales de Paymentez'
-                      : 'Configure Paymentez credentials'}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={paymentezSettings.enabled}
-                    onCheckedChange={(checked) => handlePaymentezChange('enabled', checked)}
-                    id="paymentez-enabled"
-                  />
-                  <Label htmlFor="paymentez-enabled">
-                    {paymentezSettings.enabled
-                      ? (language === 'Español' ? 'Habilitado' : 'Enabled')
-                      : (language === 'Español' ? 'Deshabilitado' : 'Disabled')}
-                  </Label>
-                </div>
-              </div>
+              <CardTitle className="flex items-center">
+                PayU Latam
+              </CardTitle>
+              <CardDescription>
+                Integración con PayU para pagos con tarjetas de crédito, débito y otros medios en Latinoamérica
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentez-client-key">
-                      <KeyIcon className="h-4 w-4 inline mr-2" />
-                      {language === 'Español' ? 'Clave del Cliente' : 'Client Key'}
-                    </Label>
-                    <Input
-                      id="paymentez-client-key"
-                      value={paymentezSettings.clientKey}
-                      onChange={(e) => handlePaymentezChange('clientKey', e.target.value)}
-                      placeholder="stk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      disabled={!paymentezSettings.enabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentez-client-secret">
-                      <LockIcon className="h-4 w-4 inline mr-2" />
-                      {language === 'Español' ? 'Secreto del Cliente' : 'Client Secret'}
-                    </Label>
-                    <Input
-                      id="paymentez-client-secret"
-                      value={paymentezSettings.clientSecret}
-                      onChange={(e) => handlePaymentezChange('clientSecret', e.target.value)}
-                      placeholder="xyz-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      type="password"
-                      disabled={!paymentezSettings.enabled}
-                    />
-                  </div>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="payu-enabled" className="text-base font-medium">Habilitar PayU</Label>
+                  <p className="text-sm text-gray-500">Activar integración con PayU Latam</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="paymentez-environment">
-                    <DatabaseIcon className="h-4 w-4 inline mr-2" />
-                    {language === 'Español' ? 'Entorno' : 'Environment'}
-                  </Label>
-                  <Select
-                    value={paymentezSettings.environment}
-                    onValueChange={(value) => handlePaymentezChange('environment', value)}
-                    disabled={!paymentezSettings.enabled}
-                  >
-                    <SelectTrigger id="paymentez-environment">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sandbox">
-                        {language === 'Español' ? 'Sandbox (Pruebas)' : 'Sandbox (Testing)'}
-                      </SelectItem>
-                      <SelectItem value="production">
-                        {language === 'Español' ? 'Producción' : 'Production'}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {paymentezSettings.enabled && (
-                  <div className="mt-4 p-4 bg-slate-50 rounded-md">
-                    <h3 className="text-sm font-medium mb-2">
-                      {language === 'Español' ? 'Estado de la Conexión' : 'Connection Status'}
-                    </h3>
-                    <div className="flex items-center text-green-600">
-                      <Check className="h-5 w-5 mr-2" />
-                      <span>
-                        {language === 'Español'
-                          ? 'Conexión exitosa con Paymentez'
-                          : 'Successfully connected to Paymentez'}
-                      </span>
+                <Switch
+                  id="payu-enabled"
+                  checked={payuSettings.enabled}
+                  onCheckedChange={(checked) => handleSwitchChange('payu', 'enabled', checked)}
+                />
+              </div>
+              
+              {payuSettings.enabled && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <div>
+                      <Label htmlFor="merchantId">Merchant ID</Label>
+                      <div className="flex items-center mt-1.5">
+                        <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
+                        <Input
+                          id="merchantId"
+                          name="merchantId"
+                          value={payuSettings.merchantId}
+                          onChange={(e) => handleInputChange('payu', e)}
+                          placeholder="ID del comercio"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="apiKey">API Key</Label>
+                      <div className="flex items-center mt-1.5">
+                        <Key className="w-4 h-4 mr-2 text-gray-500" />
+                        <Input
+                          id="apiKey"
+                          name="apiKey"
+                          type="password"
+                          value={payuSettings.apiKey}
+                          onChange={(e) => handleInputChange('payu', e)}
+                          placeholder="Llave de API"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="apiLogin">API Login</Label>
+                      <Input
+                        id="apiLogin"
+                        name="apiLogin"
+                        value={payuSettings.apiLogin}
+                        onChange={(e) => handleInputChange('payu', e)}
+                        placeholder="Login de API"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="accountId">Account ID</Label>
+                      <Input
+                        id="accountId"
+                        name="accountId"
+                        value={payuSettings.accountId}
+                        onChange={(e) => handleInputChange('payu', e)}
+                        placeholder="ID de la cuenta"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="testMode"
+                        checked={payuSettings.testMode}
+                        onCheckedChange={(checked) => handleSwitchChange('payu', 'testMode', checked)}
+                      />
+                      <Label htmlFor="testMode">Modo de Pruebas</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="autoConfirm"
+                        checked={payuSettings.autoConfirm}
+                        onCheckedChange={(checked) => handleSwitchChange('payu', 'autoConfirm', checked)}
+                      />
+                      <Label htmlFor="autoConfirm">Confirmación Automática</Label>
                     </div>
                   </div>
-                )}
-              </div>
+                  
+                  <div className="border-t border-gray-200 pt-4">
+                    <Label className="text-base font-medium">URL de Confirmación</Label>
+                    <div className="mt-1.5 p-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-mono">
+                      https://armonia.com/api/payments/payu/confirmation
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Configure esta URL en su cuenta de PayU como URL de confirmación
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleTestConnection('payu')}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link className="mr-2 h-4 w-4" />
+                      )}
+                      Probar Conexión
+                    </Button>
+                    
+                    <Button
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      Configuración Avanzada
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={handleSaveSettings}
-                disabled={!paymentezSettings.enabled}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                {language === 'Español' ? 'Guardar Configuración' : 'Save Settings'}
-              </Button>
-            </CardFooter>
           </Card>
-        </TabsContent>
-
-        {/* Paystack Configuration */}
-        <TabsContent value="paystack">
+          
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Paystack</CardTitle>
-                  <CardDescription>
-                    {language === 'Español'
-                      ? 'Configure las credenciales de Paystack'
-                      : 'Configure Paystack credentials'}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={paystackSettings.enabled}
-                    onCheckedChange={(checked) => handlePaystackChange('enabled', checked)}
-                    id="paystack-enabled"
-                  />
-                  <Label htmlFor="paystack-enabled">
-                    {paystackSettings.enabled
-                      ? (language === 'Español' ? 'Habilitado' : 'Enabled')
-                      : (language === 'Español' ? 'Deshabilitado' : 'Disabled')}
-                  </Label>
-                </div>
-              </div>
+              <CardTitle className="flex items-center">
+                Stripe
+              </CardTitle>
+              <CardDescription>
+                Integración con Stripe para pagos con tarjetas internacionales
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="paystack-api-key">
-                      <KeyIcon className="h-4 w-4 inline mr-2" />
-                      {language === 'Español' ? 'Clave API' : 'API Key'}
-                    </Label>
-                    <Input
-                      id="paystack-api-key"
-                      value={paystackSettings.apiKey}
-                      onChange={(e) => handlePaystackChange('apiKey', e.target.value)}
-                      placeholder="pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      disabled={!paystackSettings.enabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="paystack-secret-key">
-                      <LockIcon className="h-4 w-4 inline mr-2" />
-                      {language === 'Español' ? 'Clave Secreta' : 'Secret Key'}
-                    </Label>
-                    <Input
-                      id="paystack-secret-key"
-                      value={paystackSettings.secretKey}
-                      onChange={(e) => handlePaystackChange('secretKey', e.target.value)}
-                      placeholder="sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      type="password"
-                      disabled={!paystackSettings.enabled}
-                    />
-                  </div>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="stripe-enabled" className="text-base font-medium">Habilitar Stripe</Label>
+                  <p className="text-sm text-gray-500">Activar integración con Stripe</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="paystack-environment">
-                    <DatabaseIcon className="h-4 w-4 inline mr-2" />
-                    {language === 'Español' ? 'Entorno' : 'Environment'}
-                  </Label>
-                  <Select
-                    value={paystackSettings.environment}
-                    onValueChange={(value) => handlePaystackChange('environment', value)}
-                    disabled={!paystackSettings.enabled}
-                  >
-                    <SelectTrigger id="paystack-environment">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sandbox">
-                        {language === 'Español' ? 'Sandbox (Pruebas)' : 'Sandbox (Testing)'}
-                      </SelectItem>
-                      <SelectItem value="production">
-                        {language === 'Español' ? 'Producción' : 'Production'}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Switch
+                  id="stripe-enabled"
+                  checked={stripeSettings.enabled}
+                  onCheckedChange={(checked) => handleSwitchChange('stripe', 'enabled', checked)}
+                />
               </div>
+              
+              {stripeSettings.enabled && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <div>
+                      <Label htmlFor="publicKey">Public Key</Label>
+                      <div className="flex items-center mt-1.5">
+                        <Key className="w-4 h-4 mr-2 text-gray-500" />
+                        <Input
+                          id="publicKey"
+                          name="publicKey"
+                          value={stripeSettings.publicKey}
+                          onChange={(e) => handleInputChange('stripe', e)}
+                          placeholder="Llave pública"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="secretKey">Secret Key</Label>
+                      <div className="flex items-center mt-1.5">
+                        <Key className="w-4 h-4 mr-2 text-gray-500" />
+                        <Input
+                          id="secretKey"
+                          name="secretKey"
+                          type="password"
+                          value={stripeSettings.secretKey}
+                          onChange={(e) => handleInputChange('stripe', e)}
+                          placeholder="Llave secreta"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="webhookSecret">Webhook Secret</Label>
+                      <Input
+                        id="webhookSecret"
+                        name="webhookSecret"
+                        type="password"
+                        value={stripeSettings.webhookSecret}
+                        onChange={(e) => handleInputChange('stripe', e)}
+                        placeholder="Secreto del webhook"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="stripeTestMode"
+                        checked={stripeSettings.testMode}
+                        onCheckedChange={(checked) => handleSwitchChange('stripe', 'testMode', checked)}
+                      />
+                      <Label htmlFor="stripeTestMode">Modo de Pruebas</Label>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-4">
+                    <Label className="text-base font-medium">URL de Webhook</Label>
+                    <div className="mt-1.5 p-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-mono">
+                      https://armonia.com/api/payments/stripe/webhook
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Configure esta URL en su cuenta de Stripe como endpoint para webhooks
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleTestConnection('stripe')}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link className="mr-2 h-4 w-4" />
+                      )}
+                      Probar Conexión
+                    </Button>
+                    
+                    <Button
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      Configuración Avanzada
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={handleSaveSettings}
-                disabled={!paystackSettings.enabled}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                {language === 'Español' ? 'Guardar Configuración' : 'Save Settings'}
-              </Button>
-            </CardFooter>
           </Card>
+          
+          <div className="mt-6 flex justify-end">
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={handleSavePaymentSettings}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar Configuración
+                </>
+              )}
+            </Button>
+          </div>
         </TabsContent>
-
-        {/* ePayco Configuration */}
-        <TabsContent value="epayco">
-          <Card>
+        
+        {/* Bancos */}
+        <TabsContent value="banks">
+          <Card className="mb-6">
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>ePayco</CardTitle>
-                  <CardDescription>
-                    {language === 'Español'
-                      ? 'Configure las credenciales de ePayco'
-                      : 'Configure ePayco credentials'}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={epaycoSettings.enabled}
-                    onCheckedChange={(checked) => handleEpaycoChange('enabled', checked)}
-                    id="epayco-enabled"
-                  />
-                  <Label htmlFor="epayco-enabled">
-                    {epaycoSettings.enabled
-                      ? (language === 'Español' ? 'Habilitado' : 'Enabled')
-                      : (language === 'Español' ? 'Deshabilitado' : 'Disabled')}
-                  </Label>
-                </div>
-              </div>
+              <CardTitle className="flex items-center">
+                Bancolombia
+              </CardTitle>
+              <CardDescription>
+                Integración con Bancolombia para pagos directos desde cuentas bancarias
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="epayco-api-key">
-                      <KeyIcon className="h-4 w-4 inline mr-2" />
-                      {language === 'Español' ? 'Clave API' : 'API Key'}
-                    </Label>
-                    <Input
-                      id="epayco-api-key"
-                      value={epaycoSettings.apiKey}
-                      onChange={(e) => handleEpaycoChange('apiKey', e.target.value)}
-                      placeholder="XXXXXXXXX"
-                      disabled={!epaycoSettings.enabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="epayco-public-key">
-                      <KeyIcon className="h-4 w-4 inline mr-2" />
-                      {language === 'Español' ? 'Clave Pública' : 'Public Key'}
-                    </Label>
-                    <Input
-                      id="epayco-public-key"
-                      value={epaycoSettings.publicKey}
-                      onChange={(e) => handleEpaycoChange('publicKey', e.target.value)}
-                      placeholder="XXXXXXXXX"
-                      disabled={!epaycoSettings.enabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="epayco-private-key">
-                      <LockIcon className="h-4 w-4 inline mr-2" />
-                      {language === 'Español' ? 'Clave Privada' : 'Private Key'}
-                    </Label>
-                    <Input
-                      id="epayco-private-key"
-                      value={epaycoSettings.privateKey}
-                      onChange={(e) => handleEpaycoChange('privateKey', e.target.value)}
-                      placeholder="XXXXXXXXX"
-                      type="password"
-                      disabled={!epaycoSettings.enabled}
-                    />
-                  </div>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="bancolombia-enabled" className="text-base font-medium">Habilitar Bancolombia</Label>
+                  <p className="text-sm text-gray-500">Activar integración con Bancolombia</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="epayco-environment">
-                    <DatabaseIcon className="h-4 w-4 inline mr-2" />
-                    {language === 'Español' ? 'Entorno' : 'Environment'}
-                  </Label>
-                  <Select
-                    value={epaycoSettings.environment}
-                    onValueChange={(value) => handleEpaycoChange('environment', value)}
-                    disabled={!epaycoSettings.enabled}
-                  >
-                    <SelectTrigger id="epayco-environment">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sandbox">
-                        {language === 'Español' ? 'Sandbox (Pruebas)' : 'Sandbox (Testing)'}
-                      </SelectItem>
-                      <SelectItem value="production">
-                        {language === 'Español' ? 'Producción' : 'Production'}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Switch
+                  id="bancolombia-enabled"
+                  checked={bancolombiaSettings.enabled}
+                  onCheckedChange={(checked) => handleSwitchChange('bancolombia', 'enabled', checked)}
+                />
               </div>
+              
+              {bancolombiaSettings.enabled && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <div>
+                      <Label htmlFor="clientId">Client ID</Label>
+                      <div className="flex items-center mt-1.5">
+                        <Key className="w-4 h-4 mr-2 text-gray-500" />
+                        <Input
+                          id="clientId"
+                          name="clientId"
+                          value={bancolombiaSettings.clientId}
+                          onChange={(e) => handleInputChange('bancolombia', e)}
+                          placeholder="ID del cliente"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="clientSecret">Client Secret</Label>
+                      <div className="flex items-center mt-1.5">
+                        <Key className="w-4 h-4 mr-2 text-gray-500" />
+                        <Input
+                          id="clientSecret"
+                          name="clientSecret"
+                          type="password"
+                          value={bancolombiaSettings.clientSecret}
+                          onChange={(e) => handleInputChange('bancolombia', e)}
+                          placeholder="Secreto del cliente"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="redirectUri">URI de Redirección</Label>
+                      <Input
+                        id="redirectUri"
+                        name="redirectUri"
+                        value={bancolombiaSettings.redirectUri}
+                        onChange={(e) => handleInputChange('bancolombia', e)}
+                        placeholder="https://armonia.com/api/payments/bancolombia/callback"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="bancolombiaTestMode"
+                        checked={bancolombiaSettings.testMode}
+                        onCheckedChange={(checked) => handleSwitchChange('bancolombia', 'testMode', checked)}
+                      />
+                      <Label htmlFor="bancolombiaTestMode">Modo de Pruebas</Label>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleTestConnection('bancolombia')}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link className="mr-2 h-4 w-4" />
+                      )}
+                      Probar Conexión
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={handleSaveSettings}
-                disabled={!epaycoSettings.enabled}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                {language === 'Español' ? 'Guardar Configuración' : 'Save Settings'}
-              </Button>
-            </CardFooter>
           </Card>
+          
+          <div className="mt-6 flex justify-end">
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={handleSavePaymentSettings}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar Configuración
+                </>
+              )}
+            </Button>
+          </div>
+        </TabsContent>
+        
+        {/* Billeteras Digitales */}
+        <TabsContent value="wallets">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                Nequi
+              </CardTitle>
+              <CardDescription>
+                Integración con Nequi para pagos desde la billetera digital
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="nequi-enabled" className="text-base font-medium">Habilitar Nequi</Label>
+                  <p className="text-sm text-gray-500">Activar integración con Nequi</p>
+                </div>
+                <Switch
+                  id="nequi-enabled"
+                  checked={nequiSettings.enabled}
+                  onCheckedChange={(checked) => handleSwitchChange('nequi', 'enabled', checked)}
+                />
+              </div>
+              
+              {nequiSettings.enabled && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                    <div>
+                      <Label htmlFor="apiKey">API Key</Label>
+                      <div className="flex items-center mt-1.5">
+                        <Key className="w-4 h-4 mr-2 text-gray-500" />
+                        <Input
+                          id="apiKey"
+                          name="apiKey"
+                          type="password"
+                          value={nequiSettings.apiKey}
+                          onChange={(e) => handleInputChange('nequi', e)}
+                          placeholder="Llave de API"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="phoneNumber">Número de Teléfono</Label>
+                      <Input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        value={nequiSettings.phoneNumber}
+                        onChange={(e) => handleInputChange('nequi', e)}
+                        placeholder="Número de teléfono asociado"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="nequiTestMode"
+                        checked={nequiSettings.testMode}
+                        onCheckedChange={(checked) => handleSwitchChange('nequi', 'testMode', checked)}
+                      />
+                      <Label htmlFor="nequiTestMode">Modo de Pruebas</Label>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleTestConnection('nequi')}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link className="mr-2 h-4 w-4" />
+                      )}
+                      Probar Conexión
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+          
+          <div className="mt-6 flex justify-end">
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={handleSavePaymentSettings}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar Configuración
+                </>
+              )}
+            </Button>
+          </div>
+        </TabsContent>
+        
+        {/* Pagos Internacionales */}
+        <TabsContent value="international">
+          <div className="bg-gray-50 rounded-lg p-8 text-center">
+            <CreditCard className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-lg font-medium text-gray-900">Configuración de Pagos Internacionales</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              La configuración de pagos internacionales está disponible en el plan Premium.
+              Contacte con soporte para habilitar esta funcionalidad.
+            </p>
+            <div className="mt-6">
+              <Button variant="outline">
+                Contactar Soporte
+              </Button>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
