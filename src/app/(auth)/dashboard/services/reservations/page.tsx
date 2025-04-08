@@ -44,8 +44,8 @@ export default function ReservationsPage() {
   
   // Filtros
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [serviceFilter, setServiceFilter] = useState<number | "">("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState("");
   
   // Estado del diálogo
@@ -140,7 +140,7 @@ export default function ReservationsPage() {
         description: language === 'Español' 
           ? 'Mostrando datos de ejemplo' 
           : 'Showing sample data',
-        variant: 'warning',
+        variant: 'default',
       });
     } catch (error) {
       console.error("Error al cargar datos:", error);
@@ -169,7 +169,7 @@ export default function ReservationsPage() {
       }
       
       // Filtro por servicio
-      if (serviceFilter !== "" && serviceFilter !== "all" && reservation.serviceId !== serviceFilter) {
+      if (serviceFilter !== "all" && reservation.serviceId.toString() !== serviceFilter) {
         return false;
       }
       
@@ -408,7 +408,7 @@ export default function ReservationsPage() {
                 onValueChange={setStatusFilter}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={language === 'Español' ? 'Estado' : 'Status'}>{statusFilter ? (statusFilter === 'pending' ? (language === 'Español' ? 'Pendiente' : 'Pending') : statusFilter === 'approved' ? (language === 'Español' ? 'Aprobada' : 'Approved') : statusFilter === 'rejected' ? (language === 'Español' ? 'Rechazada' : 'Rejected') : statusFilter === 'cancelled' ? (language === 'Español' ? 'Cancelada' : 'Cancelled') : '') : ''}</SelectValue>
+                  <SelectValue placeholder={language === 'Español' ? 'Estado' : 'Status'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
@@ -432,11 +432,11 @@ export default function ReservationsPage() {
             
             <div>
               <Select
-                value={typeof serviceFilter === 'number' ? serviceFilter.toString() : ""}
-                onValueChange={(value) => setServiceFilter(value === "" ? "" : parseInt(value))}
+                value={serviceFilter}
+                onValueChange={setServiceFilter}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={language === 'Español' ? 'Servicio' : 'Service'}>{serviceFilter !== '' ? services.find(s => s.id === serviceFilter)?.name || '' : ''}</SelectValue>
+                  <SelectValue placeholder={language === 'Español' ? 'Servicio' : 'Service'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
@@ -482,7 +482,7 @@ export default function ReservationsPage() {
                   ? 'No se encontraron reservas con los criterios actuales' 
                   : 'No reservations found with the current criteria'}
               </p>
-              {(searchQuery || statusFilter || serviceFilter || dateFilter) && (
+              {(searchQuery || statusFilter !== "all" || serviceFilter !== "all" || dateFilter) && (
                 <Button
                   variant="outline"
                   className="mt-4"
@@ -629,11 +629,11 @@ export default function ReservationsPage() {
                 {language === 'Español' ? 'Servicio *' : 'Service *'}
               </label>
               <Select
-                value={formData.serviceId?.toString() || ""}
+                value={formData.serviceId ? formData.serviceId.toString() : ""}
                 onValueChange={(value) => handleSelectChange("serviceId", value)}
               >
                 <SelectTrigger id="serviceId">
-                  <SelectValue placeholder={language === 'Español' ? 'Seleccionar servicio' : 'Select service'}>{formData.serviceId ? services.find(s => s.id === formData.serviceId)?.name || '' : ''}</SelectValue>
+                  <SelectValue placeholder={language === 'Español' ? 'Seleccionar servicio' : 'Select service'} />
                 </SelectTrigger>
                 <SelectContent>
                   {services.map(service => (
@@ -699,7 +699,7 @@ export default function ReservationsPage() {
                   onValueChange={(value) => handleSelectChange("status", value)}
                 >
                   <SelectTrigger id="status">
-                    <SelectValue placeholder={language === 'Español' ? 'Estado' : 'Status'}>{formData.status ? (formData.status === 'pending' ? (language === 'Español' ? 'Pendiente' : 'Pending') : formData.status === 'approved' ? (language === 'Español' ? 'Aprobada' : 'Approved') : formData.status === 'rejected' ? (language === 'Español' ? 'Rechazada' : 'Rejected') : formData.status === 'cancelled' ? (language === 'Español' ? 'Cancelada' : 'Cancelled') : '') : ''}</SelectValue>
+                    <SelectValue placeholder={language === 'Español' ? 'Estado' : 'Status'} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">
