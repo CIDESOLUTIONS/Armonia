@@ -116,10 +116,10 @@ export default function Sidebar({
       icon: <Shield className="w-6 h-6" />,
       label: language === "Español" ? "Usuarios" : "Users",
       subitems: [
-        { label: language === "Español" ? "Registro de Usuarios" : "User Registry", path: "/dashboard/users/registry" },
-        { label: language === "Español" ? "Recepcionistas" : "Reception Staff", path: "/dashboard/users/reception" },
-        { label: language === "Español" ? "Vigilantes" : "Security Staff", path: "/dashboard/users/security" },
-        { label: language === "Español" ? "Servicios Generales" : "Maintenance Staff", path: "/dashboard/users/staff" },
+        { label: language === "Español" ? "Administradores" : "Administrators", path: "/dashboard/users/administrators" },
+        { label: language === "Español" ? "Recepcionistas" : "Receptionists", path: "/dashboard/users/receptionists" },
+        { label: language === "Español" ? "Vigilantes" : "Guards", path: "/dashboard/users/guards" },
+        { label: language === "Español" ? "Servicios Generales" : "General Services", path: "/dashboard/users/general-services" },
       ],
     },
     {
@@ -135,7 +135,7 @@ export default function Sidebar({
       label: language === "Español" ? "Configuraciones" : "Settings",
       subitems: [
         { label: language === "Español" ? "General" : "General", path: "/dashboard/configuration" },
-        { label: language === "Español" ? "APIs de Pagos" : "Payment APIs", path: "/dashboard/configuration/payment-gateway" },
+        { label: language === "Español" ? "APIs de Pagos" : "Payment APIs", path: "/dashboard/configuration/payments" },
         { label: language === "Español" ? "WhatsApp" : "WhatsApp", path: "/dashboard/configuration/whatsapp" },
         { label: language === "Español" ? "Cámaras" : "Cameras", path: "/dashboard/configuration/cameras" },
       ],
@@ -153,7 +153,7 @@ export default function Sidebar({
       isCollapsed ? "w-16" : "w-64"
     }`}>
       <div className="p-4 flex justify-between items-center">
-        {!isCollapsed && <span className="text-xl font-bold">Funcionalidades</span>}
+        {!isCollapsed && <span className="text-xl font-bold">Armonía</span>}
         <Button
           variant="ghost"
           size="icon"
