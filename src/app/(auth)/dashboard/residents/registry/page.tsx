@@ -279,12 +279,12 @@ export default function ResidentsRegistryPage() {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <HomeIcon className="h-4 w-4 text-gray-500" />
-            <Select value={selectedPropertyId || ''} onValueChange={(value) => setSelectedPropertyId(value || null)}>
+            <Select value={selectedPropertyId || 'all'} onValueChange={(value) => setSelectedPropertyId(value === 'all' ? null : value)}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder={t.allProperties} />
+                <SelectValue placeholder={t.allProperties || 'All properties'} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t.allProperties}</SelectItem>
+                <SelectItem value="all">{t.allProperties || 'All properties'}</SelectItem>
                 {properties.map((property) => (
                   <SelectItem key={property.id} value={property.id}>
                     {property.unitCode} - {property.address}
@@ -401,7 +401,7 @@ export default function ResidentsRegistryPage() {
               <div className="grid grid-cols-1 gap-2">
                 <Label htmlFor="propertyId">{t.property}</Label>
                 <Select value={formData.propertyId} onValueChange={(v) => handleSelectChange('propertyId', v)}>
-                  <SelectTrigger><SelectValue placeholder={t.selectProperty} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t.selectProperty || 'Select property'} /></SelectTrigger>
                   <SelectContent>
                     {properties.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.unitCode} - {p.address}</SelectItem>
@@ -436,7 +436,7 @@ export default function ResidentsRegistryPage() {
                 <div className="grid grid-cols-1 gap-2">
                   <Label htmlFor="documentType">{t.documentType}</Label>
                   <Select value={formData.documentType} onValueChange={(v) => handleSelectChange('documentType', v)}>
-                    <SelectTrigger><SelectValue placeholder={t.selectType} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t.selectType || 'Select'} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ID">{t.idCard}</SelectItem>
                       <SelectItem value="PASSPORT">{t.passport}</SelectItem>
@@ -472,14 +472,17 @@ export default function ResidentsRegistryPage() {
                 <div className="grid grid-cols-1 gap-2">
                   <Label htmlFor="relationship">{t.relationship}</Label>
                   <Select value={formData.relationship} onValueChange={(v) => handleSelectChange('relationship', v)} disabled={formData.isOwner}>
-                    <SelectTrigger><SelectValue placeholder={t.selectType} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t.selectType || 'Select type'} /></SelectTrigger>
                     <SelectContent>
-                      {formData.isOwner && <SelectItem value="OWNER">{t.owner}</SelectItem>}
-                      {!formData.isOwner && (<>
-                        <SelectItem value="FAMILY">{t.family}</SelectItem>
-                        <SelectItem value="TENANT">{t.tenant}</SelectItem>
-                        <SelectItem value="OTHER">{t.other}</SelectItem>
-                      </>)}
+                      {formData.isOwner ? (
+                        <SelectItem value="OWNER">{t.owner}</SelectItem>
+                      ) : (
+                        <>
+                          <SelectItem value="FAMILY">{t.family}</SelectItem>
+                          <SelectItem value="TENANT">{t.tenant}</SelectItem>
+                          <SelectItem value="OTHER">{t.other}</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -488,7 +491,7 @@ export default function ResidentsRegistryPage() {
               <div className="grid grid-cols-1 gap-2">
                 <Label htmlFor="status">{t.status}</Label>
                 <Select value={formData.status} onValueChange={(v) => handleSelectChange('status', v)}>
-                  <SelectTrigger><SelectValue placeholder={t.selectType} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t.selectType || 'Select status'} /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ACTIVE">{t.active}</SelectItem>
                     <SelectItem value="INACTIVE">{t.inactive}</SelectItem>
