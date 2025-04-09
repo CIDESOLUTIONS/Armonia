@@ -13,22 +13,28 @@ $DbPort = ($envContent | Select-String "DB_PORT=(.*)").Matches.Groups[1].Value
 
 $Env:PGPASSWORD = $DbPassword
 
+# Rutas absolutas a los scripts SQL
+$scriptPath = "C:\Users\meciz\Documents\armonia"
+$initScript = Join-Path $scriptPath "db_initialize.sql"
+$dataScript1 = Join-Path $scriptPath "db_test_data.sql"
+$dataScript2 = Join-Path $scriptPath "db_test_data_part2.sql"
+
 Write-Host "Actualizando información de los conjuntos residenciales..." -ForegroundColor Cyan
-psql -h $DbHost -U $DbUser -d $DbName -f "C:\Users\meciz\Documents\armonia\db_initialize.sql"
+psql -h $DbHost -U $DbUser -d $DbName -f $initScript
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error al ejecutar el script de inicialización: $LASTEXITCODE" -ForegroundColor Red
     exit 1
 }
 
 Write-Host "Insertando datos de prueba (parte 1)..." -ForegroundColor Cyan
-psql -h $DbHost -U $DbUser -d $DbName -f "C:\Users\meciz\Documents\armonia\db_test_data.sql"
+psql -h $DbHost -U $DbUser -d $DbName -f $dataScript1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error al ejecutar el script de datos de prueba (parte 1): $LASTEXITCODE" -ForegroundColor Red
     exit 1
 }
 
 Write-Host "Insertando datos de prueba (parte 2)..." -ForegroundColor Cyan
-psql -h $DbHost -U $DbUser -d $DbName -f "C:\Users\meciz\Documents\armonia\db_test_data_part2.sql"
+psql -h $DbHost -U $DbUser -d $DbName -f $dataScript2
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error al ejecutar el script de datos de prueba (parte 2): $LASTEXITCODE" -ForegroundColor Red
     exit 1
