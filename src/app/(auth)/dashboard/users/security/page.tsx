@@ -32,7 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 // Tipos para los datos de personal de seguridad
 interface SecurityStaff {

@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 
 // Importar componentes y tipos

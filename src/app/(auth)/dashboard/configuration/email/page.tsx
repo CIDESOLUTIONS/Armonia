@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { MailCheck, Send, FileText, MailPlus } from "lucide-react";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 export default function EmailSettingsPage() {
   // Estado para la configuración del servidor de correo

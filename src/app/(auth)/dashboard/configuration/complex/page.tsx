@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Building, MapPin, Phone, Calendar, Upload, CircleDollarSign } from "lucide-react";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 export default function ComplexConfigurationPage() {
   // Estado para información básica del conjunto
