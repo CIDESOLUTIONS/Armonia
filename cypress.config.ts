@@ -3,7 +3,7 @@ import { defineConfig } from 'cypress';
 export default defineConfig({
   e2e: {
     // Ajusta `baseUrl` a la URL HTTPS de tu frontend
-    baseUrl: 'https://localhost:3000', // Si tu frontend usa este puerto con HTTPS
+    baseUrl: 'http://localhost:3000', // Si tu frontend usa este puerto con HTTPS
     viewportWidth: 1280,
     viewportHeight: 720,
     supportFile: 'cypress/support/e2e.ts',
