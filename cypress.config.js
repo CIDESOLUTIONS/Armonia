@@ -6,7 +6,7 @@ module.exports = defineConfig({
     baseUrl: 'http://localhost:3000',
     viewportWidth: 1280,
     viewportHeight: 720,
-    supportFile: 'cypress/support/e2e.js',
+    supportFile: false, // Desactivamos completamente el supportFile
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     video: false,
     chromeWebSecurity: false, // Desactiva la seguridad web de Chrome para pruebas CORS
