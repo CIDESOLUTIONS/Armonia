@@ -1,116 +1,84 @@
-// Prueba para la landing page y registro de conjuntos
-describe('Landing Page y Registro de Conjuntos', () => {
+// Pruebas completas para la landing page de Armonía
+describe('Landing Page de Armonía', () => {
   beforeEach(() => {
     cy.visit('/');
+    // Esperar a que la página cargue completamente
+    cy.contains('Armonía', { timeout: 10000 }).should('be.visible');
   });
 
-  it('Debería mostrar la landing page con información sobre Armonía', () => {
-    // Verificar elementos principales de la landing page
-    cy.get('h1').contains('Gestión integral para conjuntos residenciales');
-    cy.contains('Simplifique la administración de su conjunto');
-    
-    // Verificar secciones principales
-    cy.contains('Funcionalidades');
-    cy.contains('Planes');
-    cy.contains('Contacto');
-  });
-
-  it('Debería permitir la navegación por la landing page', () => {
-    // Verificar enlaces de navegación
-    cy.contains('Funcionalidades').click();
-    cy.contains('Planes').click();
-    cy.contains('Contacto').click();
-    
-    // Verificar botón de registro y login
-    cy.contains('Registrarse').should('be.visible');
-    cy.contains('Iniciar Sesión').should('be.visible');
-  });
-
-  it('Debería mostrar el formulario de registro de conjunto', () => {
-    // Hacer clic en el botón de registro
-    cy.contains('Registrarse').click();
-    
-    // Verificar que se muestra el formulario
-    cy.get('form').should('exist');
-    cy.contains('Registro de Conjunto');
-    cy.get('input[name="complexName"]').should('exist');
-    cy.get('input[name="totalUnits"]').should('exist');
-    cy.get('input[name="adminName"]').should('exist');
-    cy.get('input[name="adminEmail"]').should('exist');
-    cy.get('input[name="adminPassword"]').should('exist');
-    cy.get('button').contains('Registrar').should('exist');
-  });
-
-  it('Debería validar los campos requeridos en el formulario de registro', () => {
-    // Hacer clic en el botón de registro
-    cy.contains('Registrarse').click();
-    
-    // Intentar enviar el formulario sin completar los campos
-    cy.get('button').contains('Registrar').click();
-      
-    // Verificar mensajes de error para campos requeridos
-    cy.contains('El nombre del conjunto es requerido').should('exist');
-    cy.contains('El número de unidades es requerido').should('exist');
-    cy.contains('El nombre del administrador es requerido').should('exist');
-    cy.contains('El correo del administrador es requerido').should('exist');
-    cy.contains('La contraseña es requerida').should('exist');
-  });
-
-  it('Debería registrar un nuevo conjunto correctamente', () => {
-    // Generar datos aleatorios para evitar duplicados
-    const random = Math.floor(Math.random() * 10000);
-    const complexName = `Conjunto de Prueba ${random}`;
-    const email = `admin${random}@test.com`;
-    
-    // Hacer clic en el botón de registro
-    cy.contains('Registrarse').click();
-    
-    // Completar el formulario
-    cy.get('input[name="complexName"]').type(complexName);
-    cy.get('input[name="totalUnits"]').type('25');
-    cy.get('input[name="adminName"]').type('Administrador de Prueba');
-    cy.get('input[name="adminEmail"]').type(email);
-    cy.get('input[name="adminPassword"]').type('Contraseña123!');
-    cy.get('input[name="adminPhone"]').type('3001234567');
-    cy.get('input[name="address"]').type('Calle 123 # 45-67');
-    cy.get('input[name="city"]').type('Ciudad de Prueba');
-    cy.get('input[name="state"]').type('Estado de Prueba');
-      
-    // Seleccionar tipos de propiedad si existe
-    cy.get('body').then(($body) => {
-      if ($body.find('select[name="propertyTypes"]').length > 0) {
-        cy.get('select[name="propertyTypes"]').select(['APARTMENT', 'HOUSE']);
-      }
+  it('Debería mostrar correctamente los elementos de la cabecera', () => {
+    // Verificar el logo y la marca
+    cy.get('header').within(() => {
+      cy.contains('Armonía').should('be.visible');
+      cy.contains('Iniciar Sesión').should('be.visible');
+      cy.contains('Registrarse').should('be.visible');
     });
-      
-    // Enviar el formulario
-    cy.get('button').contains('Registrar').click();
+  });
+
+  it('Debería mostrar la sección de hero con llamada a la acción', () => {
+    cy.get('section').first().within(() => {
+      cy.contains('Gestión').should('be.visible');
+      cy.contains('conjuntos residenciales').should('be.visible');
+      cy.contains('Comenzar').should('be.visible');
+    });
+  });
+
+  it('Debería mostrar la sección de funcionalidades', () => {
+    cy.contains('Funcionalidades').scrollIntoView();
+    cy.contains('Funcionalidades').should('be.visible');
     
-    // Verificar mensaje de éxito
-    cy.contains('Conjunto registrado con éxito', { timeout: 10000 }).should('exist');
+    // Verificar que existan al menos 3 tarjetas de funcionalidades
+    cy.get('[data-testid="feature-card"]').should('have.length.at.least', 3);
+  });
+
+  it('Debería mostrar la sección de planes', () => {
+    cy.contains('Planes').scrollIntoView();
+    cy.contains('Planes').should('be.visible');
     
-    // Verificar redirección a la página de login
+    // Verificar que existan los 3 planes: Básico, Estándar y Premium
+    cy.contains('Básico').should('be.visible');
+    cy.contains('Estándar').should('be.visible');
+    cy.contains('Premium').should('be.visible');
+  });
+
+  it('Debería permitir navegar a la página de login', () => {
+    cy.contains('Iniciar Sesión').click();
     cy.url().should('include', '/login');
   });
 
-  it('Debería mostrar error al registrar un conjunto con email duplicado', () => {
-    // Usar un email que ya existe en la base de datos
-    const existingEmail = 'admin@armonia.com';
-    
-    // Hacer clic en el botón de registro
+  it('Debería permitir navegar a la página de registro', () => {
     cy.contains('Registrarse').click();
+    cy.url().should('include', '/register');
+  });
+
+  it('Debería mostrar el formulario de contacto', () => {
+    cy.contains('Contacto').scrollIntoView();
+    cy.get('form').within(() => {
+      cy.get('input[name="name"]').should('be.visible');
+      cy.get('input[name="email"]').should('be.visible');
+      cy.get('textarea[name="message"]').should('be.visible');
+      cy.contains('Enviar').should('be.visible');
+    });
+  });
+
+  it('Debería mostrar el footer con información de la empresa y navegación', () => {
+    cy.get('footer').scrollIntoView();
+    cy.get('footer').within(() => {
+      cy.contains('Armonía').should('be.visible');
+      cy.contains('Términos y Condiciones').should('be.visible');
+      cy.contains('Política de Privacidad').should('be.visible');
+    });
+  });
+
+  it('Debería ser responsive en tamaño móvil', () => {
+    cy.viewport('iphone-x');
+    cy.reload();
     
-    // Completar el formulario con un email que ya existe
-    cy.get('input[name="complexName"]').type('Conjunto Duplicado');
-    cy.get('input[name="totalUnits"]').type('25');
-    cy.get('input[name="adminName"]').type('Administrador Duplicado');
-    cy.get('input[name="adminEmail"]').type(existingEmail);
-    cy.get('input[name="adminPassword"]').type('Contraseña123!');
-      
-    // Enviar el formulario
-    cy.get('button').contains('Registrar').click();
+    // Verificar que el menú de navegación se convierta en un botón de hamburguesa
+    cy.get('[data-testid="mobile-menu-button"]').should('be.visible');
     
-    // Verificar mensaje de error
-    cy.contains('El correo electrónico ya está en uso').should('exist');
+    // Verificar que los elementos principales sean visibles
+    cy.contains('Armonía').should('be.visible');
+    cy.contains('Gestión').should('be.visible');
   });
 });

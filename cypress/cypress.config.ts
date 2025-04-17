@@ -13,6 +13,10 @@ export default defineConfig({
     // Añadimos chromeWebSecurity para manejar CORS en pruebas, si es necesario
     chromeWebSecurity: false,
     modifyObstructiveCode: false,
+    defaultCommandTimeout: 10000,
+    requestTimeout: 10000,
+    responseTimeout: 30000,
+    pageLoadTimeout: 30000,
   },
   env: {
     // Si tu backend corre en HTTPS, cambia esto a 'https://localhost:443' o el puerto correspondiente

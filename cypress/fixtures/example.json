@@ -1,38 +1,183 @@
-// C:\Users\meciz\Documents\armonia\frontend\cypress\fixtures\example.json
 {
-    "testUser": {
-      "email": "admin@test.com",
-      "password": "password123"
+  "users": {
+    "admin": {
+      "email": "admin@armonia.com",
+      "password": "Admin123!",
+      "name": "Administrador Principal",
+      "role": "ADMIN"
     },
-    "residentUser": {
-      "email": "resident@test.com",
-      "password": "password123"
+    "resident": {
+      "email": "resident@armonia.com",
+      "password": "Resident123!",
+      "name": "Residente Principal",
+      "role": "RESIDENT"
     },
-    "testUnit": {
+    "reception": {
+      "email": "reception@armonia.com",
+      "password": "Reception123!",
+      "name": "Recepcionista Principal",
+      "role": "RECEPTION"
+    }
+  },
+  "residentialComplexes": [
+    {
+      "name": "Conjunto Villa del Sol",
+      "unitsCount": 8,
+      "unitType": "house",
+      "id": "complex1"
+    },
+    {
+      "name": "Conjunto Los Pinos",
+      "unitsCount": 10,
+      "unitType": "house",
+      "id": "complex2"
+    },
+    {
+      "name": "Edificio Horizonte",
+      "unitsCount": 12,
+      "unitType": "apartment",
+      "id": "complex3"
+    }
+  ],
+  "units": {
+    "house": {
+      "number": "101",
+      "type": "house",
+      "area": 120
+    },
+    "apartment": {
       "number": "101",
       "type": "apartment",
       "area": 75
+    }
+  },
+  "residents": {
+    "adult": {
+      "name": "Juan Pérez",
+      "identification": "1234567890",
+      "email": "juan@example.com",
+      "age": 35
     },
-    "testRequest": {
-      "type": "petition",
-      "subject": "Mantenimiento",
-      "description": "Se requiere mantenimiento en área común",
-      "priority": "medium"
+    "child": {
+      "name": "Ana Pérez",
+      "identification": "0987654321",
+      "age": 10
+    }
+  },
+  "pets": {
+    "dog": {
+      "name": "Rocky",
+      "type": "Perro",
+      "breed": "Labrador",
+      "color": "Dorado"
     },
-    "testAssembly": {
+    "cat": {
+      "name": "Luna",
+      "type": "Gato",
+      "breed": "Siamés",
+      "color": "Blanco y gris"
+    }
+  },
+  "vehicles": {
+    "car": {
+      "plate": "ABC123",
+      "brand": "Toyota",
+      "model": "Corolla",
+      "color": "Azul"
+    },
+    "motorcycle": {
+      "plate": "XYZ789",
+      "brand": "Honda",
+      "model": "CBR",
+      "color": "Rojo"
+    }
+  },
+  "commonAreas": [
+    {
+      "name": "Salón Comunal",
+      "capacity": 50,
+      "pricePerHour": 2,
+      "startTime": "08:00",
+      "endTime": "22:00"
+    },
+    {
+      "name": "Piscina",
+      "capacity": 30,
+      "pricePerHour": 2,
+      "startTime": "09:00",
+      "endTime": "20:00"
+    },
+    {
+      "name": "Cancha de Tenis",
+      "capacity": 4,
+      "pricePerHour": 2,
+      "startTime": "07:00",
+      "endTime": "22:00"
+    },
+    {
+      "name": "Zona BBQ",
+      "capacity": 10,
+      "pricePerHour": 2,
+      "startTime": "10:00",
+      "endTime": "22:00"
+    }
+  ],
+  "assemblies": [
+    {
       "title": "Asamblea Ordinaria 2025",
       "type": "ordinary",
       "date": "2025-03-15",
       "time": "10:00",
-      "description": "Asamblea ordinaria anual",
+      "description": "Asamblea ordinaria anual para aprobar presupuesto y discutir temas generales.",
       "quorum": 51
     },
-    "testService": {
-      "name": "Salón Comunal",
-      "capacity": 50,
-      "startTime": "08:00",
-      "endTime": "22:00",
-      "description": "Salón para eventos sociales",
-      "rules": "Máximo 50 personas, reserva previa requerida"
+    {
+      "title": "Asamblea Extraordinaria - Proyecto Cancha de Pádel",
+      "type": "extraordinary",
+      "date": "2025-05-20",
+      "time": "19:00",
+      "description": "Asamblea extraordinaria para aprobar construcción de cancha de pádel.",
+      "quorum": 70
+    },
+    {
+      "title": "Asamblea Extraordinaria - Pintura Fachadas",
+      "type": "extraordinary",
+      "date": "2025-07-10",
+      "time": "18:30",
+      "description": "Asamblea extraordinaria para aprobar pintura de fachadas.",
+      "quorum": 70
+    }
+  ],
+  "pqr": {
+    "petition": {
+      "type": "petition",
+      "subject": "Solicitud de información",
+      "description": "Necesito información sobre el proceso de reserva del salón comunal.",
+      "priority": "low"
+    },
+    "complaint": {
+      "type": "complaint",
+      "subject": "Ruido excesivo",
+      "description": "Ruido excesivo proveniente del apartamento 102 después de las 22:00 horas.",
+      "priority": "medium"
+    },
+    "claim": {
+      "type": "claim",
+      "subject": "Daño en área común",
+      "description": "La puerta de acceso al gimnasio está averiada y no cierra correctamente.",
+      "priority": "high"
+    }
+  },
+  "financials": {
+    "regularFee": {
+      "amount": 150000,
+      "description": "Cuota de administración regular",
+      "dueDate": "2025-05-15"
+    },
+    "extraordinaryFee": {
+      "amount": 300000,
+      "description": "Cuota extraordinaria para proyecto de cancha de pádel",
+      "dueDate": "2025-06-30"
     }
   }
+}

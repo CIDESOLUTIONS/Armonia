@@ -5,6 +5,8 @@
     "@types/cypress": "^0.1.6",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
+    "cypress": "^14.3.0",
+    "cypress-file-upload": "^5.0.8",
     "mkcert": "^3.2.0",
     "typescript": "^5.7.3"
   },
@@ -18,7 +20,20 @@
     "schema": "prisma/schema.prisma"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cypress run --headless",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run --headless",
+    "cypress:runSpec": "cypress run --headless --spec",
+    "cypress:runTs": "cypress run --headless --spec cypress/e2e/**/*.cy.ts",
+    "cypress:runJs": "cypress run --headless --spec cypress/e2e/**/*.cy.js",
+    "cypress:runAll": "cypress run --headless --spec 'cypress/e2e/**/*.cy.{js,ts}'",
+    "cypress:runChrome": "cypress run --spec cypress/e2e/**/*.cy.{js,ts} --headed --browser chrome",
+    "cypress:runChromeHeadless": "cypress run --spec cypress/e2e/**/*.cy.{js,ts} --headless --browser chrome",
+    "cypress:basic": "cypress run --headless --spec cypress/e2e/basic.cy.js --config-file cypress/config/basic-test.config.js",
+    "cypress:runPriority": "node cypress/run-tests.js",
+    "cypress:landing": "cypress run --spec cypress/e2e/01-landing-page.cy.js",
+    "cypress:login": "cypress run --spec cypress/e2e/02-login.cy.js",
+    "cypress:admin": "cypress run --spec cypress/e2e/03-admin-dashboard.cy.js"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

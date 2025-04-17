@@ -1,0 +1,6 @@
+[2025-04-14 09:09:03] === INICIO DE EJECUCIÓN AUTOMÁTICA DE PRUEBAS CYPRESS ===
+[2025-04-14 09:09:03] Verificando si la aplicación está en ejecución...
+[2025-04-14 09:09:03] La aplicación está en ejecución en localhost:3000.
+[2025-04-14 09:09:03] Ejecutando prueba basic.cy.js en modo headless...
+[2025-04-14 09:09:23] ¡Prueba ejecutada exitosamente!
+[2025-04-14 09:09:23] === FIN DE EJECUCIÓN AUTOMÁTICA DE PRUEBAS CYPRESS ===

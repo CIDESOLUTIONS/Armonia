@@ -1,0 +1,54 @@
+{
+  "properties": [
+    {
+      "id": 1,
+      "propertyIdentifier": "Casa 101",
+      "area": 120,
+      "propertyType": "Casa"
+    },
+    {
+      "id": 2,
+      "propertyIdentifier": "Casa 102",
+      "area": 130,
+      "propertyType": "Casa"
+    },
+    {
+      "id": 3,
+      "propertyIdentifier": "Apto 201",
+      "area": 90,
+      "propertyType": "Apartamento"
+    }
+  ],
+  "residents": [
+    {
+      "id": 1,
+      "name": "Juan Pérez",
+      "email": "juan.perez@example.com",
+      "identification": "1234567890",
+      "propertyId": 1
+    },
+    {
+      "id": 2,
+      "name": "María López",
+      "email": "maria.lopez@example.com",
+      "identification": "0987654321",
+      "propertyId": 1
+    }
+  ],
+  "assemblies": [
+    {
+      "id": 1,
+      "title": "Asamblea Ordinaria 2025",
+      "type": "Ordinaria",
+      "date": "2025-05-15T10:00:00",
+      "description": "Asamblea ordinaria anual para discutir el presupuesto y proyectos del año"
+    },
+    {
+      "id": 2,
+      "title": "Asamblea Extraordinaria",
+      "type": "Extraordinaria",
+      "date": "2025-06-10T15:00:00",
+      "description": "Asamblea extraordinaria para discutir el proyecto de la cancha de pádel"
+    }
+  ]
+}

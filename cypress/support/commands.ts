@@ -5,32 +5,37 @@
 
 // Comando para iniciar sesión con un tipo de usuario
 Cypress.Commands.add('login', (userType: string) => {
-  let email, password;
-
-  switch (userType) {
-    case 'admin':
-      email = 'admin@example.com';
-      password = 'password';
-      break;
-    case 'resident':
-      email = 'residente@example.com';
-      password = 'password';
-      break;
-    case 'reception':
-      email = 'recepcion@example.com';
-      password = 'password';
-      break;
-    default:
-      throw new Error(`Usuario no soportado: ${userType}`);
-  }
-
-  cy.visit('/login');
-  cy.get('input[placeholder="Tu correo electrónico"]').type(email);
-  cy.get('input[placeholder="Tu contraseña"]').type(password);
-  cy.contains('Iniciar Sesión').click();
-  
-  // Verificar que inicia sesión correctamente
-  cy.url().should('include', '/dashboard');
+  cy.fixture('example.json').then((testData) => {
+    let userData;
+    
+    switch (userType) {
+      case 'admin':
+        userData = testData.users.admin;
+        break;
+      case 'resident':
+        userData = testData.users.resident;
+        break;
+      case 'reception':
+        userData = testData.users.reception;
+        break;
+      default:
+        throw new Error(`Usuario no soportado: ${userType}`);
+    }
+    
+    cy.visit('/login');
+    cy.get('input[type="email"]').type(userData.email);
+    cy.get('input[type="password"]').type(userData.password);
+    cy.contains('Ingresar').click();
+    
+    // Verificar que inicia sesión correctamente según el tipo de usuario
+    if (userType === 'admin') {
+      cy.url().should('include', '/dashboard');
+    } else if (userType === 'resident') {
+      cy.url().should('include', '/resident');
+    } else if (userType === 'reception') {
+      cy.url().should('include', '/reception');
+    }
+  });
 });
 
 // Comando para cerrar sesión

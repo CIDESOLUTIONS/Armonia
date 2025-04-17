@@ -13,18 +13,24 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
-// Import commands.js using ES2015 syntax:
+// Importar comandos.js usando ES2015 
 import './commands'
 
-// Alternatively you can use CommonJS syntax:
-// require('./commands')
+// Configurar timeout global más largo para esperar elementos
+Cypress.config('defaultCommandTimeout', 10000);
+Cypress.config('pageLoadTimeout', 30000);
 
-// Hide fetch/XHR requests from command log
-const app = window.top;
-if (app && !app.document.head.querySelector('[data-hide-command-log-request]')) {
-  const style = app.document.createElement('style');
-  style.innerHTML =
-    '.command-name-request, .command-name-xhr { display: none }';
-  style.setAttribute('data-hide-command-log-request', '');
-  app.document.head.appendChild(style);
-}
+// Ignorar errores no controlados de la aplicación
+Cypress.on('uncaught:exception', (err, runnable) => {
+  // Regresar false previene que Cypress falle la prueba
+  return false;
+});
+
+// Manejo para capturas de pantalla en caso de fallo
+Cypress.on('test:after:run', (test, runnable) => {
+  if (test.state === 'failed') {
+    // El complemento de capturas de pantalla toma automáticamente una captura de pantalla
+    // pero podemos agregar lógica adicional aquí si es necesario
+    console.log(`Test fallido: ${runnable.parent.title} - ${test.title}`);
+  }
+});

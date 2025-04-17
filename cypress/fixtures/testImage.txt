@@ -1,0 +1,1 @@
+Esta es una simulación de archivo de imagen para pruebas. En un entorno real, sería un archivo .jpg o .png.
