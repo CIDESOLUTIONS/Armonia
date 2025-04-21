@@ -26,6 +26,52 @@ describe('Landing Page de Armonía', () => {
     });
   });
 
+  it('Debería cambiar el tema entre claro y oscuro', () => {
+    // Verificar que inicialmente está en modo claro
+    cy.get('div[class*="bg-white"]').should('exist');
+    
+    // Hacer clic en el botón de cambio de tema (Sol)
+    cy.get('button[title*="Cambiar a Oscuro"]').click();
+    
+    // Verificar que cambia a modo oscuro
+    cy.get('div[class*="bg-gray-900"]').should('exist');
+    
+    // Hacer clic en el botón de cambio de tema (Luna)
+    cy.get('button[title*="Switch to Light"]').click();
+    
+    // Verificar que vuelve a modo claro
+    cy.get('div[class*="bg-white"]').should('exist');
+  });
+
+  it('Debería cambiar entre monedas', () => {
+    // Verificar que por defecto aparece la moneda en pesos
+    cy.contains('$95000').should('be.visible');
+    
+    // Cambiar a dólares
+    cy.get('button[title*="Switch to Dollars"]').click();
+    
+    // Verificar que cambia a dólares
+    cy.contains('$25').should('be.visible');
+    
+    // Volver a pesos
+    cy.get('button[title*="Cambiar a Pesos"]').click();
+    
+    // Verificar que vuelve a pesos
+    cy.contains('$95000').should('be.visible');
+  });
+
+  it('Debería mostrar el componente de video', () => {
+    // Navegar a la sección de video
+    cy.get('[data-testid="video-showcase"]').scrollIntoView();
+    
+    // Verificar que el video existe
+    cy.get('[data-testid="showcase-video"]').should('exist');
+    
+    // Verificar que los controles del video están presentes
+    cy.get('[data-testid="video-play-button"]').should('be.visible');
+    cy.get('[data-testid="video-mute-button"]').should('be.visible');
+  });
+
   it('Debería mostrar la sección de funcionalidades', () => {
     // Navegar a la sección de funcionalidades
     cy.get('a[href="#funcionalidades"]').first().click();
@@ -45,6 +91,20 @@ describe('Landing Page de Armonía', () => {
     cy.contains('Plan Básico').should('be.visible');
     cy.contains('Plan Estándar').should('be.visible');
     cy.contains('Plan Premium').should('be.visible');
+  });
+
+  it('Debería mostrar la sección de contacto', () => {
+    // Navegar a la sección de contacto
+    cy.get('[data-testid="contact-section"]').scrollIntoView();
+    
+    // Verificar que el formulario existe
+    cy.get('[data-testid="contact-form"]').should('be.visible');
+    
+    // Verificar que tiene los campos requeridos
+    cy.get('#name').should('exist');
+    cy.get('#email').should('exist');
+    cy.get('#complexName').should('exist');
+    cy.get('[data-testid="submit-contact"]').should('exist');
   });
 
   it('Debería permitir navegar al selector de portales desde el header', () => {
@@ -88,5 +148,27 @@ describe('Landing Page de Armonía', () => {
     cy.contains('Funcionalidades').should('be.visible');
     cy.contains('Planes').should('be.visible');
     cy.contains('Iniciar Sesión').should('be.visible');
+  });
+
+  it('Debería permitir completar el formulario de contacto', () => {
+    // Navegar a la sección de contacto
+    cy.get('[data-testid="contact-section"]').scrollIntoView();
+    
+    // Llenar el formulario
+    cy.get('#name').type('Juan Pérez');
+    cy.get('#email').type('juan.perez@ejemplo.com');
+    cy.get('#phone').type('3001234567');
+    cy.get('#complexName').type('Conjunto Residencial Los Pinos');
+    cy.get('#units').type('45');
+    cy.get('#message').type('Me gustaría tener más información sobre el plan Premium.');
+    
+    // Enviar el formulario (interceptamos el submit para evitar la navegación)
+    cy.window().then((win) => {
+      cy.stub(win, 'alert').as('alertStub');
+    });
+    cy.get('[data-testid="contact-form"]').submit();
+    
+    // Verificar que se muestra el mensaje de éxito
+    cy.get('@alertStub').should('have.been.calledWith', 'Gracias por su interés. Nos pondremos en contacto con usted pronto.');
   });
 });
