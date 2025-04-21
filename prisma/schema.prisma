@@ -47,6 +47,21 @@ model User {
   @@schema("armonia")
 }
 
+// Modelo para prospectos de clientes
+model Prospect {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  phone       String?
+  complexName String
+  units       Int
+  message     String?
+  createdAt   DateTime @default(now())
+  contacted   Boolean  @default(false)
+
+  @@schema("armonia")
+}
+
 // Los siguientes modelos se usarán como referencia para crear 
 // las tablas en cada esquema de tenant de manera dinámica
 

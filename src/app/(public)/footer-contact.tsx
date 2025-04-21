@@ -79,19 +79,58 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí iría la lógica para enviar el formulario
-    alert("Gracias por su interés. Nos pondremos en contacto con usted pronto.");
-    // Limpiar el formulario
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      complexName: "",
-      units: "",
-      message: "",
-    });
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al enviar el formulario');
+      }
+      
+      // Mostrar mensaje de éxito
+      setSubmitStatus({
+        type: 'success',
+        message: currentLanguage === "Español" ? 
+          'Gracias por su interés. Nos pondremos en contacto con usted pronto.' : 
+          'Thank you for your interest. We will contact you soon.'
+      });
+      
+      // Limpiar el formulario
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        complexName: "",
+        units: "",
+        message: "",
+      });
+      
+    } catch (error) {
+      console.error('Error al enviar el formulario:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: currentLanguage === "Español" ? 
+          'Error al procesar su solicitud. Por favor, inténtelo de nuevo más tarde.' : 
+          'Error processing your request. Please try again later.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -139,11 +178,11 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
                 <div className="mt-8 space-y-4">
                   <div className="flex items-center">
                     <Mail className="h-5 w-5 text-indigo-600 mr-3" />
-                    <span className="text-gray-600">contacto@armonia.com</span>
+                    <span className="text-gray-600">Customers@cidesolutions.com</span>
                   </div>
                   <div className="flex items-center">
                     <Phone className="h-5 w-5 text-indigo-600 mr-3" />
-                    <span className="text-gray-600">+57 (601) 123-4567</span>
+                    <span className="text-gray-600">+57 (315) 7651063</span>
                   </div>
                 </div>
               </div>
@@ -228,9 +267,30 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
                       rows={4}
                     ></textarea>
                   </div>
-                  <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" data-testid="submit-contact">
-                    {t.submitButton}
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-indigo-600 hover:bg-indigo-700" 
+                    data-testid="submit-contact"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {currentLanguage === "Español" ? 'Enviando...' : 'Sending...'}
+                      </span>
+                    ) : (
+                      t.submitButton
+                    )}
                   </Button>
+                  
+                  {submitStatus && (
+                    <div className={`mt-4 p-3 rounded ${submitStatus.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {submitStatus.message}
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
