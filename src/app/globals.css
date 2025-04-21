@@ -59,6 +59,42 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+
+  /* Tema oscuro */
+  .dark-theme {
+    background-color: rgb(17, 24, 39);
+    color: #ffffff;
+  }
+
+  /* Estilos específicos para el tema oscuro */
+  .dark-theme .bg-white {
+    background-color: rgb(31, 41, 55);
+  }
+
+  .dark-theme .bg-indigo-50 {
+    background-color: rgb(45, 55, 72);
+  }
+
+  .dark-theme .text-gray-900 {
+    color: #ffffff;
+  }
+
+  .dark-theme .text-gray-700, 
+  .dark-theme .text-gray-600 {
+    color: rgb(209, 213, 219);
+  }
+
+  .dark-theme .border-gray-200 {
+    border-color: rgb(55, 65, 81);
+  }
+
+  .dark-theme .text-indigo-600 {
+    color: rgb(129, 140, 248);
+  }
+
+  .dark-theme .text-indigo-700 {
+    color: rgb(165, 180, 252);
+  }
 }
 
 /* Componentes */
