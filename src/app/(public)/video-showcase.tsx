@@ -71,7 +71,7 @@ export function VideoShowcase({ theme, language }: { theme: string, language?: s
   }, []);
 
   return (
-    <section className={`py-16 ${theme === "Oscuro" ? "bg-gray-900" : "bg-white"}`} data-testid="video-showcase">
+    <section className="py-16 bg-indigo-50" data-testid="video-showcase">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>

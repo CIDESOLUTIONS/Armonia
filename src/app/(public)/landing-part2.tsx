@@ -4,23 +4,47 @@ import { Building, User, Shield, Check, Calendar, DollarSign, MessageSquare, Bel
 export function LandingPart2({ theme, language }: { theme: string, language?: string }) {
   // Si no se pasa el idioma, asumimos español
   const currentLanguage = language || "Español";
+  
+  // Textos localizados
+  const texts = {
+    es: {
+      functionalitiesTitle: "Funcionalidades Completas para su Conjunto",
+      functionalitiesDescription: "Armonía proporciona una plataforma integral, diseñada específicamente para la administración eficiente de conjuntos residenciales, que unifica y simplifica todas sus necesidades de gestión.",
+      learnMore: "Saber más",
+      statsTitle: "Lo que dicen nuestros clientes",
+      statsDescription: "Descubra cómo Armonía ha transformado la gestión de conjuntos residenciales.",
+      featuresTitle: "Características que Facilitan su Gestión",
+      featuresDescription: "Todas las herramientas que necesita para transformar la administración de su conjunto en un proceso digital, eficiente y transparente."
+    },
+    en: {
+      functionalitiesTitle: "Complete Features for Your Complex",
+      functionalitiesDescription: "Armonía provides a comprehensive platform, specifically designed for the efficient management of residential complexes, unifying and simplifying all your management needs.",
+      learnMore: "Learn more",
+      statsTitle: "What our clients say",
+      statsDescription: "Discover how Armonía has transformed residential complex management.",
+      featuresTitle: "Features that Facilitate Your Management",
+      featuresDescription: "All the tools you need to transform your complex administration into a digital, efficient and transparent process."
+    }
+  };
+  
+  const t = currentLanguage === "Español" ? texts.es : texts.en;
   return (
     <>
       {/* Características Principales */}
-      <section id="funcionalidades" className={`py-20 ${theme === "Oscuro" ? "bg-gray-800" : "bg-white"}`}>
+      <section id="funcionalidades" className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`} data-testid="funcionalidades-title">
-              Funcionalidades Completas para su Conjunto
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900" data-testid="funcionalidades-title">
+              {t.functionalitiesTitle}
             </h2>
-            <p className={`text-lg ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} max-w-3xl mx-auto`}>
-              Armonía proporciona una plataforma integral, diseñada específicamente para la administración eficiente de conjuntos residenciales, que unifica y simplifica todas sus necesidades de gestión.
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              {t.functionalitiesDescription}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Módulo de Administración */}
-            <div className={`${theme === "Oscuro" ? "bg-gray-700" : "bg-white"} p-8 rounded-lg border ${theme === "Oscuro" ? "border-gray-600" : "border-gray-200"} shadow-md hover:shadow-xl transition-all`} data-testid="feature-card">
+            <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all" data-testid="feature-card">
               <Building className="h-12 w-12 text-indigo-600 mb-6" />
               <h3 className={`text-xl font-bold mb-3 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Gestión de Inventario</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} mb-6`}>
@@ -45,7 +69,7 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
                 </li>
               </ul>
               <a href="#" className={`inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium`}>
-                Saber más
+                {t.learnMore}
                 <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -78,7 +102,7 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
                 </li>
               </ul>
               <a href="#" className={`inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium`}>
-                Saber más
+                {t.learnMore}
                 <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -224,7 +248,7 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
       </section>
 
       {/* Sección de estadísticas */}
-      <section className={`py-16 ${theme === "Oscuro" ? "bg-gray-900" : "bg-indigo-50"}`}>
+      <section className="py-16 bg-indigo-50">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
@@ -248,14 +272,14 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
       </section>
 
       {/* Características Adicionales */}
-      <section className={`py-20 ${theme === "Oscuro" ? "bg-gray-800" : "bg-white"}`}>
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>
-              Características que Facilitan su Gestión
+              {t.featuresTitle}
             </h2>
             <p className={`text-lg ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} max-w-3xl mx-auto`}>
-              Todas las herramientas que necesita para transformar la administración de su conjunto en un proceso digital, eficiente y transparente.
+              {t.featuresDescription}
             </p>
           </div>
 
@@ -296,14 +320,14 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
       </section>
 
       {/* Testimonios */}
-      <section className={`py-20 ${theme === "Oscuro" ? "bg-gray-900" : "bg-indigo-50"}`}>
+      <section className="py-20 bg-indigo-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>
-              Lo que dicen nuestros clientes
+              {t.statsTitle}
             </h2>
             <p className={`text-lg ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} max-w-3xl mx-auto`}>
-              Descubra cómo Armonía ha transformado la gestión de conjuntos residenciales.
+              {t.statsDescription}
             </p>
           </div>
 

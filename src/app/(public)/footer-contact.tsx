@@ -42,7 +42,7 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
   return (
     <>
       {/* Formulario de Contacto */}
-      <section id="contacto" className={`py-20 ${theme === "Oscuro" ? "bg-gray-900" : "bg-white"}`} data-testid="contact-section">
+      <section id="contacto" className="py-20 bg-white" data-testid="contact-section">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <div>

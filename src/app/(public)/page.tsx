@@ -81,9 +81,9 @@ export default function LandingPage() {
         setCurrency={setCurrency}
       />
 
-      <div className="pt-16"> {/* Padding superior para compensar el header fijo */}
+      <div> {/* Contenedor principal */}
         {/* Hero Section */}
-        <section className="relative py-20 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white overflow-hidden" data-testid="hero-section">
+        <section className="relative pt-24 pb-20 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white overflow-hidden" data-testid="hero-section">
           <div className="absolute inset-0 overflow-hidden opacity-20">
             <div className="absolute transform -rotate-12 -translate-y-1/2 -translate-x-1/4 left-0 top-0 w-full h-full bg-white opacity-10 rounded-full"></div>
             <div className="absolute transform rotate-12 translate-y-1/2 translate-x-1/4 right-0 bottom-0 w-full h-full bg-indigo-300 opacity-10 rounded-full"></div>
@@ -147,24 +147,24 @@ export default function LandingPage() {
         </section>
         
         {/* Sección de características clave */}
-        <section className={`py-12 ${theme === "Oscuro" ? "bg-gray-800" : "bg-white"}`}>
+        <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-              <div className={`p-6 rounded-lg ${theme === "Oscuro" ? "bg-gray-700" : "bg-indigo-50"}`}>
+              <div className="p-6 rounded-lg bg-indigo-50">
                 <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.integralManagement : texts.en.integralManagement}</div>
-                <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>
+                <p className="text-gray-700">
                   {language === "Español" ? texts.es.managementDesc : texts.en.managementDesc}
                 </p>
               </div>
-              <div className={`p-6 rounded-lg ${theme === "Oscuro" ? "bg-gray-700" : "bg-indigo-50"}`}>
+              <div className="p-6 rounded-lg bg-indigo-50">
                 <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.efficientCommunication : texts.en.efficientCommunication}</div>
-                <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>
+                <p className="text-gray-700">
                   {language === "Español" ? texts.es.communicationDesc : texts.en.communicationDesc}
                 </p>
               </div>
-              <div className={`p-6 rounded-lg ${theme === "Oscuro" ? "bg-gray-700" : "bg-indigo-50"}`}>
+              <div className="p-6 rounded-lg bg-indigo-50">
                 <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.easyToUse : texts.en.easyToUse}</div>
-                <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>
+                <p className="text-gray-700">
                   {language === "Español" ? texts.es.easyDesc : texts.en.easyDesc}
                 </p>
               </div>

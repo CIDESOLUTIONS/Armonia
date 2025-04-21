@@ -20,7 +20,7 @@ export function LandingPart3({
   return (
     <>
       {/* Planes */}
-      <section id="planes" className={`py-20 ${theme === "Oscuro" ? "bg-gray-800" : "bg-indigo-50"}`}>
+      <section id="planes" className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>
@@ -139,7 +139,7 @@ export function LandingPart3({
       </section>
 
       {/* Sección CTA para registro */}
-      <section id="registrar" className={`py-20 ${theme === "Oscuro" ? "bg-gray-900" : "bg-white"}`}>
+      <section id="registrar" className="py-20 bg-indigo-50">
         <div className="container mx-auto px-4 text-center">
           <h2 className={`text-3xl md:text-4xl font-bold mb-6 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>
             ¿Listo para optimizar la administración de su conjunto?
