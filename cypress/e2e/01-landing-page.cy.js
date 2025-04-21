@@ -135,6 +135,15 @@ describe('Landing Page de Armonía', () => {
     });
   });
 
+  it('Debería mostrar la información de contacto actualizada', () => {
+    // Navegar a la sección de contacto
+    cy.get('[data-testid="contact-section"]').scrollIntoView();
+    
+    // Verificar que se muestra la información de contacto actualizada
+    cy.contains('Customers@cidesolutions.com').should('be.visible');
+    cy.contains('+57 (315) 7651063').should('be.visible');
+  });
+
   it('Debería ser responsive en tamaño móvil', () => {
     // Cambiar viewport a tamaño móvil
     cy.viewport('iphone-x');
@@ -151,6 +160,12 @@ describe('Landing Page de Armonía', () => {
   });
 
   it('Debería permitir completar el formulario de contacto', () => {
+    // Interceptamos la llamada a la API de contacto
+    cy.intercept('POST', '/api/contact', {
+      statusCode: 200,
+      body: { success: true, message: 'Formulario enviado correctamente. Nos pondremos en contacto pronto.' }
+    }).as('submitForm');
+
     // Navegar a la sección de contacto
     cy.get('[data-testid="contact-section"]').scrollIntoView();
     
@@ -162,13 +177,47 @@ describe('Landing Page de Armonía', () => {
     cy.get('#units').type('45');
     cy.get('#message').type('Me gustaría tener más información sobre el plan Premium.');
     
-    // Enviar el formulario (interceptamos el submit para evitar la navegación)
-    cy.window().then((win) => {
-      cy.stub(win, 'alert').as('alertStub');
-    });
-    cy.get('[data-testid="contact-form"]').submit();
+    // Enviar el formulario
+    cy.get('[data-testid="submit-contact"]').click();
+    
+    // Esperar a que se procese la solicitud
+    cy.wait('@submitForm');
     
     // Verificar que se muestra el mensaje de éxito
-    cy.get('@alertStub').should('have.been.calledWith', 'Gracias por su interés. Nos pondremos en contacto con usted pronto.');
+    cy.contains('Gracias por su interés. Nos pondremos en contacto con usted pronto.').should('be.visible');
+    
+    // Verificar que los campos del formulario se han limpiado
+    cy.get('#name').should('have.value', '');
+    cy.get('#email').should('have.value', '');
+    cy.get('#phone').should('have.value', '');
+    cy.get('#complexName').should('have.value', '');
+    cy.get('#units').should('have.value', '');
+    cy.get('#message').should('have.value', '');
+  });
+
+  it('Debería mostrar un mensaje de error si el envío del formulario falla', () => {
+    // Interceptamos la llamada a la API de contacto para simular un error
+    cy.intercept('POST', '/api/contact', {
+      statusCode: 500,
+      body: { error: 'Error al procesar la solicitud.' }
+    }).as('submitFormError');
+
+    // Navegar a la sección de contacto
+    cy.get('[data-testid="contact-section"]').scrollIntoView();
+    
+    // Llenar el formulario
+    cy.get('#name').type('Juan Pérez');
+    cy.get('#email').type('juan.perez@ejemplo.com');
+    cy.get('#complexName').type('Conjunto Residencial Los Pinos');
+    cy.get('#units').type('45');
+    
+    // Enviar el formulario
+    cy.get('[data-testid="submit-contact"]').click();
+    
+    // Esperar a que se procese la solicitud
+    cy.wait('@submitFormError');
+    
+    // Verificar que se muestra el mensaje de error
+    cy.contains('Error al procesar su solicitud. Por favor, inténtelo de nuevo más tarde.').should('be.visible');
   });
 });
