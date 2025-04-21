@@ -2,7 +2,7 @@
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  schemas    = ["armonia"]
+  schemas    = ["armonia", "tenant"]
 }
 
 // Definición del generator

@@ -3,7 +3,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Sun, Moon, DollarSign, User, LogIn, LogOut } from 'lucide-react';
+import { Globe, Sun, Moon, DollarSign, User, LogIn, LogOut, Menu } from 'lucide-react';
+import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 
 interface HeaderProps {
   theme: string;
@@ -32,6 +34,7 @@ export function Header({
 }: HeaderProps) {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleLanguage = () => {
     setLanguage(language === 'Español' ? 'Inglés' : 'Español');
@@ -47,84 +50,155 @@ export function Header({
 
   const handleLogin = () => {
     setIsDropdownOpen(false);
-    router.push('/login');
+    router.push(ROUTES.PORTAL_SELECTOR);
   }; 
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-indigo-600 py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center shadow-md">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold italic text-white">
-          Armonía
-        </h1>
-        {isLoggedIn && complexName && (
-          <p className="text-sm text-white opacity-75">
-            {complexName}
-          </p>
-        )}
-      </div>
-      <div className="flex items-center gap-4">
-        <button
-          onClick={toggleLanguage}
-          className="text-white hover:text-indigo-200 focus:outline-none"
-          title={language === 'Español' ? 'Cambiar a Inglés' : 'Switch to Spanish'}
-        >
-          <Globe className="w-6 h-6" />
-        </button>
-        <button
-          onClick={toggleTheme}
-          className="text-white hover:text-indigo-200 focus:outline-none"
-          title={theme === 'Claro' ? 'Cambiar a Oscuro' : 'Switch to Light'}
-        >
-          {theme === 'Claro' ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-        </button>
-        <button
-          onClick={toggleCurrency}
-          className="text-white hover:text-indigo-200 focus:outline-none"
-          title={currency === 'Dólares' ? 'Cambiar a Pesos' : 'Switch to Dollars'}
-        >
-          <DollarSign className="w-6 h-6" />
-        </button>
-        {isLoggedIn && adminName && (
-          <span className="text-white text-sm truncate max-w-[150px]">
-            {adminName}
-          </span>
-        )}
-        <div className="relative">
-          <button
-            className="text-white hover:text-indigo-200 focus:outline-none"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            <User className="w-6 h-6" />
-          </button>
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg">
-              <button
-                className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-700 flex items-center"
-                onClick={() => {
-                  if (isLoggedIn && logout) {
-                    logout();
-                  } else {
-                    router.push('/login');
-                  }
-                  setIsDropdownOpen(false);
-                }}
-              >
-                {isLoggedIn ? (
-                  <>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    {language === 'Español' ? 'Cerrar Sesión' : 'Logout'}
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    {language === 'Español' ? 'Iniciar Sesión' : 'Login'}
-                  </>
-                )}
-              </button>
-            </div>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-indigo-600 py-4 px-4 sm:px-6 lg:px-8 shadow-md" data-testid="main-header">
+      <div className="container mx-auto flex justify-between items-center">
+        <div className="flex items-center">
+          <h1 className="text-2xl sm:text-3xl font-extrabold italic text-white">
+            Armonía
+          </h1>
+          {isLoggedIn && complexName && (
+            <p className="text-sm text-white opacity-75 ml-2">
+              {complexName}
+            </p>
           )}
         </div>
+
+        {/* Desktop navigation */}
+        <nav className="hidden md:flex items-center space-x-6">
+          <a href="#funcionalidades" className="text-white hover:text-indigo-200 focus:outline-none">
+            Funcionalidades
+          </a>
+          <a href="#planes" className="text-white hover:text-indigo-200 focus:outline-none">
+            Planes
+          </a>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleLanguage}
+              className="text-white hover:text-indigo-200 focus:outline-none"
+              title={language === 'Español' ? 'Cambiar a Inglés' : 'Switch to Spanish'}
+            >
+              <Globe className="w-5 h-5" />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="text-white hover:text-indigo-200 focus:outline-none"
+              title={theme === 'Claro' ? 'Cambiar a Oscuro' : 'Switch to Light'}
+            >
+              {theme === 'Claro' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={toggleCurrency}
+              className="text-white hover:text-indigo-200 focus:outline-none"
+              title={currency === 'Dólares' ? 'Cambiar a Pesos' : 'Switch to Dollars'}
+            >
+              <DollarSign className="w-5 h-5" />
+            </button>
+          </div>
+          {isLoggedIn ? (
+            <div className="relative">
+              <button
+                className="text-white hover:text-indigo-200 focus:outline-none"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <User className="w-6 h-6" />
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg">
+                  <button
+                    className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-700 flex items-center"
+                    onClick={() => {
+                      if (logout) logout();
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {language === 'Español' ? 'Cerrar Sesión' : 'Logout'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link 
+              href={ROUTES.PORTAL_SELECTOR} 
+              className="text-white hover:text-indigo-200 transition-colors px-4 py-2 border border-white rounded hover:bg-indigo-700"
+            >
+              Iniciar Sesión
+            </Link>
+          )}
+        </nav>
+
+        {/* Mobile menu button */}
+        <button 
+          className="md:hidden text-white focus:outline-none"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          data-testid="mobile-menu-button"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
       </div>
+
+      {/* Mobile navigation */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden mt-4 pb-4">
+          <div className="flex flex-col space-y-4 border-t border-indigo-500 pt-4">
+            <a 
+              href="#funcionalidades" 
+              className="text-white hover:text-indigo-200 px-4"
+              onClick={() => scrollToSection('funcionalidades')}
+            >
+              Funcionalidades
+            </a>
+            <a 
+              href="#planes" 
+              className="text-white hover:text-indigo-200 px-4"
+              onClick={() => scrollToSection('planes')}
+            >
+              Planes
+            </a>
+            <div className="flex items-center gap-4 px-4">
+              <button
+                onClick={toggleLanguage}
+                className="text-white hover:text-indigo-200 focus:outline-none"
+              >
+                <Globe className="w-5 h-5" />
+              </button>
+              <button
+                onClick={toggleTheme}
+                className="text-white hover:text-indigo-200 focus:outline-none"
+              >
+                {theme === 'Claro' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={toggleCurrency}
+                className="text-white hover:text-indigo-200 focus:outline-none"
+              >
+                <DollarSign className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex flex-col space-y-2 px-4">
+              <Link
+                href={ROUTES.PORTAL_SELECTOR}
+                className="text-white hover:text-indigo-200 transition-colors px-4 py-2 border border-white rounded hover:bg-indigo-700 text-center"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Iniciar Sesión
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

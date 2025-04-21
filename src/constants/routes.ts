@@ -1,8 +1,14 @@
 // src/constants/routes.ts
 export const ROUTES = {
   HOME: '/',
+  PORTAL_SELECTOR: '/portal-selector',
   LOGIN: '/login',
+  RESIDENT_LOGIN: '/login?portal=resident',
+  RECEPTION_LOGIN: '/login?portal=reception',
+  ADMIN_LOGIN: '/login?portal=admin',
   DASHBOARD: '/dashboard',
+  RESIDENT_DASHBOARD: '/resident/dashboard',
+  RECEPTION_DASHBOARD: '/reception/dashboard',
   INVENTORY: '/dashboard/inventory',
   INVENTORY_PROPERTIES: '/dashboard/inventory/properties',
   INVENTORY_VEHICLES: '/dashboard/inventory/vehicles',
@@ -30,4 +36,5 @@ export const ROUTES = {
   SETTINGS_WHATSAPP: '/dashboard/settings/whatsapp',
   SETTINGS_CAMERAS: '/dashboard/settings/cameras',
   FORGOT_PASSWORD: '/forgot-password',
+  REGISTER_COMPLEX: '/register-complex',
 } as const;

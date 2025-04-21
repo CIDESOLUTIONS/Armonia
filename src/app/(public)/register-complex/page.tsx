@@ -1,0 +1,611 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Header } from "@/components/layout/header";
+import { Building, Check, ArrowLeft } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
+
+export default function RegisterComplex() {
+  const router = useRouter();
+  const [language, setLanguage] = useState("Español");
+  const [currency, setCurrency] = useState("Pesos");
+  const [theme, setTheme] = useState("Claro");
+  const [step, setStep] = useState(1);
+  const [plan, setPlan] = useState("basic");
+  
+  // Formulario para registro de conjunto
+  const [formData, setFormData] = useState({
+    complexName: "",
+    adminName: "",
+    adminEmail: "",
+    adminPhone: "",
+    address: "",
+    city: "",
+    country: "Colombia",
+    state: "",
+    units: "",
+    services: [] as string[],
+    username: "",
+    password: "",
+    confirmPassword: "",
+    terms: false
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    
+    if (name === "terms") {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+      return;
+    }
+    
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        services: [...prev.services, name]
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        services: prev.services.filter(service => service !== name)
+      }));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (step < 3) {
+      setStep(step + 1);
+      return;
+    }
+    
+    // Aquí iría la lógica para enviar los datos de registro al servidor
+    // Por ahora, simulamos el registro exitoso
+    
+    alert(`¡Gracias por registrar su conjunto "${formData.complexName}"! Te hemos enviado un correo con los pasos a seguir para completar la configuración.`);
+    router.push(ROUTES.PORTAL_SELECTOR);
+  };
+
+  const handlePlanSelect = (selectedPlan: string) => {
+    setPlan(selectedPlan);
+    setStep(2);
+  };
+
+  return (
+    <div className={`flex flex-col min-h-screen ${theme === "Oscuro" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"}`}>
+      {/* Header compartido */}
+      <Header 
+        theme={theme}
+        setTheme={setTheme}
+        language={language}
+        setLanguage={setLanguage}
+        currency={currency}
+        setCurrency={setCurrency}
+      />
+
+      <div className="pt-24 flex-grow"> {/* Padding superior para compensar el header fijo */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={() => router.push('/')}
+              className="text-indigo-600 hover:bg-indigo-50"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver a Inicio
+            </Button>
+          </div>
+          
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-4">Registro de Conjunto Residencial</h1>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Complete la información requerida para registrar su conjunto en la plataforma Armonía.
+            </p>
+          </div>
+          
+          {/* Pasos de registro */}
+          <div className="mb-12">
+            <div className="flex justify-center items-center">
+              <div className={`flex items-center ${step === 1 ? "text-indigo-600" : (step > 1 ? "text-green-500" : "text-gray-400")}`}>
+                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 1 ? "border-indigo-600 text-indigo-600" : (step > 1 ? "border-green-500 text-green-500" : "border-gray-300 text-gray-400")}`}>
+                  {step > 1 ? <Check className="h-6 w-6" /> : "1"}
+                </div>
+                <span className="ml-2 text-sm font-medium">Plan</span>
+              </div>
+              
+              <div className={`w-16 md:w-32 h-1 mx-2 ${step > 1 ? "bg-green-500" : "bg-gray-300"}`}></div>
+              
+              <div className={`flex items-center ${step === 2 ? "text-indigo-600" : (step > 2 ? "text-green-500" : "text-gray-400")}`}>
+                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 2 ? "border-indigo-600 text-indigo-600" : (step > 2 ? "border-green-500 text-green-500" : "border-gray-300 text-gray-400")}`}>
+                  {step > 2 ? <Check className="h-6 w-6" /> : "2"}
+                </div>
+                <span className="ml-2 text-sm font-medium">Conjunto</span>
+              </div>
+              
+              <div className={`w-16 md:w-32 h-1 mx-2 ${step > 2 ? "bg-green-500" : "bg-gray-300"}`}></div>
+              
+              <div className={`flex items-center ${step === 3 ? "text-indigo-600" : "text-gray-400"}`}>
+                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 3 ? "border-indigo-600 text-indigo-600" : "border-gray-300 text-gray-400"}`}>
+                  3
+                </div>
+                <span className="ml-2 text-sm font-medium">Cuenta</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Paso 1: Selección de Plan */}
+          {step === 1 && (
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-2xl font-bold mb-8 text-center">Seleccione un Plan</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className={`bg-white p-8 rounded-lg border ${plan === "basic" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("basic")}>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">Plan Básico</h3>
+                  <div className="text-4xl font-bold mb-4 text-gray-900">Gratuito</div>
+                  <p className="text-gray-600 mb-6">Ideal para conjuntos pequeños de hasta 30 unidades.</p>
+                  
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Gestión de propiedades y residentes</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Portal básico de comunicaciones</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Limitado a 1 año de históricos</span>
+                    </li>
+                  </ul>
+                  
+                  <Button 
+                    className={`w-full ${plan === "basic" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
+                    onClick={() => handlePlanSelect("basic")}
+                  >
+                    Seleccionar Plan Básico
+                  </Button>
+                </div>
+                
+                <div className={`bg-white p-8 rounded-lg border ${plan === "standard" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer relative`} onClick={() => handlePlanSelect("standard")}>
+                  <div className="absolute top-0 right-0 bg-indigo-500 text-white px-4 py-1 text-sm font-bold rounded-bl-lg rounded-tr-lg">
+                    RECOMENDADO
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">Plan Estándar</h3>
+                  <div className="text-4xl font-bold mb-4 text-gray-900">
+                    ${currency === "Dólares" ? "25" : "95000"}<span className="text-base font-normal">/mes</span>
+                  </div>
+                  <p className="text-gray-600 mb-6">Para conjuntos de hasta 50 unidades.</p>
+                  
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Todas las funcionalidades básicas</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Gestión de asambleas y votaciones</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Sistema de PQR avanzado</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Históricos de hasta 3 años</span>
+                    </li>
+                  </ul>
+                  
+                  <Button 
+                    className={`w-full ${plan === "standard" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
+                    onClick={() => handlePlanSelect("standard")}
+                  >
+                    Seleccionar Plan Estándar
+                  </Button>
+                </div>
+                
+                <div className={`bg-white p-8 rounded-lg border ${plan === "premium" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("premium")}>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">Plan Premium</h3>
+                  <div className="text-4xl font-bold mb-4 text-gray-900">
+                    ${currency === "Dólares" ? "50" : "190000"}<span className="text-base font-normal">/mes</span>
+                  </div>
+                  <p className="text-gray-600 mb-6">Para conjuntos de hasta 120 unidades.</p>
+                  
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Todas las funcionalidades estándar</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Módulo financiero avanzado</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">Personalización de la plataforma</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700">API para integraciones</span>
+                    </li>
+                  </ul>
+                  
+                  <Button 
+                    className={`w-full ${plan === "premium" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
+                    onClick={() => handlePlanSelect("premium")}
+                  >
+                    Seleccionar Plan Premium
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Paso 2: Información del Conjunto */}
+          {step === 2 && (
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-2xl font-bold mb-8 text-center">Información del Conjunto</h2>
+              
+              <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg">
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="complexName" className="block mb-2 text-sm font-medium text-gray-700">Nombre del conjunto</label>
+                    <input 
+                      type="text" 
+                      id="complexName" 
+                      name="complexName" 
+                      value={formData.complexName} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder="Ej. Conjunto Residencial Vista Hermosa"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="adminName" className="block mb-2 text-sm font-medium text-gray-700">Nombre del administrador</label>
+                      <input 
+                        type="text" 
+                        id="adminName" 
+                        name="adminName" 
+                        value={formData.adminName} 
+                        onChange={handleChange} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Nombre completo"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="adminPhone" className="block mb-2 text-sm font-medium text-gray-700">Teléfono</label>
+                      <input 
+                        type="tel" 
+                        id="adminPhone" 
+                        name="adminPhone" 
+                        value={formData.adminPhone} 
+                        onChange={handleChange} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="(123) 456-7890"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="adminEmail" className="block mb-2 text-sm font-medium text-gray-700">Correo electrónico</label>
+                    <input 
+                      type="email" 
+                      id="adminEmail" 
+                      name="adminEmail" 
+                      value={formData.adminEmail} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder="correo@ejemplo.com"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="address" className="block mb-2 text-sm font-medium text-gray-700">Dirección</label>
+                    <input 
+                      type="text" 
+                      id="address" 
+                      name="address" 
+                      value={formData.address} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder="Dirección del conjunto"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label htmlFor="city" className="block mb-2 text-sm font-medium text-gray-700">Ciudad</label>
+                      <input 
+                        type="text" 
+                        id="city" 
+                        name="city" 
+                        value={formData.city} 
+                        onChange={handleChange} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Ciudad"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="state" className="block mb-2 text-sm font-medium text-gray-700">Departamento/Estado</label>
+                      <input 
+                        type="text" 
+                        id="state" 
+                        name="state" 
+                        value={formData.state} 
+                        onChange={handleChange} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder="Departamento"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="country" className="block mb-2 text-sm font-medium text-gray-700">País</label>
+                      <select 
+                        id="country" 
+                        name="country" 
+                        value={formData.country} 
+                        onChange={handleChange} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        required
+                      >
+                        <option value="Colombia">Colombia</option>
+                        <option value="México">México</option>
+                        <option value="España">España</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="Chile">Chile</option>
+                        <option value="Perú">Perú</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="units" className="block mb-2 text-sm font-medium text-gray-700">Número de unidades</label>
+                    <input 
+                      type="number" 
+                      id="units" 
+                      name="units" 
+                      value={formData.units} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder="Ej. 30"
+                      required
+                    />
+                    {plan === "basic" && parseInt(formData.units) > 30 && (
+                      <p className="mt-1 text-sm text-red-600">El plan básico solo permite hasta 30 unidades. Por favor, seleccione otro plan o reduzca el número de unidades.</p>
+                    )}
+                    {plan === "standard" && parseInt(formData.units) > 50 && (
+                      <p className="mt-1 text-sm text-red-600">El plan estándar solo permite hasta 50 unidades. Por favor, seleccione el plan premium o reduzca el número de unidades.</p>
+                    )}
+                    {plan === "premium" && parseInt(formData.units) > 120 && (
+                      <p className="mt-1 text-sm text-red-600">El plan premium solo permite hasta 120 unidades. Por favor, contacte con nosotros para un plan personalizado.</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-gray-700">Servicios comunes</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-pool" 
+                          name="pool" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-pool" className="text-gray-700">Piscina</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-gym" 
+                          name="gym" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-gym" className="text-gray-700">Gimnasio</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-salon" 
+                          name="salon" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-salon" className="text-gray-700">Salón comunal</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-bbq" 
+                          name="bbq" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-bbq" className="text-gray-700">Zona BBQ</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-tennis" 
+                          name="tennis" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-tennis" className="text-gray-700">Cancha de tenis</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-park" 
+                          name="park" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-park" className="text-gray-700">Parque infantil</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-security" 
+                          name="security" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-security" className="text-gray-700">Vigilancia 24h</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          id="service-parking" 
+                          name="parking" 
+                          onChange={handleCheckboxChange} 
+                          className="mr-2" 
+                        />
+                        <label htmlFor="service-parking" className="text-gray-700">Parqueadero</label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setStep(1)}
+                      className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                    >
+                      Atrás
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      Continuar
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          )}
+          
+          {/* Paso 3: Creación de Cuenta */}
+          {step === 3 && (
+            <div className="max-w-xl mx-auto">
+              <h2 className="text-2xl font-bold mb-8 text-center">Creación de Cuenta</h2>
+              
+              <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg">
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-700">Nombre de usuario</label>
+                    <input 
+                      type="text" 
+                      id="username" 
+                      name="username" 
+                      value={formData.username} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder="Nombre de usuario para acceder"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700">Contraseña</label>
+                    <input 
+                      type="password" 
+                      id="password" 
+                      name="password" 
+                      value={formData.password} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder="Mínimo 8 caracteres"
+                      minLength={8}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="confirmPassword" className="block mb-2 text-sm font-medium text-gray-700">Confirmar contraseña</label>
+                    <input 
+                      type="password" 
+                      id="confirmPassword" 
+                      name="confirmPassword" 
+                      value={formData.confirmPassword} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder="Repita su contraseña"
+                      minLength={8}
+                      required
+                    />
+                    {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                      <p className="mt-1 text-sm text-red-600">Las contraseñas no coinciden.</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <input 
+                      type="checkbox" 
+                      id="terms" 
+                      name="terms" 
+                      checked={formData.terms}
+                      onChange={handleCheckboxChange} 
+                      className="mt-1 mr-2" 
+                      required
+                    />
+                    <label htmlFor="terms" className="text-sm text-gray-700">
+                      Acepto los <a href="#" className="text-indigo-600 hover:text-indigo-800">Términos y Condiciones</a> y la <a href="#" className="text-indigo-600 hover:text-indigo-800">Política de Privacidad</a> de Armonía.
+                    </label>
+                  </div>
+                  
+                  <div className="flex justify-between pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setStep(2)}
+                      className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                    >
+                      Atrás
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                      disabled={!formData.terms || formData.password !== formData.confirmPassword}
+                    >
+                      Registrar Conjunto
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <footer className="py-8 bg-gray-900 text-gray-400">
+        <div className="container mx-auto px-4 text-center">
+          <p>© 2025 Armonía. Todos los derechos reservados.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
