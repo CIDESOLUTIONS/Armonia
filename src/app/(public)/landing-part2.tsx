@@ -26,7 +26,23 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
       pqr: "Sistema PQR",
       pqrDesc: "Gestione eficientemente las peticiones, quejas y reclamos con un sistema organizado que mejora la comunicación.",
       reception: "Recepción y Vigilancia",
-      receptionDesc: "Optimice la seguridad y control de acceso con herramientas digitales diseñadas para el personal de vigilancia."
+      receptionDesc: "Optimice la seguridad y control de acceso con herramientas digitales diseñadas para el personal de vigilancia.",
+      stats: {
+        complexesManaged: "Conjuntos gestionados",
+        satisfiedResidents: "Residentes satisfechos",
+        userSatisfaction: "Satisfacción de usuarios",
+        timeReduction: "Reducción en tiempo administrativo",
+      },
+      features: {
+        virtualAssemblies: "Asambleas Virtuales",
+        virtualAssembliesDesc: "Organice reuniones virtuales con votación electrónica y verificación automática de quórum.",
+        advancedReports: "Reportes Avanzados",
+        advancedReportsDesc: "Acceda a información detallada con análisis visuales para tomar decisiones informadas.",
+        notifications: "Notificaciones",
+        notificationsDesc: "Mantenga a todos informados con alertas automáticas por email, SMS y aplicación móvil.",
+        documentManagement: "Gestión Documental",
+        documentManagementDesc: "Almacene y organice todos los documentos relevantes en un repositorio digital seguro."
+      }
     },
     en: {
       functionalitiesTitle: "Complete Features for Your Complex",
@@ -47,7 +63,23 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
       pqr: "PQR System",
       pqrDesc: "Efficiently manage petitions, complaints and claims with an organized system that improves communication.",
       reception: "Reception and Security",
-      receptionDesc: "Optimize security and access control with digital tools designed for security personnel."
+      receptionDesc: "Optimize security and access control with digital tools designed for security personnel.",
+      stats: {
+        complexesManaged: "Managed Complexes",
+        satisfiedResidents: "Satisfied Residents",
+        userSatisfaction: "User Satisfaction",
+        timeReduction: "Administrative Time Reduction",
+      },
+      features: {
+        virtualAssemblies: "Virtual Assemblies",
+        virtualAssembliesDesc: "Organize virtual meetings with electronic voting and automatic quorum verification.",
+        advancedReports: "Advanced Reports",
+        advancedReportsDesc: "Access detailed information with visual analysis to make informed decisions.",
+        notifications: "Notifications",
+        notificationsDesc: "Keep everyone informed with automatic alerts via email, SMS and mobile app.",
+        documentManagement: "Document Management",
+        documentManagementDesc: "Store and organize all relevant documents in a secure digital repository."
+      }
     }
   };
   
@@ -277,19 +309,19 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-4xl font-bold mb-2 text-indigo-600">+500</div>
-              <p className="text-gray-700">Conjuntos gestionados</p>
+              <p className="text-gray-700">{t.stats.complexesManaged}</p>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2 text-indigo-600">+25,000</div>
-              <p className="text-gray-700">Residentes satisfechos</p>
+              <p className="text-gray-700">{t.stats.satisfiedResidents}</p>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2 text-indigo-600">98%</div>
-              <p className="text-gray-700">Satisfacción de usuarios</p>
+              <p className="text-gray-700">{t.stats.userSatisfaction}</p>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2 text-indigo-600">-30%</div>
-              <p className="text-gray-700">Reducción en tiempo administrativo</p>
+              <p className="text-gray-700">{t.stats.timeReduction}</p>
             </div>
           </div>
         </div>
@@ -310,33 +342,33 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
               <Calendar className="h-12 w-12 text-indigo-500 mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Asambleas Virtuales</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.virtualAssemblies}</h3>
               <p className="text-gray-600">
-                Organice reuniones virtuales con votación electrónica y verificación automática de quórum.
+                {t.features.virtualAssembliesDesc}
               </p>
             </div>
 
             <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
               <BarChart4 className="h-12 w-12 text-indigo-500 mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Reportes Avanzados</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.advancedReports}</h3>
               <p className="text-gray-600">
-                Acceda a información detallada con análisis visuales para tomar decisiones informadas.
+                {t.features.advancedReportsDesc}
               </p>
             </div>
 
             <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
               <Bell className="h-12 w-12 text-indigo-500 mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Notificaciones</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.notifications}</h3>
               <p className="text-gray-600">
-                Mantenga a todos informados con alertas automáticas por email, SMS y aplicación móvil.
+                {t.features.notificationsDesc}
               </p>
             </div>
 
             <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
               <Archive className="h-12 w-12 text-indigo-500 mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-gray-900">Gestión Documental</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.documentManagement}</h3>
               <p className="text-gray-600">
-                Almacene y organice todos los documentos relevantes en un repositorio digital seguro.
+                {t.features.documentManagementDesc}
               </p>
             </div>
           </div>

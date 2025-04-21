@@ -134,7 +134,7 @@ export function Header({
               href={ROUTES.PORTAL_SELECTOR} 
               className="text-white hover:text-indigo-200 transition-colors px-4 py-2 border border-white rounded hover:bg-indigo-700"
             >
-              Iniciar Sesión
+              {t.login}
             </Link>
           )}
         </nav>
@@ -158,14 +158,14 @@ export function Header({
               className="text-white hover:text-indigo-200 px-4"
               onClick={() => scrollToSection('funcionalidades')}
             >
-              Funcionalidades
+              {t.features}
             </a>
             <a 
               href="#planes" 
               className="text-white hover:text-indigo-200 px-4"
               onClick={() => scrollToSection('planes')}
             >
-              Planes
+              {t.plans}
             </a>
             <div className="flex items-center gap-4 px-4">
               <button

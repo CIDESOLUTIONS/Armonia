@@ -83,10 +83,10 @@ export default function LandingPage() {
 
       <div> {/* Contenedor principal */}
         {/* Hero Section */}
-        <section className="relative pt-24 pb-20 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white overflow-hidden" data-testid="hero-section">
-          <div className="absolute inset-0 overflow-hidden opacity-20">
-            <div className="absolute transform -rotate-12 -translate-y-1/2 -translate-x-1/4 left-0 top-0 w-full h-full bg-white opacity-10 rounded-full"></div>
-            <div className="absolute transform rotate-12 translate-y-1/2 translate-x-1/4 right-0 bottom-0 w-full h-full bg-indigo-300 opacity-10 rounded-full"></div>
+        <section className="relative pt-24 pb-20 bg-white text-gray-800 overflow-hidden" data-testid="hero-section">
+          <div className="absolute inset-0 overflow-hidden opacity-10">
+            <div className="absolute transform -rotate-12 -translate-y-1/2 -translate-x-1/4 left-0 top-0 w-full h-full bg-indigo-200 opacity-50 rounded-full"></div>
+            <div className="absolute transform rotate-12 translate-y-1/2 translate-x-1/4 right-0 bottom-0 w-full h-full bg-indigo-200 opacity-50 rounded-full"></div>
           </div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -94,19 +94,19 @@ export default function LandingPage() {
                 <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
                   {language === "Español" ? texts.es.title : texts.en.title}
                 </h1>
-                <p className="text-lg mb-8 text-indigo-100 leading-relaxed">
+                <p className="text-lg mb-8 text-gray-600 leading-relaxed">
                   {language === "Español" ? texts.es.description : texts.en.description}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
-                    className="bg-white text-indigo-600 hover:bg-indigo-50 px-6 py-3 rounded-md font-medium"
+                    className="bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-3 rounded-md font-medium"
                     onClick={() => router.push(ROUTES.PORTAL_SELECTOR)}
                     data-testid="iniciar-sesion-btn"
                   >
                     {language === "Español" ? texts.es.loginButton : texts.en.loginButton}
                   </button>
                   <button
-                    className="bg-transparent border border-white text-white hover:bg-indigo-700 px-6 py-3 rounded-md font-medium"
+                    className="bg-transparent border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-6 py-3 rounded-md font-medium"
                     onClick={() => router.push(ROUTES.REGISTER_COMPLEX)}
                     data-testid="registrar-conjunto-btn"
                   >
@@ -126,8 +126,8 @@ export default function LandingPage() {
                       className="w-full h-auto"
                       priority
                     />
-                    <div className="absolute inset-0 bg-indigo-900 bg-opacity-10 flex items-center justify-center">
-                      <p className="text-white font-bold text-lg shadow-sm">{language === "Español" ? texts.es.dashboardPreview : texts.en.dashboardPreview}</p>
+                    <div className="absolute inset-0 bg-indigo-100 bg-opacity-50 flex items-center justify-center">
+                      <p className="text-indigo-700 font-bold text-lg shadow-sm">{language === "Español" ? texts.es.dashboardPreview : texts.en.dashboardPreview}</p>
                     </div>
                   </div>
                 </div>
@@ -139,8 +139,8 @@ export default function LandingPage() {
                 className="text-white flex flex-col items-center focus:outline-none group"
                 aria-label="Ver más"
               >
-                <span className="mb-2 group-hover:opacity-80">{language === "Español" ? texts.es.learnMore : texts.en.learnMore}</span>
-                <ChevronDown className="h-6 w-6 animate-bounce" />
+                <span className="mb-2 group-hover:opacity-80 text-indigo-600">{language === "Español" ? texts.es.learnMore : texts.en.learnMore}</span>
+                <ChevronDown className="h-6 w-6 animate-bounce text-indigo-600" />
               </button>
             </div>
           </div>
