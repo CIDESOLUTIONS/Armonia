@@ -1,7 +1,9 @@
 // Funcionalidades y características adicionales
 import { Building, User, Shield, Check, Calendar, DollarSign, MessageSquare, Bell, Users, Archive, CheckCircle, BarChart4 } from "lucide-react";
 
-export function LandingPart2({ theme }: { theme: string }) {
+export function LandingPart2({ theme, language }: { theme: string, language?: string }) {
+  // Si no se pasa el idioma, asumimos español
+  const currentLanguage = language || "Español";
   return (
     <>
       {/* Características Principales */}

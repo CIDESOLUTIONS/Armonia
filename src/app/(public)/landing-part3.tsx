@@ -7,10 +7,14 @@ import { ROUTES } from "@/constants/routes";
 export function LandingPart3({ 
   theme, 
   currency,
+  language,
 }: { 
   theme: string,
   currency: string,
+  language?: string,
 }) {
+  // Si no se pasa el idioma, asumimos español
+  const currentLanguage = language || "Español";
   const router = useRouter();
   
   return (

@@ -3,7 +3,23 @@
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
 
-export function VideoShowcase({ theme }: { theme: string }) {
+export function VideoShowcase({ theme, language }: { theme: string, language?: string }) {
+  // Si no se pasa el idioma, asumimos español
+  const currentLanguage = language || "Español";
+  
+  // Textos traducciones
+  const texts = {
+    es: {
+      title: "Vea Armonía en acción",
+      description: "Descubra cómo nuestra plataforma simplifica la gestión de conjuntos residenciales.",
+      videoNote: "El video muestra todas las funcionalidades disponibles en los planes Estándar y Premium."
+    },
+    en: {
+      title: "See Armonía in action",
+      description: "Discover how our platform simplifies the management of residential complexes.",
+      videoNote: "The video shows all features available in Standard and Premium plans."
+    }
+  };
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -59,10 +75,10 @@ export function VideoShowcase({ theme }: { theme: string }) {
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>
-            Vea Armonía en acción
+            {currentLanguage === "Español" ? texts.es.title : texts.en.title}
           </h2>
           <p className={`text-lg ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} max-w-3xl mx-auto`}>
-            Descubra cómo nuestra plataforma simplifica la gestión de conjuntos residenciales.
+            {currentLanguage === "Español" ? texts.es.description : texts.en.description}
           </p>
         </div>
 
@@ -107,7 +123,7 @@ export function VideoShowcase({ theme }: { theme: string }) {
 
         <div className="mt-8 text-center">
           <p className={`text-sm ${theme === "Oscuro" ? "text-gray-400" : "text-gray-500"}`}>
-            El video muestra todas las funcionalidades disponibles en los planes Estándar y Premium.
+            {currentLanguage === "Español" ? texts.es.videoNote : texts.en.videoNote}
           </p>
         </div>
       </div>

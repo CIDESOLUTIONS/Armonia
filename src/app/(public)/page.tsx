@@ -11,6 +11,38 @@ import { FooterContact } from "./footer-contact";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 
+// Textos para soportar múltiples idiomas
+const texts = {
+  es: {
+    title: "Gestión integral para conjuntos residenciales",
+    description: "Armonía es la plataforma integral que revoluciona la administración de conjuntos residenciales, unificando en un solo sistema la gestión de propiedades, residentes, finanzas, asambleas y seguridad. Nuestra solución digitaliza todos los procesos administrativos, reduce costos operativos y mejora la comunicación entre administradores y residentes, permitiéndole enfocarse en lo que realmente importa: crear una comunidad residencial armoniosa y bien gestionada.",
+    loginButton: "Iniciar Sesión",
+    registerButton: "Registrar Conjunto",
+    learnMore: "Conocer más",
+    dashboardPreview: "Visualice toda la información de su conjunto",
+    integralManagement: "Gestión Integral",
+    managementDesc: "Una plataforma completa para todas las necesidades de administración de su conjunto.",
+    efficientCommunication: "Comunicación Eficiente",
+    communicationDesc: "Mejore la comunicación entre administración, residentes y personal de vigilancia.",
+    easyToUse: "Fácil de Usar",
+    easyDesc: "Interfaz intuitiva diseñada para ser utilizada por personas con cualquier nivel técnico."
+  },
+  en: {
+    title: "Comprehensive Management for Residential Complexes",
+    description: "Armonía is the comprehensive platform that revolutionizes the administration of residential complexes, unifying property management, residents, finances, assemblies, and security in a single system. Our solution digitalizes all administrative processes, reduces operational costs, and improves communication between administrators and residents, allowing you to focus on what really matters: creating a harmonious and well-managed residential community.",
+    loginButton: "Login",
+    registerButton: "Register Complex",
+    learnMore: "Learn More",
+    dashboardPreview: "Visualize all your complex information",
+    integralManagement: "Comprehensive Management",
+    managementDesc: "A complete platform for all the administrative needs of your complex.",
+    efficientCommunication: "Efficient Communication",
+    communicationDesc: "Improve communication between administration, residents and security personnel.",
+    easyToUse: "Easy to Use",
+    easyDesc: "Intuitive interface designed to be used by people with any technical level."
+  }
+};
+
 export default function LandingPage() {
   const router = useRouter();
   const [language, setLanguage] = useState("Español");
@@ -22,6 +54,16 @@ export default function LandingPage() {
     // Aquí se podrían cargar textos según el idioma seleccionado
     document.documentElement.lang = language === "Español" ? "es" : "en";
   }, [language]);
+
+  // Efecto para aplicar el tema seleccionado
+  useEffect(() => {
+    // Aplicar clases al body según el tema
+    if (theme === "Oscuro") {
+      document.body.classList.add("dark-theme");
+    } else {
+      document.body.classList.remove("dark-theme");
+    }
+  }, [theme]);
 
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
@@ -39,7 +81,7 @@ export default function LandingPage() {
         setCurrency={setCurrency}
       />
 
-      <div className="pt-24"> {/* Padding superior para compensar el header fijo */}
+      <div className="pt-16"> {/* Padding superior para compensar el header fijo */
         {/* Hero Section */}
         <section className="relative py-20 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white overflow-hidden" data-testid="hero-section">
           <div className="absolute inset-0 overflow-hidden opacity-20">
@@ -50,10 +92,10 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                  Gestión integral para conjuntos residenciales
+                  {language === "Español" ? texts.es.title : texts.en.title}
                 </h1>
                 <p className="text-lg mb-8 text-indigo-100 leading-relaxed">
-                  Simplifique la administración de su conjunto con nuestra plataforma todo-en-uno. Comunicación, gestión financiera, control de acceso y mucho más en un solo lugar.
+                  {language === "Español" ? texts.es.description : texts.en.description}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
@@ -61,14 +103,14 @@ export default function LandingPage() {
                     onClick={() => router.push(ROUTES.PORTAL_SELECTOR)}
                     data-testid="iniciar-sesion-btn"
                   >
-                    Iniciar Sesión
+                    {language === "Español" ? texts.es.loginButton : texts.en.loginButton}
                   </button>
                   <button
                     className="bg-transparent border border-white text-white hover:bg-indigo-700 px-6 py-3 rounded-md font-medium"
                     onClick={() => router.push(ROUTES.REGISTER_COMPLEX)}
                     data-testid="registrar-conjunto-btn"
                   >
-                    Registrar Conjunto
+                    {language === "Español" ? texts.es.registerButton : texts.en.registerButton}
                   </button>
                 </div>
               </div>
@@ -85,7 +127,7 @@ export default function LandingPage() {
                       priority
                     />
                     <div className="absolute inset-0 bg-indigo-900 bg-opacity-10 flex items-center justify-center">
-                      <p className="text-white font-bold text-lg shadow-sm">Visualice toda la información de su conjunto</p>
+                      <p className="text-white font-bold text-lg shadow-sm">{language === "Español" ? texts.es.dashboardPreview : texts.en.dashboardPreview}</p>
                     </div>
                   </div>
                 </div>
@@ -97,7 +139,7 @@ export default function LandingPage() {
                 className="text-white flex flex-col items-center focus:outline-none group"
                 aria-label="Ver más"
               >
-                <span className="mb-2 group-hover:opacity-80">Conocer más</span>
+                <span className="mb-2 group-hover:opacity-80">{language === "Español" ? texts.es.learnMore : texts.en.learnMore}</span>
                 <ChevronDown className="h-6 w-6 animate-bounce" />
               </button>
             </div>
@@ -109,21 +151,21 @@ export default function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div className={`p-6 rounded-lg ${theme === "Oscuro" ? "bg-gray-700" : "bg-indigo-50"}`}>
-                <div className="text-indigo-600 font-bold text-xl mb-2">Gestión Integral</div>
+                <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.integralManagement : texts.en.integralManagement}</div>
                 <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>
-                  Una plataforma completa para todas las necesidades de administración de su conjunto.
+                  {language === "Español" ? texts.es.managementDesc : texts.en.managementDesc}
                 </p>
               </div>
               <div className={`p-6 rounded-lg ${theme === "Oscuro" ? "bg-gray-700" : "bg-indigo-50"}`}>
-                <div className="text-indigo-600 font-bold text-xl mb-2">Comunicación Eficiente</div>
+                <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.efficientCommunication : texts.en.efficientCommunication}</div>
                 <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>
-                  Mejore la comunicación entre administración, residentes y personal de vigilancia.
+                  {language === "Español" ? texts.es.communicationDesc : texts.en.communicationDesc}
                 </p>
               </div>
               <div className={`p-6 rounded-lg ${theme === "Oscuro" ? "bg-gray-700" : "bg-indigo-50"}`}>
-                <div className="text-indigo-600 font-bold text-xl mb-2">Fácil de Usar</div>
+                <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.easyToUse : texts.en.easyToUse}</div>
                 <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>
-                  Interfaz intuitiva diseñada para ser utilizada por personas con cualquier nivel técnico.
+                  {language === "Español" ? texts.es.easyDesc : texts.en.easyDesc}
                 </p>
               </div>
             </div>
@@ -131,18 +173,19 @@ export default function LandingPage() {
         </section>
         
         {/* Incluir componentes de las partes 2 y 3 */}
-        <LandingPart2 theme={theme} />
+        <LandingPart2 theme={theme} language={language} />
         
         {/* Video de demostración */}
-        <VideoShowcase theme={theme} />
+        <VideoShowcase theme={theme} language={language} />
         
         <LandingPart3 
           theme={theme} 
           currency={currency}
+          language={language}
         />
         
         {/* Sección de contacto */}
-        <FooterContact theme={theme} />
+        <FooterContact theme={theme} language={language} />
       </div>
     </div>
   );
