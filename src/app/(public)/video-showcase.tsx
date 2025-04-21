@@ -74,10 +74,10 @@ export function VideoShowcase({ theme, language }: { theme: string, language?: s
     <section className="py-16 bg-indigo-50" data-testid="video-showcase">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
             {currentLanguage === "Español" ? texts.es.title : texts.en.title}
           </h2>
-          <p className={`text-lg ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} max-w-3xl mx-auto`}>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             {currentLanguage === "Español" ? texts.es.description : texts.en.description}
           </p>
         </div>
@@ -117,12 +117,12 @@ export function VideoShowcase({ theme, language }: { theme: string, language?: s
             data-testid="showcase-video"
           >
             <source src="/videos/landing-video.mp4" type="video/mp4" />
-            <p>Su navegador no soporta videos HTML5. Aquí hay un <a href="/videos/armonia-demo.mp4">enlace al video</a>.</p>
+            <p>Su navegador no soporta videos HTML5. Aquí hay un <a href="/videos/landing-video.mp4">enlace al video</a>.</p>
           </video>
         </div>
 
         <div className="mt-8 text-center">
-          <p className={`text-sm ${theme === "Oscuro" ? "text-gray-400" : "text-gray-500"}`}>
+          <p className="text-sm text-gray-500">
             {currentLanguage === "Español" ? texts.es.videoNote : texts.en.videoNote}
           </p>
         </div>

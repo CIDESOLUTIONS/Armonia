@@ -7,6 +7,61 @@ import { Building, MessageSquare, Calendar, Mail, Phone } from "lucide-react";
 export function FooterContact({ theme, language }: { theme: string, language?: string }) {
   // Si no se pasa el idioma, asumimos español
   const currentLanguage = language || "Español";
+  
+  // Textos localizados
+  const texts = {
+    es: {
+      contactTitle: "¿Interesado en Armonía?",
+      contactDesc: "Complete el formulario y un representante se pondrá en contacto con usted para ofrecerle una demostración personalizada.",
+      supportTitle: "Soporte Premium",
+      supportDesc: "Respuesta garantizada en menos de 24 horas.",
+      trainingTitle: "Capacitación Gratuita",
+      trainingDesc: "Sesiones de capacitación para administradores y residentes.",
+      migrationTitle: "Migración de Datos",
+      migrationDesc: "Le ayudamos a migrar los datos de su sistema actual.",
+      formTitle: "Solicite más información",
+      nameLabel: "Nombre completo",
+      namePlaceholder: "Ingrese su nombre",
+      emailLabel: "Correo electrónico",
+      emailPlaceholder: "correo@ejemplo.com",
+      phoneLabel: "Teléfono",
+      phonePlaceholder: "(123) 456-7890",
+      complexLabel: "Nombre del conjunto",
+      complexPlaceholder: "Nombre del conjunto residencial",
+      unitsLabel: "Número de unidades",
+      unitsPlaceholder: "Ej. 30",
+      messageLabel: "Mensaje",
+      messagePlaceholder: "¿En qué podemos ayudarle?",
+      submitButton: "Enviar Solicitud"
+    },
+    en: {
+      contactTitle: "Interested in Armonía?",
+      contactDesc: "Fill out the form and a representative will contact you to offer a personalized demonstration.",
+      supportTitle: "Premium Support",
+      supportDesc: "Guaranteed response in less than 24 hours.",
+      trainingTitle: "Free Training",
+      trainingDesc: "Training sessions for administrators and residents.",
+      migrationTitle: "Data Migration",
+      migrationDesc: "We help you migrate data from your current system.",
+      formTitle: "Request more information",
+      nameLabel: "Full name",
+      namePlaceholder: "Enter your name",
+      emailLabel: "Email",
+      emailPlaceholder: "email@example.com",
+      phoneLabel: "Phone",
+      phonePlaceholder: "(123) 456-7890",
+      complexLabel: "Complex name",
+      complexPlaceholder: "Residential complex name",
+      unitsLabel: "Number of units",
+      unitsPlaceholder: "Ex. 30",
+      messageLabel: "Message",
+      messagePlaceholder: "How can we help you?",
+      submitButton: "Send Request"
+    }
+  };
+  
+  const t = currentLanguage === "Español" ? texts.es : texts.en;
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -46,11 +101,11 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <div>
-              <h2 className={`text-3xl md:text-4xl font-bold mb-6 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>
-                ¿Interesado en Armonía?
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">
+                {t.contactTitle}
               </h2>
-              <p className={`text-lg mb-6 ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>
-                Complete el formulario y un representante se pondrá en contacto con usted para ofrecerle una demostración personalizada.
+              <p className="text-lg mb-6 text-gray-600">
+                {t.contactDesc}
               </p>
               <div className="space-y-4">
                 <div className="flex items-center">
@@ -58,8 +113,8 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
                     <MessageSquare className="h-5 w-5 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className={`font-semibold ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Soporte Premium</h3>
-                    <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>Respuesta garantizada en menos de 24 horas.</p>
+                    <h3 className="font-semibold text-gray-900">{t.supportTitle}</h3>
+                    <p className="text-gray-600">{t.supportDesc}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -67,8 +122,8 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
                     <Calendar className="h-5 w-5 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className={`font-semibold ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Capacitación Gratuita</h3>
-                    <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>Sesiones de capacitación para administradores y residentes.</p>
+                    <h3 className="font-semibold text-gray-900">{t.trainingTitle}</h3>
+                    <p className="text-gray-600">{t.trainingDesc}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -76,105 +131,105 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
                     <Building className="h-5 w-5 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className={`font-semibold ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Migración de Datos</h3>
-                    <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>Le ayudamos a migrar los datos de su sistema actual.</p>
+                    <h3 className="font-semibold text-gray-900">{t.migrationTitle}</h3>
+                    <p className="text-gray-600">{t.migrationDesc}</p>
                   </div>
                 </div>
                 
                 <div className="mt-8 space-y-4">
                   <div className="flex items-center">
                     <Mail className="h-5 w-5 text-indigo-600 mr-3" />
-                    <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>contacto@armonia.com</span>
+                    <span className="text-gray-600">contacto@armonia.com</span>
                   </div>
                   <div className="flex items-center">
                     <Phone className="h-5 w-5 text-indigo-600 mr-3" />
-                    <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>+57 (601) 123-4567</span>
+                    <span className="text-gray-600">+57 (601) 123-4567</span>
                   </div>
                 </div>
               </div>
             </div>
             <div>
-              <form onSubmit={handleSubmit} className={`p-8 rounded-lg shadow-lg ${theme === "Oscuro" ? "bg-gray-800" : "bg-white border border-gray-200"}`} data-testid="contact-form">
-                <h3 className={`text-2xl font-bold mb-6 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Solicite más información</h3>
+              <form onSubmit={handleSubmit} className="p-8 rounded-lg shadow-lg bg-white border border-gray-200" data-testid="contact-form">
+                <h3 className="text-2xl font-bold mb-6 text-gray-900">{t.formTitle}</h3>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="name" className={`block mb-2 text-sm font-medium ${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Nombre completo</label>
+                    <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700">{t.nameLabel}</label>
                     <input 
                       type="text" 
                       id="name" 
                       name="name" 
                       value={formData.name} 
                       onChange={handleChange} 
-                      className={`w-full px-4 py-2 border rounded-lg ${theme === "Oscuro" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`} 
-                      placeholder="Ingrese su nombre"
+                      className="w-full px-4 py-2 border rounded-lg bg-white border-gray-300 text-gray-900" 
+                      placeholder={t.namePlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className={`block mb-2 text-sm font-medium ${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Correo electrónico</label>
+                    <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">{t.emailLabel}</label>
                     <input 
                       type="email" 
                       id="email" 
                       name="email" 
                       value={formData.email} 
                       onChange={handleChange} 
-                      className={`w-full px-4 py-2 border rounded-lg ${theme === "Oscuro" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`} 
-                      placeholder="correo@ejemplo.com"
+                      className="w-full px-4 py-2 border rounded-lg bg-white border-gray-300 text-gray-900" 
+                      placeholder={t.emailPlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className={`block mb-2 text-sm font-medium ${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Teléfono</label>
+                    <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-700">{t.phoneLabel}</label>
                     <input 
                       type="tel" 
                       id="phone" 
                       name="phone" 
                       value={formData.phone} 
                       onChange={handleChange} 
-                      className={`w-full px-4 py-2 border rounded-lg ${theme === "Oscuro" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`} 
-                      placeholder="(123) 456-7890"
+                      className="w-full px-4 py-2 border rounded-lg bg-white border-gray-300 text-gray-900" 
+                      placeholder={t.phonePlaceholder}
                     />
                   </div>
                   <div>
-                    <label htmlFor="complexName" className={`block mb-2 text-sm font-medium ${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Nombre del conjunto</label>
+                    <label htmlFor="complexName" className="block mb-2 text-sm font-medium text-gray-700">{t.complexLabel}</label>
                     <input 
                       type="text" 
                       id="complexName" 
                       name="complexName" 
                       value={formData.complexName} 
                       onChange={handleChange} 
-                      className={`w-full px-4 py-2 border rounded-lg ${theme === "Oscuro" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`} 
-                      placeholder="Nombre del conjunto residencial"
+                      className="w-full px-4 py-2 border rounded-lg bg-white border-gray-300 text-gray-900" 
+                      placeholder={t.complexPlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="units" className={`block mb-2 text-sm font-medium ${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Número de unidades</label>
+                    <label htmlFor="units" className="block mb-2 text-sm font-medium text-gray-700">{t.unitsLabel}</label>
                     <input 
                       type="number" 
                       id="units" 
                       name="units" 
                       value={formData.units} 
                       onChange={handleChange} 
-                      className={`w-full px-4 py-2 border rounded-lg ${theme === "Oscuro" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`} 
-                      placeholder="Ej. 30"
+                      className="w-full px-4 py-2 border rounded-lg bg-white border-gray-300 text-gray-900" 
+                      placeholder={t.unitsPlaceholder}
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="message" className={`block mb-2 text-sm font-medium ${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Mensaje</label>
+                    <label htmlFor="message" className="block mb-2 text-sm font-medium text-gray-700">{t.messageLabel}</label>
                     <textarea 
                       id="message" 
                       name="message" 
                       value={formData.message} 
                       onChange={handleChange} 
-                      className={`w-full px-4 py-2 border rounded-lg ${theme === "Oscuro" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`} 
-                      placeholder="¿En qué podemos ayudarle?"
+                      className="w-full px-4 py-2 border rounded-lg bg-white border-gray-300 text-gray-900" 
+                      placeholder={t.messagePlaceholder}
                       rows={4}
                     ></textarea>
                   </div>
                   <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" data-testid="submit-contact">
-                    Enviar Solicitud
+                    {t.submitButton}
                   </Button>
                 </div>
               </form>
