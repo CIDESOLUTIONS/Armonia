@@ -1,18 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 import { Header } from "@/components/layout/header";
 import { LandingPart2 } from "./landing-part2";
 import { LandingPart3 } from "./landing-part3";
+import { VideoShowcase } from "./video-showcase";
+import { FooterContact } from "./footer-contact";
 import { ChevronDown } from "lucide-react";
+import Image from "next/image";
 
 export default function LandingPage() {
   const router = useRouter();
   const [language, setLanguage] = useState("Español");
   const [currency, setCurrency] = useState("Pesos");
   const [theme, setTheme] = useState("Claro");
+  
+  // Efecto para aplicar el idioma seleccionado
+  useEffect(() => {
+    // Aquí se podrían cargar textos según el idioma seleccionado
+    document.documentElement.lang = language === "Español" ? "es" : "en";
+  }, [language]);
 
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
@@ -67,11 +76,16 @@ export default function LandingPage() {
                 {/* Dashboard preview */}
                 <div className="bg-white rounded-lg shadow-2xl overflow-hidden transform rotate-1">
                   <div className="aspect-video bg-gray-100 relative">
-                    <div className="w-full h-full flex items-center justify-center bg-indigo-100">
-                      <p className="text-indigo-600 font-bold text-lg">Vista previa del dashboard</p>
-                    </div>
-                    <div className="absolute inset-0 bg-indigo-900 bg-opacity-20 flex items-center justify-center">
-                      <p className="text-white font-bold text-lg"></p>
+                    <Image 
+                      src="/images/landing-hero1.png" 
+                      alt="Vista previa del dashboard de Armonía"
+                      width={600}
+                      height={338}
+                      className="w-full h-auto"
+                      priority
+                    />
+                    <div className="absolute inset-0 bg-indigo-900 bg-opacity-10 flex items-center justify-center">
+                      <p className="text-white font-bold text-lg shadow-sm">Visualice toda la información de su conjunto</p>
                     </div>
                   </div>
                 </div>
@@ -118,10 +132,17 @@ export default function LandingPage() {
         
         {/* Incluir componentes de las partes 2 y 3 */}
         <LandingPart2 theme={theme} />
+        
+        {/* Video de demostración */}
+        <VideoShowcase theme={theme} />
+        
         <LandingPart3 
           theme={theme} 
           currency={currency}
         />
+        
+        {/* Sección de contacto */}
+        <FooterContact theme={theme} />
       </div>
     </div>
   );

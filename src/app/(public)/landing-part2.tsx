@@ -12,7 +12,7 @@ export function LandingPart2({ theme }: { theme: string }) {
               Funcionalidades Completas para su Conjunto
             </h2>
             <p className={`text-lg ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} max-w-3xl mx-auto`}>
-              Armonía ofrece soluciones integrales para todos los aspectos de la administración de propiedades horizontales.
+              Armonía proporciona una plataforma integral, diseñada específicamente para la administración eficiente de conjuntos residenciales, que unifica y simplifica todas sus necesidades de gestión.
             </p>
           </div>
 
@@ -22,16 +22,16 @@ export function LandingPart2({ theme }: { theme: string }) {
               <Building className="h-12 w-12 text-indigo-600 mb-6" />
               <h3 className={`text-xl font-bold mb-3 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Gestión de Inventario</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} mb-6`}>
-                Control completo de propiedades, residentes, vehículos y mascotas en un solo lugar.
+                Control digitalizado y centralizado de todos los activos y unidades de su conjunto residencial.
               </p>
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Inventario detallado de propiedades</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Registro detallado de propiedades</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Registro de propietarios y residentes</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Base de datos de propietarios y residentes</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
@@ -55,16 +55,16 @@ export function LandingPart2({ theme }: { theme: string }) {
               <Users className="h-12 w-12 text-indigo-600 mb-6" />
               <h3 className={`text-xl font-bold mb-3 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Gestión de Asambleas</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} mb-6`}>
-                Organice asambleas eficientes con herramientas de quórum, votación y documentación.
+                Transforme sus asambleas en eventos eficientes con herramientas digitales que agilizan todo el proceso.
               </p>
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Programación y convocatoria</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Programación y convocatoria automatizada</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Verificación de quórum y asistencia</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Verificación digital de quórum</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
@@ -72,7 +72,7 @@ export function LandingPart2({ theme }: { theme: string }) {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Elaboración y firma de actas</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Elaboración y firma digital de actas</span>
                 </li>
               </ul>
               <a href="#" className={`inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium`}>
@@ -88,16 +88,16 @@ export function LandingPart2({ theme }: { theme: string }) {
               <DollarSign className="h-12 w-12 text-indigo-600 mb-6" />
               <h3 className={`text-xl font-bold mb-3 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Gestión Financiera</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} mb-6`}>
-                Control integral de finanzas, presupuestos, cuotas y pagos para su conjunto.
+                Administre los recursos de su conjunto con transparencia y precisión mediante herramientas financieras avanzadas.
               </p>
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Presupuestos y seguimiento</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Presupuestos y seguimiento en tiempo real</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Generación de cuotas (ordinarias/extraordinarias)</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Generación automática de cuotas</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
@@ -124,20 +124,20 @@ export function LandingPart2({ theme }: { theme: string }) {
               <User className="h-12 w-12 text-indigo-600 mb-6" />
               <h3 className={`text-xl font-bold mb-3 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Portal de Residentes</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} mb-6`}>
-                Acceso personalizado para residentes con gestión de pagos, reservas y más.
+                Brinde a los residentes una experiencia digital completa para gestionar todos sus asuntos relacionados con el conjunto.
               </p>
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Estado de cuenta y pagos</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Estado de cuenta y pagos online</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Reserva de áreas comunes</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Reserva digital de áreas comunes</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Participación en asambleas y votaciones</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Participación en asambleas virtuales</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
@@ -157,24 +157,24 @@ export function LandingPart2({ theme }: { theme: string }) {
               <MessageSquare className="h-12 w-12 text-indigo-600 mb-6" />
               <h3 className={`text-xl font-bold mb-3 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Sistema PQR</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} mb-6`}>
-                Gestión eficiente de peticiones, quejas y reclamos con seguimiento detallado.
+                Gestione eficientemente las peticiones, quejas y reclamos con un sistema organizado que mejora la comunicación.
               </p>
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Creación y seguimiento de solicitudes</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Creación y seguimiento digital de solicitudes</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Categorización por tipo y prioridad</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Categorización inteligente por prioridad</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Asignación de responsables</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Asignación automática de responsables</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Métricas y reportes de gestión</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Análisis y estadísticas de gestión</span>
                 </li>
               </ul>
               <a href="#" className={`inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium`}>
@@ -190,7 +190,7 @@ export function LandingPart2({ theme }: { theme: string }) {
               <Shield className="h-12 w-12 text-indigo-600 mb-6" />
               <h3 className={`text-xl font-bold mb-3 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Recepción y Vigilancia</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} mb-6`}>
-                Control de acceso, correspondencia y seguridad para su conjunto residencial.
+                Optimice la seguridad y control de acceso con herramientas digitales diseñadas para el personal de vigilancia.
               </p>
               <ul className="space-y-2 mb-6">
                 <li className="flex items-start">
@@ -207,7 +207,7 @@ export function LandingPart2({ theme }: { theme: string }) {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Registro de incidentes de seguridad</span>
+                  <span className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-700"}`}>Alertas de seguridad en tiempo real</span>
                 </li>
               </ul>
               <a href="#" className={`inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium`}>
@@ -253,7 +253,7 @@ export function LandingPart2({ theme }: { theme: string }) {
               Características que Facilitan su Gestión
             </h2>
             <p className={`text-lg ${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} max-w-3xl mx-auto`}>
-              Descubra todas las herramientas que Armonía ofrece para optimizar la administración de su conjunto.
+              Todas las herramientas que necesita para transformar la administración de su conjunto en un proceso digital, eficiente y transparente.
             </p>
           </div>
 
@@ -262,7 +262,7 @@ export function LandingPart2({ theme }: { theme: string }) {
               <Calendar className="h-12 w-12 text-indigo-500 mb-4" />
               <h3 className={`text-lg font-semibold mb-2 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Asambleas Virtuales</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>
-                Organice y gestione votaciones con verificación de quórum y generación automática de actas.
+                Organice reuniones virtuales con votación electrónica y verificación automática de quórum.
               </p>
             </div>
 
@@ -270,7 +270,7 @@ export function LandingPart2({ theme }: { theme: string }) {
               <BarChart4 className="h-12 w-12 text-indigo-500 mb-4" />
               <h3 className={`text-lg font-semibold mb-2 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Reportes Avanzados</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>
-                Informes detallados y personalizables para tomar mejores decisiones basadas en datos.
+                Acceda a información detallada con análisis visuales para tomar decisiones informadas.
               </p>
             </div>
 
@@ -278,7 +278,7 @@ export function LandingPart2({ theme }: { theme: string }) {
               <Bell className="h-12 w-12 text-indigo-500 mb-4" />
               <h3 className={`text-lg font-semibold mb-2 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Notificaciones</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>
-                Alertas y notificaciones automatizadas para mantener informados a todos los residentes.
+                Mantenga a todos informados con alertas automáticas por email, SMS y aplicación móvil.
               </p>
             </div>
 
@@ -286,7 +286,7 @@ export function LandingPart2({ theme }: { theme: string }) {
               <Archive className="h-12 w-12 text-indigo-500 mb-4" />
               <h3 className={`text-lg font-semibold mb-2 ${theme === "Oscuro" ? "text-white" : "text-gray-900"}`}>Gestión Documental</h3>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"}`}>
-                Almacenamiento y organización de todos los documentos importantes del conjunto.
+                Almacene y organice todos los documentos relevantes en un repositorio digital seguro.
               </p>
             </div>
           </div>
@@ -317,7 +317,7 @@ export function LandingPart2({ theme }: { theme: string }) {
                 </div>
               </div>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} italic`}>
-                "Armonía ha simplificado enormemente nuestra gestión administrativa. Las asambleas virtuales y el sistema de votación han aumentado la participación de los residentes de manera significativa."
+                "Armonía ha revolucionado nuestra administración. Las asambleas virtuales y el sistema de votación han aumentado la participación en un 80%. La gestión financiera es ahora transparente y sencilla."
               </p>
             </div>
 
@@ -332,7 +332,7 @@ export function LandingPart2({ theme }: { theme: string }) {
                 </div>
               </div>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} italic`}>
-                "Como residente, valoro mucho la transparencia que Armonía ha traído a nuestro conjunto. Ahora puedo ver mi estado de cuenta, hacer pagos y reservar áreas comunes desde mi celular."
+                "Como residente, Armonía ha cambiado completamente mi experiencia. Puedo pagar mis cuotas online, reservar áreas comunes desde mi celular, y estar informada de todo lo que ocurre en el conjunto."
               </p>
             </div>
 
@@ -347,7 +347,7 @@ export function LandingPart2({ theme }: { theme: string }) {
                 </div>
               </div>
               <p className={`${theme === "Oscuro" ? "text-gray-300" : "text-gray-600"} italic`}>
-                "El módulo de recepción es excelente. Registrar visitantes y paquetes es muy sencillo, y los residentes reciben notificaciones inmediatas cuando tienen correspondencia."
+                "El módulo de recepción es muy intuitivo. La gestión de visitantes y paquetes es ahora 100% digital, y los residentes reciben notificaciones instantáneas cuando tienen correspondencia."
               </p>
             </div>
           </div>
