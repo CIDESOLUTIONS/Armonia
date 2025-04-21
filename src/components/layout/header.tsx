@@ -7,6 +7,22 @@ import { Globe, Sun, Moon, DollarSign, User, LogIn, LogOut, Menu } from 'lucide-
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 
+// Traducciones para el header
+const headerTexts = {
+  es: {
+    features: "Funcionalidades",
+    plans: "Planes",
+    login: "Iniciar Sesión",
+    logout: "Cerrar Sesión"
+  },
+  en: {
+    features: "Features",
+    plans: "Plans",
+    login: "Login",
+    logout: "Logout"
+  }
+};
+
 interface HeaderProps {
   theme: string;
   setTheme: (theme: string) => void;
@@ -35,6 +51,9 @@ export function Header({
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Obtenemos las traducciones según el idioma
+  const t = language === 'Español' ? headerTexts.es : headerTexts.en;
 
   const toggleLanguage = () => {
     setLanguage(language === 'Español' ? 'Inglés' : 'Español');
@@ -78,10 +97,10 @@ export function Header({
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           <a href="#funcionalidades" className="text-white hover:text-indigo-200 focus:outline-none">
-            Funcionalidades
+            {t.features}
           </a>
           <a href="#planes" className="text-white hover:text-indigo-200 focus:outline-none">
-            Planes
+            {t.plans}
           </a>
           <div className="flex items-center gap-4">
             <button
@@ -124,7 +143,7 @@ export function Header({
                     }}
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    {language === 'Español' ? 'Cerrar Sesión' : 'Logout'}
+                    {t.logout}
                   </button>
                 </div>
               )}
@@ -193,7 +212,7 @@ export function Header({
                 className="text-white hover:text-indigo-200 transition-colors px-4 py-2 border border-white rounded hover:bg-indigo-700 text-center"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Iniciar Sesión
+                {t.login}
               </Link>
             </div>
           </div>
