@@ -81,7 +81,7 @@ export default function LandingPage() {
         setCurrency={setCurrency}
       />
 
-      <div className="pt-16"> {/* Padding superior para compensar el header fijo */
+      <div className="pt-16"> {/* Padding superior para compensar el header fijo */}
         {/* Hero Section */}
         <section className="relative py-20 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white overflow-hidden" data-testid="hero-section">
           <div className="absolute inset-0 overflow-hidden opacity-20">
