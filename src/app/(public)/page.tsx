@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
 import { Header } from "@/components/layout/header";
+import { LandingPart1 } from "./landing-part1";
 import { LandingPart2 } from "./landing-part2";
 import { LandingPart3 } from "./landing-part3";
 import { VideoShowcase } from "./video-showcase";
@@ -172,7 +173,8 @@ export default function LandingPage() {
           </div>
         </section>
         
-        {/* Incluir componentes de las partes 2 y 3 */}
+        {/* Incluir componentes de las partes 1, 2 y 3 */}
+        <LandingPart1 theme={theme} language={language} />
         <LandingPart2 theme={theme} language={language} />
         
         {/* Video de demostración */}
