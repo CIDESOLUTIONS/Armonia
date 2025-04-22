@@ -347,30 +347,30 @@ export default function RegisterComplex() {
                 
                 <div className={`bg-white p-8 rounded-lg border ${plan === "standard" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer relative`} onClick={() => handlePlanSelect("standard")}>
                   <div className="absolute top-0 right-0 bg-indigo-500 text-white px-4 py-1 text-sm font-bold rounded-bl-lg rounded-tr-lg">
-                    RECOMENDADO
+                    {t.recommended}
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-gray-900">Plan Estándar</h3>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">{t.standardPlan}</h3>
                   <div className="text-4xl font-bold mb-4 text-gray-900">
                     ${currency === "Dólares" ? "25" : "95000"}<span className="text-base font-normal">/mes</span>
                   </div>
-                  <p className="text-gray-600 mb-6">Para conjuntos de hasta 50 unidades.</p>
+                  <p className="text-gray-600 mb-6">{t.standardPlanDesc}</p>
                   
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Todas las funcionalidades básicas</span>
+                      <span className="text-gray-700">{t.standardPlanFeature1}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Gestión de asambleas y votaciones</span>
+                      <span className="text-gray-700">{t.standardPlanFeature2}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Sistema de PQR avanzado</span>
+                      <span className="text-gray-700">{t.standardPlanFeature3}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Históricos de hasta 3 años</span>
+                      <span className="text-gray-700">{t.standardPlanFeature4}</span>
                     </li>
                   </ul>
                   
@@ -378,33 +378,33 @@ export default function RegisterComplex() {
                     className={`w-full ${plan === "standard" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
                     onClick={() => handlePlanSelect("standard")}
                   >
-                    Seleccionar Plan Estándar
+                    {t.selectStandardPlan}
                   </Button>
                 </div>
                 
                 <div className={`bg-white p-8 rounded-lg border ${plan === "premium" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("premium")}>
-                  <h3 className="text-xl font-bold mb-2 text-gray-900">Plan Premium</h3>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">{t.premiumPlan}</h3>
                   <div className="text-4xl font-bold mb-4 text-gray-900">
                     ${currency === "Dólares" ? "50" : "190000"}<span className="text-base font-normal">/mes</span>
                   </div>
-                  <p className="text-gray-600 mb-6">Para conjuntos de hasta 120 unidades.</p>
+                  <p className="text-gray-600 mb-6">{t.premiumPlanDesc}</p>
                   
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Todas las funcionalidades estándar</span>
+                      <span className="text-gray-700">{t.premiumPlanFeature1}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Módulo financiero avanzado</span>
+                      <span className="text-gray-700">{t.premiumPlanFeature2}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Personalización de la plataforma</span>
+                      <span className="text-gray-700">{t.premiumPlanFeature3}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">API para integraciones</span>
+                      <span className="text-gray-700">{t.premiumPlanFeature4}</span>
                     </li>
                   </ul>
                   
@@ -412,7 +412,7 @@ export default function RegisterComplex() {
                     className={`w-full ${plan === "premium" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
                     onClick={() => handlePlanSelect("premium")}
                   >
-                    Seleccionar Plan Premium
+                    {t.selectPremiumPlan}
                   </Button>
                 </div>
               </div>
@@ -422,12 +422,12 @@ export default function RegisterComplex() {
           {/* Paso 2: Información del Conjunto */}
           {step === 2 && (
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-bold mb-8 text-center">Información del Conjunto</h2>
+              <h2 className="text-2xl font-bold mb-8 text-center">{t.complexInfoTitle}</h2>
               
               <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg">
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="complexName" className="block mb-2 text-sm font-medium text-gray-700">Nombre del conjunto</label>
+                    <label htmlFor="complexName" className="block mb-2 text-sm font-medium text-gray-700">{t.complexName}</label>
                     <input 
                       type="text" 
                       id="complexName" 
@@ -435,14 +435,14 @@ export default function RegisterComplex() {
                       value={formData.complexName} 
                       onChange={handleChange} 
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder="Ej. Conjunto Residencial Vista Hermosa"
+                      placeholder={t.complexNamePlaceholder}
                       required
                     />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="adminName" className="block mb-2 text-sm font-medium text-gray-700">Nombre del administrador</label>
+                      <label htmlFor="adminName" className="block mb-2 text-sm font-medium text-gray-700">{t.adminName}</label>
                       <input 
                         type="text" 
                         id="adminName" 
@@ -450,12 +450,12 @@ export default function RegisterComplex() {
                         value={formData.adminName} 
                         onChange={handleChange} 
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                        placeholder="Nombre completo"
+                        placeholder={t.adminNamePlaceholder}
                         required
                       />
                     </div>
                     <div>
-                      <label htmlFor="adminPhone" className="block mb-2 text-sm font-medium text-gray-700">Teléfono</label>
+                      <label htmlFor="adminPhone" className="block mb-2 text-sm font-medium text-gray-700">{t.phone}</label>
                       <input 
                         type="tel" 
                         id="adminPhone" 
@@ -463,14 +463,14 @@ export default function RegisterComplex() {
                         value={formData.adminPhone} 
                         onChange={handleChange} 
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                        placeholder="(123) 456-7890"
+                        placeholder={t.phonePlaceholder}
                         required
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <label htmlFor="adminEmail" className="block mb-2 text-sm font-medium text-gray-700">Correo electrónico</label>
+                    <label htmlFor="adminEmail" className="block mb-2 text-sm font-medium text-gray-700">{t.email}</label>
                     <input 
                       type="email" 
                       id="adminEmail" 
@@ -478,13 +478,13 @@ export default function RegisterComplex() {
                       value={formData.adminEmail} 
                       onChange={handleChange} 
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder="correo@ejemplo.com"
+                      placeholder={t.emailPlaceholder}
                       required
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="address" className="block mb-2 text-sm font-medium text-gray-700">Dirección</label>
+                    <label htmlFor="address" className="block mb-2 text-sm font-medium text-gray-700">{t.address}</label>
                     <input 
                       type="text" 
                       id="address" 
@@ -492,14 +492,14 @@ export default function RegisterComplex() {
                       value={formData.address} 
                       onChange={handleChange} 
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder="Dirección del conjunto"
+                      placeholder={t.addressPlaceholder}
                       required
                     />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label htmlFor="city" className="block mb-2 text-sm font-medium text-gray-700">Ciudad</label>
+                      <label htmlFor="city" className="block mb-2 text-sm font-medium text-gray-700">{t.city}</label>
                       <input 
                         type="text" 
                         id="city" 
@@ -507,12 +507,12 @@ export default function RegisterComplex() {
                         value={formData.city} 
                         onChange={handleChange} 
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                        placeholder="Ciudad"
+                        placeholder={t.cityPlaceholder}
                         required
                       />
                     </div>
                     <div>
-                      <label htmlFor="state" className="block mb-2 text-sm font-medium text-gray-700">Departamento/Estado</label>
+                      <label htmlFor="state" className="block mb-2 text-sm font-medium text-gray-700">{t.state}</label>
                       <input 
                         type="text" 
                         id="state" 
@@ -520,12 +520,12 @@ export default function RegisterComplex() {
                         value={formData.state} 
                         onChange={handleChange} 
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                        placeholder="Departamento"
+                        placeholder={t.statePlaceholder}
                         required
                       />
                     </div>
                     <div>
-                      <label htmlFor="country" className="block mb-2 text-sm font-medium text-gray-700">País</label>
+                      <label htmlFor="country" className="block mb-2 text-sm font-medium text-gray-700">{t.country}</label>
                       <select 
                         id="country" 
                         name="country" 
