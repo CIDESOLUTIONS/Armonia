@@ -227,8 +227,11 @@ export default function RegisterComplex() {
     }
   };
 
-  // Actualizamos el mensaje de alerta y usamos los textos traducidos
-  const handleSubmit = (e: React.FormEvent) => {
+  // Actualizamos para conectar con el API y procesar la respuesta
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (step < 3) {
@@ -236,11 +239,55 @@ export default function RegisterComplex() {
       return;
     }
     
-    // Aquí iría la lógica para enviar los datos de registro al servidor
-    // Por ahora, simulamos el registro exitoso
-    
-    alert(`${t.successMessage}`);
-    router.push(ROUTES.PORTAL_SELECTOR);
+    try {
+      setIsSubmitting(true);
+      setError("");
+      
+      // Convertir los servicios a un formato adecuado para el API
+      const propertyTypes = formData.services.map(service => ({
+        name: service,
+        enabled: true
+      }));
+      
+      // Crear objeto con los datos a enviar
+      const requestData = {
+        complexName: formData.complexName,
+        totalUnits: parseInt(formData.units),
+        adminName: formData.adminName,
+        adminEmail: formData.adminEmail,
+        adminPhone: formData.adminPhone,
+        adminPassword: formData.password,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+        propertyTypes
+      };
+      
+      // Enviar datos al API
+      const response = await fetch('/api/register-complex', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al registrar el conjunto');
+      }
+      
+      // Registro exitoso
+      alert(`${t.successMessage}`);
+      router.push(ROUTES.PORTAL_SELECTOR);
+    } catch (err: any) {
+      console.error('Error de registro:', err);
+      setError(err.message || 'Ocurrió un error durante el registro. Por favor, inténtelo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handlePlanSelect = (selectedPlan: string) => {
@@ -261,9 +308,9 @@ export default function RegisterComplex() {
         hideNavLinks={true}
       />
 
-      <div className="pt-24 flex-grow"> {/* Padding superior para compensar el header fijo */}
+      <div className="pt-16 flex-grow"> {/* Ajustado de pt-24 a pt-16 para reducir el espacio */}
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center mb-8">
+          <div className="flex items-center mb-4">
             <Button 
               variant="ghost" 
               onClick={() => router.push('/')}
@@ -274,7 +321,7 @@ export default function RegisterComplex() {
             </Button>
           </div>
           
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-4">{t.title}</h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t.description}
@@ -282,7 +329,7 @@ export default function RegisterComplex() {
           </div>
           
           {/* Pasos de registro */}
-          <div className="mb-12">
+          <div className="mb-8">
             <div className="flex justify-center items-center">
               <div className={`flex items-center ${step === 1 ? "text-indigo-600" : (step > 1 ? "text-green-500" : "text-gray-400")}`}>
                 <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 1 ? "border-indigo-600 text-indigo-600" : (step > 1 ? "border-green-500 text-green-500" : "border-gray-300 text-gray-400")}`}>
@@ -545,7 +592,7 @@ export default function RegisterComplex() {
                   </div>
                   
                   <div>
-                    <label htmlFor="units" className="block mb-2 text-sm font-medium text-gray-700">Número de unidades</label>
+                    <label htmlFor="units" className="block mb-2 text-sm font-medium text-gray-700">{t.units}</label>
                     <input 
                       type="number" 
                       id="units" 
@@ -553,22 +600,22 @@ export default function RegisterComplex() {
                       value={formData.units} 
                       onChange={handleChange} 
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder="Ej. 30"
+                      placeholder={t.unitsPlaceholder}
                       required
                     />
                     {plan === "basic" && parseInt(formData.units) > 30 && (
-                      <p className="mt-1 text-sm text-red-600">El plan básico solo permite hasta 30 unidades. Por favor, seleccione otro plan o reduzca el número de unidades.</p>
+                      <p className="mt-1 text-sm text-red-600">{t.basicPlanLimit}</p>
                     )}
                     {plan === "standard" && parseInt(formData.units) > 50 && (
-                      <p className="mt-1 text-sm text-red-600">El plan estándar solo permite hasta 50 unidades. Por favor, seleccione el plan premium o reduzca el número de unidades.</p>
+                      <p className="mt-1 text-sm text-red-600">{t.standardPlanLimit}</p>
                     )}
                     {plan === "premium" && parseInt(formData.units) > 120 && (
-                      <p className="mt-1 text-sm text-red-600">El plan premium solo permite hasta 120 unidades. Por favor, contacte con nosotros para un plan personalizado.</p>
+                      <p className="mt-1 text-sm text-red-600">{t.premiumPlanLimit}</p>
                     )}
                   </div>
                   
                   <div>
-                    <p className="mb-2 text-sm font-medium text-gray-700">Servicios comunes</p>
+                    <p className="mb-2 text-sm font-medium text-gray-700">{t.services}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="flex items-center">
                         <input 
@@ -578,7 +625,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-pool" className="text-gray-700">Piscina</label>
+                        <label htmlFor="service-pool" className="text-gray-700">{t.pool}</label>
                       </div>
                       <div className="flex items-center">
                         <input 
@@ -588,7 +635,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-gym" className="text-gray-700">Gimnasio</label>
+                        <label htmlFor="service-gym" className="text-gray-700">{t.gym}</label>
                       </div>
                       <div className="flex items-center">
                         <input 
@@ -598,7 +645,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-salon" className="text-gray-700">Salón comunal</label>
+                        <label htmlFor="service-salon" className="text-gray-700">{t.communityRoom}</label>
                       </div>
                       <div className="flex items-center">
                         <input 
@@ -608,7 +655,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-bbq" className="text-gray-700">Zona BBQ</label>
+                        <label htmlFor="service-bbq" className="text-gray-700">{t.bbq}</label>
                       </div>
                       <div className="flex items-center">
                         <input 
@@ -618,7 +665,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-tennis" className="text-gray-700">Cancha de tenis</label>
+                        <label htmlFor="service-tennis" className="text-gray-700">{t.tennis}</label>
                       </div>
                       <div className="flex items-center">
                         <input 
@@ -628,7 +675,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-park" className="text-gray-700">Parque infantil</label>
+                        <label htmlFor="service-park" className="text-gray-700">{t.playground}</label>
                       </div>
                       <div className="flex items-center">
                         <input 
@@ -638,7 +685,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-security" className="text-gray-700">Vigilancia 24h</label>
+                        <label htmlFor="service-security" className="text-gray-700">{t.security}</label>
                       </div>
                       <div className="flex items-center">
                         <input 
@@ -648,7 +695,7 @@ export default function RegisterComplex() {
                           onChange={handleCheckboxChange} 
                           className="mr-2" 
                         />
-                        <label htmlFor="service-parking" className="text-gray-700">Parqueadero</label>
+                        <label htmlFor="service-parking" className="text-gray-700">{t.parking}</label>
                       </div>
                     </div>
                   </div>
@@ -659,16 +706,34 @@ export default function RegisterComplex() {
                       variant="outline" 
                       onClick={() => setStep(1)}
                       className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                      disabled={isSubmitting}
                     >
-                      Atrás
+                      {t.back}
                     </Button>
                     <Button 
                       type="submit" 
                       className="bg-indigo-600 hover:bg-indigo-700"
+                      disabled={isSubmitting}
                     >
-                      Continuar
+                      {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          {language === "Español" ? "Procesando..." : "Processing..."}
+                        </>
+                      ) : (
+                        t.continue
+                      )}
                     </Button>
                   </div>
+                  
+                  {error && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
+                      {error}
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
@@ -677,12 +742,12 @@ export default function RegisterComplex() {
           {/* Paso 3: Creación de Cuenta */}
           {step === 3 && (
             <div className="max-w-xl mx-auto">
-              <h2 className="text-2xl font-bold mb-8 text-center">Creación de Cuenta</h2>
+              <h2 className="text-2xl font-bold mb-8 text-center">{t.accountCreationTitle}</h2>
               
               <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg">
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-700">Nombre de usuario</label>
+                    <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-700">{t.username}</label>
                     <input 
                       type="text" 
                       id="username" 
@@ -690,13 +755,13 @@ export default function RegisterComplex() {
                       value={formData.username} 
                       onChange={handleChange} 
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder="Nombre de usuario para acceder"
+                      placeholder={t.usernamePlaceholder}
                       required
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700">Contraseña</label>
+                    <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700">{t.password}</label>
                     <input 
                       type="password" 
                       id="password" 
@@ -704,14 +769,14 @@ export default function RegisterComplex() {
                       value={formData.password} 
                       onChange={handleChange} 
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder="Mínimo 8 caracteres"
+                      placeholder={t.passwordPlaceholder}
                       minLength={8}
                       required
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="confirmPassword" className="block mb-2 text-sm font-medium text-gray-700">Confirmar contraseña</label>
+                    <label htmlFor="confirmPassword" className="block mb-2 text-sm font-medium text-gray-700">{t.confirmPassword}</label>
                     <input 
                       type="password" 
                       id="confirmPassword" 
@@ -719,12 +784,12 @@ export default function RegisterComplex() {
                       value={formData.confirmPassword} 
                       onChange={handleChange} 
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder="Repita su contraseña"
+                      placeholder={t.confirmPasswordPlaceholder}
                       minLength={8}
                       required
                     />
                     {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600">Las contraseñas no coinciden.</p>
+                      <p className="mt-1 text-sm text-red-600">{t.passwordsDoNotMatch}</p>
                     )}
                   </div>
                   
@@ -739,7 +804,7 @@ export default function RegisterComplex() {
                       required
                     />
                     <label htmlFor="terms" className="text-sm text-gray-700">
-                      Acepto los <a href="#" className="text-indigo-600 hover:text-indigo-800">Términos y Condiciones</a> y la <a href="#" className="text-indigo-600 hover:text-indigo-800">Política de Privacidad</a> de Armonía.
+                      {t.termsAndConditions} <a href="#" className="text-indigo-600 hover:text-indigo-800">{t.terms}</a> {t.and} <a href="#" className="text-indigo-600 hover:text-indigo-800">{t.privacyPolicy}</a> {t.of}
                     </label>
                   </div>
                   
@@ -750,14 +815,24 @@ export default function RegisterComplex() {
                       onClick={() => setStep(2)}
                       className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
                     >
-                      Atrás
+                      {t.back}
                     </Button>
                     <Button 
                       type="submit" 
                       className="bg-indigo-600 hover:bg-indigo-700"
-                      disabled={!formData.terms || formData.password !== formData.confirmPassword}
+                      disabled={!formData.terms || formData.password !== formData.confirmPassword || isSubmitting}
                     >
-                      Registrar Conjunto
+                      {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          {language === "Español" ? "Procesando..." : "Processing..."}
+                        </>
+                      ) : (
+                        t.registerComplex
+                      )}
                     </Button>
                   </div>
                 </div>
