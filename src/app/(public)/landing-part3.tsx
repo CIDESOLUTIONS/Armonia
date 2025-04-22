@@ -198,45 +198,7 @@ export function LandingPart3({
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 bg-gray-900 text-gray-400">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-bold text-white mb-4">Producto</h3>
-              <ul className="space-y-2">
-                <li><a href="#funcionalidades" className="hover:text-white">Funcionalidades</a></li>
-                <li><a href="#planes" className="hover:text-white">Planes</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white mb-4">Empresa</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white">Acerca de</a></li>
-                <li><a href="#" className="hover:text-white">Contacto</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white mb-4">Recursos</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white">Documentación</a></li>
-                <li><a href="#" className="hover:text-white">Centro de ayuda</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white">Términos de servicio</a></li>
-                <li><a href="#" className="hover:text-white">Privacidad</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="text-lg font-bold text-white mb-4 md:mb-0">Armonía</div>
-            <div className="text-sm">© {new Date().getFullYear()} Armonía. Todos los derechos reservados.</div>
-          </div>
-        </div>
-      </footer>
+
     </>
   );
 }

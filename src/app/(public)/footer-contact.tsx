@@ -133,6 +133,42 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
     }
   };
 
+  // Añadir textos para el footer
+  const footerTexts = {
+    es: {
+      product: "Producto",
+      features: "Funcionalidades",
+      plans: "Planes",
+      company: "Empresa",
+      about: "Acerca de",
+      contact: "Contacto",
+      resources: "Recursos",
+      documentation: "Documentación",
+      helpCenter: "Centro de ayuda",
+      legal: "Legal",
+      terms: "Términos de servicio",
+      privacy: "Privacidad",
+      copyright: "© " + new Date().getFullYear() + " CIDE Solutions. Todos los derechos reservados."
+    },
+    en: {
+      product: "Product",
+      features: "Features",
+      plans: "Plans",
+      company: "Company",
+      about: "About",
+      contact: "Contact",
+      resources: "Resources",
+      documentation: "Documentation",
+      helpCenter: "Help center",
+      legal: "Legal",
+      terms: "Terms of service",
+      privacy: "Privacy",
+      copyright: "© " + new Date().getFullYear() + " CIDE Solutions. All rights reserved."
+    }
+  };
+  
+  const f = currentLanguage === "Español" ? footerTexts.es : footerTexts.en;
+
   return (
     <>
       {/* Formulario de Contacto */}
@@ -297,6 +333,66 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="py-12 bg-gray-900 text-gray-400" data-testid="main-footer">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-lg font-bold text-white mb-4">{f.product}</h3>
+              <ul className="space-y-2">
+                <li><a href="#funcionalidades" className="hover:text-white transition-colors">{f.features}</a></li>
+                <li><a href="#planes" className="hover:text-white transition-colors">{f.plans}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white mb-4">{f.company}</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="hover:text-white transition-colors">{f.about}</a></li>
+                <li><a href="#contacto" className="hover:text-white transition-colors">{f.contact}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white mb-4">{f.resources}</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="hover:text-white transition-colors">{f.documentation}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{f.helpCenter}</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white mb-4">{f.legal}</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="hover:text-white transition-colors">{f.terms}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{f.privacy}</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Información de contacto en el footer */}
+          <div className="border-t border-gray-800 pt-8 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="flex items-center">
+                <Mail className="h-5 w-5 text-indigo-400 mr-3" />
+                <span>Customers@cidesolutions.com</span>
+              </div>
+              <div className="flex items-center">
+                <Phone className="h-5 w-5 text-indigo-400 mr-3" />
+                <span>+57 (315) 7651063</span>
+              </div>
+              <div className="flex items-center">
+                <Building className="h-5 w-5 text-indigo-400 mr-3" />
+                <span>CIDE Solutions</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Copyright */}
+          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <div className="text-lg font-bold text-white mb-4 md:mb-0">Armonía</div>
+            <div className="text-sm">{f.copyright}</div>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }
