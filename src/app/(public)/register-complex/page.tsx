@@ -7,6 +7,168 @@ import { Header } from "@/components/layout/header";
 import { Building, Check, ArrowLeft } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 
+// Textos para soportar múltiples idiomas
+const texts = {
+  es: {
+    backToHome: "Volver a Inicio",
+    title: "Registro de Conjunto Residencial",
+    description: "Complete la información requerida para registrar su conjunto en la plataforma Armonía.",
+    stepPlan: "Plan",
+    stepComplex: "Conjunto",
+    stepAccount: "Cuenta",
+    selectPlanTitle: "Seleccione un Plan",
+    basicPlan: "Plan Básico",
+    basicPlanPrice: "Gratuito",
+    basicPlanDesc: "Ideal para conjuntos pequeños de hasta 30 unidades.",
+    basicPlanFeature1: "Gestión de propiedades y residentes",
+    basicPlanFeature2: "Portal básico de comunicaciones",
+    basicPlanFeature3: "Limitado a 1 año de históricos",
+    selectBasicPlan: "Seleccionar Plan Básico",
+    standardPlan: "Plan Estándar",
+    recommended: "RECOMENDADO",
+    standardPlanDesc: "Para conjuntos de hasta 50 unidades.",
+    standardPlanFeature1: "Todas las funcionalidades básicas",
+    standardPlanFeature2: "Gestión de asambleas y votaciones",
+    standardPlanFeature3: "Sistema de PQR avanzado",
+    standardPlanFeature4: "Históricos de hasta 3 años",
+    selectStandardPlan: "Seleccionar Plan Estándar",
+    premiumPlan: "Plan Premium",
+    premiumPlanDesc: "Para conjuntos de hasta 120 unidades.",
+    premiumPlanFeature1: "Todas las funcionalidades estándar",
+    premiumPlanFeature2: "Módulo financiero avanzado",
+    premiumPlanFeature3: "Personalización de la plataforma",
+    premiumPlanFeature4: "API para integraciones",
+    selectPremiumPlan: "Seleccionar Plan Premium",
+    complexInfoTitle: "Información del Conjunto",
+    complexName: "Nombre del conjunto",
+    complexNamePlaceholder: "Ej. Conjunto Residencial Vista Hermosa",
+    adminName: "Nombre del administrador",
+    adminNamePlaceholder: "Nombre completo",
+    phone: "Teléfono",
+    phonePlaceholder: "(123) 456-7890",
+    email: "Correo electrónico",
+    emailPlaceholder: "correo@ejemplo.com",
+    address: "Dirección",
+    addressPlaceholder: "Dirección del conjunto",
+    city: "Ciudad",
+    cityPlaceholder: "Ciudad",
+    state: "Departamento/Estado",
+    statePlaceholder: "Departamento",
+    country: "País",
+    units: "Número de unidades",
+    unitsPlaceholder: "Ej. 30",
+    basicPlanLimit: "El plan básico solo permite hasta 30 unidades. Por favor, seleccione otro plan o reduzca el número de unidades.",
+    standardPlanLimit: "El plan estándar solo permite hasta 50 unidades. Por favor, seleccione el plan premium o reduzca el número de unidades.",
+    premiumPlanLimit: "El plan premium solo permite hasta 120 unidades. Por favor, contacte con nosotros para un plan personalizado.",
+    services: "Servicios comunes",
+    pool: "Piscina",
+    gym: "Gimnasio",
+    communityRoom: "Salón comunal",
+    bbq: "Zona BBQ",
+    tennis: "Cancha de tenis",
+    playground: "Parque infantil",
+    security: "Vigilancia 24h",
+    parking: "Parqueadero",
+    back: "Atrás",
+    continue: "Continuar",
+    accountCreationTitle: "Creación de Cuenta",
+    username: "Nombre de usuario",
+    usernamePlaceholder: "Nombre de usuario para acceder",
+    password: "Contraseña",
+    passwordPlaceholder: "Mínimo 8 caracteres",
+    confirmPassword: "Confirmar contraseña",
+    confirmPasswordPlaceholder: "Repita su contraseña",
+    passwordsDoNotMatch: "Las contraseñas no coinciden.",
+    termsAndConditions: "Acepto los",
+    terms: "Términos y Condiciones",
+    and: "y la",
+    privacyPolicy: "Política de Privacidad",
+    of: "de Armonía.",
+    registerComplex: "Registrar Conjunto",
+    successMessage: "¡Gracias por registrar su conjunto! Te hemos enviado un correo con los pasos a seguir para completar la configuración.",
+    copyright: "© 2025 Armonía. Todos los derechos reservados."
+  },
+  en: {
+    backToHome: "Back to Home",
+    title: "Residential Complex Registration",
+    description: "Complete the required information to register your complex in the Armonía platform.",
+    stepPlan: "Plan",
+    stepComplex: "Complex",
+    stepAccount: "Account",
+    selectPlanTitle: "Select a Plan",
+    basicPlan: "Basic Plan",
+    basicPlanPrice: "Free",
+    basicPlanDesc: "Ideal for small complexes with up to 30 units.",
+    basicPlanFeature1: "Property and resident management",
+    basicPlanFeature2: "Basic communications portal",
+    basicPlanFeature3: "Limited to 1 year of historical data",
+    selectBasicPlan: "Select Basic Plan",
+    standardPlan: "Standard Plan",
+    recommended: "RECOMMENDED",
+    standardPlanDesc: "For complexes with up to 50 units.",
+    standardPlanFeature1: "All basic features",
+    standardPlanFeature2: "Assembly and voting management",
+    standardPlanFeature3: "Advanced PQR system",
+    standardPlanFeature4: "Up to 3 years of historical data",
+    selectStandardPlan: "Select Standard Plan",
+    premiumPlan: "Premium Plan",
+    premiumPlanDesc: "For complexes with up to 120 units.",
+    premiumPlanFeature1: "All standard features",
+    premiumPlanFeature2: "Advanced financial module",
+    premiumPlanFeature3: "Platform customization",
+    premiumPlanFeature4: "API for integrations",
+    selectPremiumPlan: "Select Premium Plan",
+    complexInfoTitle: "Complex Information",
+    complexName: "Complex name",
+    complexNamePlaceholder: "E.g. Vista Hermosa Residential Complex",
+    adminName: "Administrator name",
+    adminNamePlaceholder: "Full name",
+    phone: "Phone",
+    phonePlaceholder: "(123) 456-7890",
+    email: "Email",
+    emailPlaceholder: "email@example.com",
+    address: "Address",
+    addressPlaceholder: "Complex address",
+    city: "City",
+    cityPlaceholder: "City",
+    state: "State/Province",
+    statePlaceholder: "State",
+    country: "Country",
+    units: "Number of units",
+    unitsPlaceholder: "E.g. 30",
+    basicPlanLimit: "The basic plan only allows up to 30 units. Please select another plan or reduce the number of units.",
+    standardPlanLimit: "The standard plan only allows up to 50 units. Please select the premium plan or reduce the number of units.",
+    premiumPlanLimit: "The premium plan only allows up to 120 units. Please contact us for a custom plan.",
+    services: "Common services",
+    pool: "Swimming pool",
+    gym: "Gym",
+    communityRoom: "Community room",
+    bbq: "BBQ area",
+    tennis: "Tennis court",
+    playground: "Playground",
+    security: "24h Security",
+    parking: "Parking",
+    back: "Back",
+    continue: "Continue",
+    accountCreationTitle: "Account Creation",
+    username: "Username",
+    usernamePlaceholder: "Username to access",
+    password: "Password",
+    passwordPlaceholder: "Minimum 8 characters",
+    confirmPassword: "Confirm password",
+    confirmPasswordPlaceholder: "Repeat your password",
+    passwordsDoNotMatch: "Passwords do not match.",
+    termsAndConditions: "I accept the",
+    terms: "Terms and Conditions",
+    and: "and the",
+    privacyPolicy: "Privacy Policy",
+    of: "of Armonía.",
+    registerComplex: "Register Complex",
+    successMessage: "Thank you for registering your complex! We have sent you an email with the steps to complete the setup.",
+    copyright: "© 2025 Armonía. All rights reserved."
+  }
+};
+
 export default function RegisterComplex() {
   const router = useRouter();
   const [language, setLanguage] = useState("Español");
@@ -14,6 +176,9 @@ export default function RegisterComplex() {
   const [theme, setTheme] = useState("Claro");
   const [step, setStep] = useState(1);
   const [plan, setPlan] = useState("basic");
+
+  // Obtener los textos traducidos
+  const t = language === "Español" ? texts.es : texts.en;
   
   // Formulario para registro de conjunto
   const [formData, setFormData] = useState({
@@ -62,6 +227,7 @@ export default function RegisterComplex() {
     }
   };
 
+  // Actualizamos el mensaje de alerta y usamos los textos traducidos
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -73,7 +239,7 @@ export default function RegisterComplex() {
     // Aquí iría la lógica para enviar los datos de registro al servidor
     // Por ahora, simulamos el registro exitoso
     
-    alert(`¡Gracias por registrar su conjunto "${formData.complexName}"! Te hemos enviado un correo con los pasos a seguir para completar la configuración.`);
+    alert(`${t.successMessage}`);
     router.push(ROUTES.PORTAL_SELECTOR);
   };
 
@@ -92,6 +258,7 @@ export default function RegisterComplex() {
         setLanguage={setLanguage}
         currency={currency}
         setCurrency={setCurrency}
+        hideNavLinks={true}
       />
 
       <div className="pt-24 flex-grow"> {/* Padding superior para compensar el header fijo */}
@@ -103,14 +270,14 @@ export default function RegisterComplex() {
               className="text-indigo-600 hover:bg-indigo-50"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver a Inicio
+              {t.backToHome}
             </Button>
           </div>
           
           <div className="mb-8 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-4">Registro de Conjunto Residencial</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-4">{t.title}</h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Complete la información requerida para registrar su conjunto en la plataforma Armonía.
+              {t.description}
             </p>
           </div>
           
@@ -121,7 +288,7 @@ export default function RegisterComplex() {
                 <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 1 ? "border-indigo-600 text-indigo-600" : (step > 1 ? "border-green-500 text-green-500" : "border-gray-300 text-gray-400")}`}>
                   {step > 1 ? <Check className="h-6 w-6" /> : "1"}
                 </div>
-                <span className="ml-2 text-sm font-medium">Plan</span>
+                <span className="ml-2 text-sm font-medium">{t.stepPlan}</span>
               </div>
               
               <div className={`w-16 md:w-32 h-1 mx-2 ${step > 1 ? "bg-green-500" : "bg-gray-300"}`}></div>
@@ -130,7 +297,7 @@ export default function RegisterComplex() {
                 <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 2 ? "border-indigo-600 text-indigo-600" : (step > 2 ? "border-green-500 text-green-500" : "border-gray-300 text-gray-400")}`}>
                   {step > 2 ? <Check className="h-6 w-6" /> : "2"}
                 </div>
-                <span className="ml-2 text-sm font-medium">Conjunto</span>
+                <span className="ml-2 text-sm font-medium">{t.stepComplex}</span>
               </div>
               
               <div className={`w-16 md:w-32 h-1 mx-2 ${step > 2 ? "bg-green-500" : "bg-gray-300"}`}></div>
@@ -139,7 +306,7 @@ export default function RegisterComplex() {
                 <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 3 ? "border-indigo-600 text-indigo-600" : "border-gray-300 text-gray-400"}`}>
                   3
                 </div>
-                <span className="ml-2 text-sm font-medium">Cuenta</span>
+                <span className="ml-2 text-sm font-medium">{t.stepAccount}</span>
               </div>
             </div>
           </div>
@@ -147,26 +314,26 @@ export default function RegisterComplex() {
           {/* Paso 1: Selección de Plan */}
           {step === 1 && (
             <div className="max-w-5xl mx-auto">
-              <h2 className="text-2xl font-bold mb-8 text-center">Seleccione un Plan</h2>
+              <h2 className="text-2xl font-bold mb-8 text-center">{t.selectPlanTitle}</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className={`bg-white p-8 rounded-lg border ${plan === "basic" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("basic")}>
-                  <h3 className="text-xl font-bold mb-2 text-gray-900">Plan Básico</h3>
-                  <div className="text-4xl font-bold mb-4 text-gray-900">Gratuito</div>
-                  <p className="text-gray-600 mb-6">Ideal para conjuntos pequeños de hasta 30 unidades.</p>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">{t.basicPlan}</h3>
+                  <div className="text-4xl font-bold mb-4 text-gray-900">{t.basicPlanPrice}</div>
+                  <p className="text-gray-600 mb-6">{t.basicPlanDesc}</p>
                   
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Gestión de propiedades y residentes</span>
+                      <span className="text-gray-700">{t.basicPlanFeature1}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Portal básico de comunicaciones</span>
+                      <span className="text-gray-700">{t.basicPlanFeature2}</span>
                     </li>
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">Limitado a 1 año de históricos</span>
+                      <span className="text-gray-700">{t.basicPlanFeature3}</span>
                     </li>
                   </ul>
                   
@@ -174,7 +341,7 @@ export default function RegisterComplex() {
                     className={`w-full ${plan === "basic" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
                     onClick={() => handlePlanSelect("basic")}
                   >
-                    Seleccionar Plan Básico
+                    {t.selectBasicPlan}
                   </Button>
                 </div>
                 
@@ -603,7 +770,7 @@ export default function RegisterComplex() {
       {/* Footer */}
       <footer className="py-8 bg-gray-900 text-gray-400">
         <div className="container mx-auto px-4 text-center">
-          <p>© 2025 Armonía. Todos los derechos reservados.</p>
+          <p>{t.copyright}</p>
         </div>
       </footer>
     </div>

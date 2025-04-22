@@ -36,6 +36,7 @@ interface HeaderProps {
   isLoggedIn?: boolean;
   complexName?: string | null;
   adminName?: string | null;
+  hideNavLinks?: boolean;
 }
 
 export function Header({
@@ -49,6 +50,7 @@ export function Header({
   isLoggedIn = false,
   complexName = null,
   adminName = null,
+  hideNavLinks = false,
 }: HeaderProps) {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -98,15 +100,19 @@ export function Header({
 
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center space-x-6">
-          <a href="#funcionalidades" className="text-white hover:text-indigo-200 focus:outline-none">
-            {t.features}
-          </a>
-          <a href="#planes" className="text-white hover:text-indigo-200 focus:outline-none">
-            {t.plans}
-          </a>
-          <a href="#contacto" className="text-white hover:text-indigo-200 focus:outline-none">
-            {t.contact}
-          </a>
+          {!hideNavLinks && (
+            <>
+              <a href="#funcionalidades" className="text-white hover:text-indigo-200 focus:outline-none">
+                {t.features}
+              </a>
+              <a href="#planes" className="text-white hover:text-indigo-200 focus:outline-none">
+                {t.plans}
+              </a>
+              <a href="#contacto" className="text-white hover:text-indigo-200 focus:outline-none">
+                {t.contact}
+              </a>
+            </>
+          )}
           <div className="flex items-center gap-4">
             <button
               onClick={toggleLanguage}
@@ -177,27 +183,31 @@ export function Header({
       {isMobileMenuOpen && (
         <div className="md:hidden mt-4 pb-4">
           <div className="flex flex-col space-y-4 border-t border-indigo-500 pt-4">
-            <a 
-              href="#funcionalidades" 
-              className="text-white hover:text-indigo-200 px-4"
-              onClick={() => scrollToSection('funcionalidades')}
-            >
-              {t.features}
-            </a>
-            <a 
-              href="#planes" 
-              className="text-white hover:text-indigo-200 px-4"
-              onClick={() => scrollToSection('planes')}
-            >
-              {t.plans}
-            </a>
-            <a 
-              href="#contacto" 
-              className="text-white hover:text-indigo-200 px-4"
-              onClick={() => scrollToSection('contacto')}
-            >
-              {t.contact}
-            </a>
+            {!hideNavLinks && (
+              <>
+                <a 
+                  href="#funcionalidades" 
+                  className="text-white hover:text-indigo-200 px-4"
+                  onClick={() => scrollToSection('funcionalidades')}
+                >
+                  {t.features}
+                </a>
+                <a 
+                  href="#planes" 
+                  className="text-white hover:text-indigo-200 px-4"
+                  onClick={() => scrollToSection('planes')}
+                >
+                  {t.plans}
+                </a>
+                <a 
+                  href="#contacto" 
+                  className="text-white hover:text-indigo-200 px-4"
+                  onClick={() => scrollToSection('contacto')}
+                >
+                  {t.contact}
+                </a>
+              </>
+            )}
             <div className="flex items-center gap-4 px-4">
               <button
                 onClick={toggleLanguage}
