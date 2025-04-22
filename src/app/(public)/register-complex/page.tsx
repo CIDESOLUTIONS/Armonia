@@ -308,8 +308,8 @@ export default function RegisterComplex() {
         hideNavLinks={true}
       />
 
-      <div className="pt-16 flex-grow"> {/* Ajustado de pt-24 a pt-16 para reducir el espacio */}
-        <div className="container mx-auto px-4 py-8">
+      <div className="pt-10 flex-grow"> {/* Ajustado de pt-16 a pt-10 para reducir aún más el espacio */}
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center mb-4">
             <Button 
               variant="ghost" 
@@ -321,15 +321,15 @@ export default function RegisterComplex() {
             </Button>
           </div>
           
-          <div className="mb-6 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-4">{t.title}</h1>
+          <div className="mb-4 text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-2">{t.title}</h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t.description}
             </p>
           </div>
           
           {/* Pasos de registro */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex justify-center items-center">
               <div className={`flex items-center ${step === 1 ? "text-indigo-600" : (step > 1 ? "text-green-500" : "text-gray-400")}`}>
                 <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 1 ? "border-indigo-600 text-indigo-600" : (step > 1 ? "border-green-500 text-green-500" : "border-gray-300 text-gray-400")}`}>
