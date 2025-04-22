@@ -125,13 +125,14 @@ describe('Landing Page de Armonía', () => {
 
   it('Debería mostrar el footer con información de la empresa y navegación', () => {
     // Desplazarse al footer
-    cy.get('footer').scrollIntoView();
+    cy.get('[data-testid="main-footer"]').scrollIntoView();
     
     // Verificar elementos del footer
-    cy.get('footer').within(() => {
+    cy.get('[data-testid="main-footer"]').within(() => {
       cy.contains('Armonía').should('be.visible');
       cy.contains('Términos de servicio').should('be.visible');
       cy.contains('Privacidad').should('be.visible');
+      cy.contains('CIDE Solutions').should('be.visible');
     });
   });
 
