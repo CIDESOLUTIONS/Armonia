@@ -12,12 +12,14 @@ const headerTexts = {
   es: {
     features: "Funcionalidades",
     plans: "Planes",
+    contact: "Contáctenos",
     login: "Iniciar Sesión",
     logout: "Cerrar Sesión"
   },
   en: {
     features: "Features",
     plans: "Plans",
+    contact: "Contact Us",
     login: "Login",
     logout: "Logout"
   }
@@ -102,6 +104,9 @@ export function Header({
           <a href="#planes" className="text-white hover:text-indigo-200 focus:outline-none">
             {t.plans}
           </a>
+          <a href="#contacto" className="text-white hover:text-indigo-200 focus:outline-none">
+            {t.contact}
+          </a>
           <div className="flex items-center gap-4">
             <button
               onClick={toggleLanguage}
@@ -185,6 +190,13 @@ export function Header({
               onClick={() => scrollToSection('planes')}
             >
               {t.plans}
+            </a>
+            <a 
+              href="#contacto" 
+              className="text-white hover:text-indigo-200 px-4"
+              onClick={() => scrollToSection('contacto')}
+            >
+              {t.contact}
             </a>
             <div className="flex items-center gap-4 px-4">
               <button
