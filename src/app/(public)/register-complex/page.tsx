@@ -1,7 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+// Efecto para verificar el pago realizado
+  useEffect(() => {
+    // Si hay un plan seleccionado en la URL y no está marcado como pagado, verificamos el localStorage
+    if (planParam && (planParam === "standard" || planParam === "premium") && !paidParam) {
+      const storedPaymentCompleted = localStorage.getItem("paymentCompleted");
+      if (storedPaymentCompleted === "true") {
+        setPaymentCompleted(true);
+        // Limpiar el localStorage
+        localStorage.removeItem("paymentCompleted");
+      }
+    }
+  }, [planParam, paidParam]);  // Efecto para verificar el pago realizado
+  useEffect(() => {
+    // Si hay un plan seleccionado en la URL y no está marcado como pagado, verificamos el localStorage
+    if (planParam && (planParam === "standard" || planParam === "premium") && !paidParam) {
+      const storedPaymentCompleted = localStorage.getItem("paymentCompleted");
+      if (storedPaymentCompleted === "true") {
+        setPaymentCompleted(true);
+        // Limpiar el localStorage
+        localStorage.removeItem("paymentCompleted");
+      }
+    }
+  }, [planParam, paidParam]);
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
 import { Building, Check, ArrowLeft } from "lucide-react";
@@ -171,11 +195,16 @@ const texts = {
 
 export default function RegisterComplex() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const paidParam = searchParams.get("paid");
+  
   const [language, setLanguage] = useState("Español");
   const [currency, setCurrency] = useState("Pesos");
   const [theme, setTheme] = useState("Claro");
   const [step, setStep] = useState(1);
-  const [plan, setPlan] = useState("basic");
+  const [plan, setPlan] = useState(planParam || "basic");
+  const [paymentCompleted, setPaymentCompleted] = useState(paidParam === "true");
 
   // Obtener los textos traducidos
   const t = language === "Español" ? texts.es : texts.en;
@@ -292,7 +321,18 @@ export default function RegisterComplex() {
 
   const handlePlanSelect = (selectedPlan: string) => {
     setPlan(selectedPlan);
-    setStep(2);
+    
+    // Si el plan seleccionado es de pago, redirigir a la página de checkout
+    if (selectedPlan === "standard" || selectedPlan === "premium") {
+      // Guardar la selección en localStorage para recuperarla después
+      localStorage.setItem("selectedPlan", selectedPlan);
+      
+      // Redirigir a la página de checkout con el plan seleccionado
+      router.push(`/checkout?plan=${selectedPlan}`);
+    } else {
+      // Para el plan básico, continuar con el flujo normal
+      setStep(2);
+    }
   };
 
   return (
@@ -308,9 +348,9 @@ export default function RegisterComplex() {
         hideNavLinks={true}
       />
 
-      <div className="pt-10 flex-grow"> {/* Ajustado de pt-16 a pt-10 para reducir aún más el espacio */}
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center mb-4">
+      <div className="pt-5 flex-grow"> {/* Reducido aún más: de pt-10 a pt-5 */}
+        <div className="container mx-auto px-4 py-2">
+          <div className="flex items-center mb-2">
             <Button 
               variant="ghost" 
               onClick={() => router.push('/')}
@@ -321,7 +361,7 @@ export default function RegisterComplex() {
             </Button>
           </div>
           
-          <div className="mb-4 text-center">
+          <div className="mb-3 text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-indigo-600 mb-2">{t.title}</h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t.description}
@@ -329,7 +369,7 @@ export default function RegisterComplex() {
           </div>
           
           {/* Pasos de registro */}
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="flex justify-center items-center">
               <div className={`flex items-center ${step === 1 ? "text-indigo-600" : (step > 1 ? "text-green-500" : "text-gray-400")}`}>
                 <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${step === 1 ? "border-indigo-600 text-indigo-600" : (step > 1 ? "border-green-500 text-green-500" : "border-gray-300 text-gray-400")}`}>
@@ -361,15 +401,15 @@ export default function RegisterComplex() {
           {/* Paso 1: Selección de Plan */}
           {step === 1 && (
             <div className="max-w-5xl mx-auto">
-              <h2 className="text-2xl font-bold mb-8 text-center">{t.selectPlanTitle}</h2>
+              <h2 className="text-2xl font-bold mb-5 text-center">{t.selectPlanTitle}</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className={`bg-white p-8 rounded-lg border ${plan === "basic" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("basic")}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className={`bg-white p-6 rounded-lg border ${plan === "basic" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("basic")}>
                   <h3 className="text-xl font-bold mb-2 text-gray-900">{t.basicPlan}</h3>
-                  <div className="text-4xl font-bold mb-4 text-gray-900">{t.basicPlanPrice}</div>
-                  <p className="text-gray-600 mb-6">{t.basicPlanDesc}</p>
+                  <div className="text-3xl font-bold mb-3 text-gray-900">{t.basicPlanPrice}</div>
+                  <p className="text-gray-600 mb-4">{t.basicPlanDesc}</p>
                   
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-2 mb-6">
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
                       <span className="text-gray-700">{t.basicPlanFeature1}</span>
@@ -392,17 +432,17 @@ export default function RegisterComplex() {
                   </Button>
                 </div>
                 
-                <div className={`bg-white p-8 rounded-lg border ${plan === "standard" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer relative`} onClick={() => handlePlanSelect("standard")}>
+                <div className={`bg-white p-6 rounded-lg border ${plan === "standard" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer relative`} onClick={() => handlePlanSelect("standard")}>
                   <div className="absolute top-0 right-0 bg-indigo-500 text-white px-4 py-1 text-sm font-bold rounded-bl-lg rounded-tr-lg">
                     {t.recommended}
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-gray-900">{t.standardPlan}</h3>
-                  <div className="text-4xl font-bold mb-4 text-gray-900">
+                  <div className="text-3xl font-bold mb-3 text-gray-900">
                     ${currency === "Dólares" ? "25" : "95000"}<span className="text-base font-normal">/mes</span>
                   </div>
-                  <p className="text-gray-600 mb-6">{t.standardPlanDesc}</p>
+                  <p className="text-gray-600 mb-4">{t.standardPlanDesc}</p>
                   
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-2 mb-6">
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
                       <span className="text-gray-700">{t.standardPlanFeature1}</span>
@@ -429,14 +469,14 @@ export default function RegisterComplex() {
                   </Button>
                 </div>
                 
-                <div className={`bg-white p-8 rounded-lg border ${plan === "premium" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("premium")}>
+                <div className={`bg-white p-6 rounded-lg border ${plan === "premium" ? "border-indigo-500 ring-2 ring-indigo-500" : "border-gray-200"} shadow-md hover:shadow-xl transition-all cursor-pointer`} onClick={() => handlePlanSelect("premium")}>
                   <h3 className="text-xl font-bold mb-2 text-gray-900">{t.premiumPlan}</h3>
-                  <div className="text-4xl font-bold mb-4 text-gray-900">
+                  <div className="text-3xl font-bold mb-3 text-gray-900">
                     ${currency === "Dólares" ? "50" : "190000"}<span className="text-base font-normal">/mes</span>
                   </div>
-                  <p className="text-gray-600 mb-6">{t.premiumPlanDesc}</p>
+                  <p className="text-gray-600 mb-4">{t.premiumPlanDesc}</p>
                   
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-2 mb-6">
                     <li className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
                       <span className="text-gray-700">{t.premiumPlanFeature1}</span>
@@ -450,9 +490,93 @@ export default function RegisterComplex() {
                       <span className="text-gray-700">{t.premiumPlanFeature3}</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700">{t.premiumPlanFeature4}</span>
+                    <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                    <span className="text-gray-700">{t.premiumPlanFeature4}</span>
                     </li>
+                    </ul>
+                    
+                    <Button 
+                      className={`w-full ${plan === "premium" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
+                      onClick={() => handlePlanSelect("premium")}
+                    >
+                      {t.selectPremiumPlan}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Paso 2: Información del Conjunto */}
+          {step === 2 && (
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-2xl font-bold mb-5 text-center">{t.complexInfoTitle}</h2>
+              
+              <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
+                <div className="space-y-4">
+                  {/* Plan seleccionado */}
+                  <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-md">
+                    <span className="font-medium text-indigo-700">
+                      {plan === "basic" ? t.basicPlan : (plan === "standard" ? t.standardPlan : t.premiumPlan)}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="complexName" className="block mb-2 text-sm font-medium text-gray-700">{t.complexName}</label>
+                    <input 
+                      type="text" 
+                      id="complexName" 
+                      name="complexName" 
+                      value={formData.complexName} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder={t.complexNamePlaceholder}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="adminName" className="block mb-2 text-sm font-medium text-gray-700">{t.adminName}</label>
+                      <input 
+                        type="text" 
+                        id="adminName" 
+                        name="adminName" 
+                        value={formData.adminName} 
+                        onChange={handleChange} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder={t.adminNamePlaceholder}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="adminPhone" className="block mb-2 text-sm font-medium text-gray-700">{t.phone}</label>
+                      <input 
+                        type="tel" 
+                        id="adminPhone" 
+                        name="adminPhone" 
+                        value={formData.adminPhone} 
+                        onChange={handleChange} 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        placeholder={t.phonePlaceholder}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="adminEmail" className="block mb-2 text-sm font-medium text-gray-700">{t.email}</label>
+                    <input 
+                      type="email" 
+                      id="adminEmail" 
+                      name="adminEmail" 
+                      value={formData.adminEmail} 
+                      onChange={handleChange} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      placeholder={t.emailPlaceholder}
+                      required
+                    />
+                  </div>
                   </ul>
                   
                   <Button 
@@ -469,10 +593,17 @@ export default function RegisterComplex() {
           {/* Paso 2: Información del Conjunto */}
           {step === 2 && (
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-bold mb-8 text-center">{t.complexInfoTitle}</h2>
+              <h2 className="text-2xl font-bold mb-5 text-center">{t.complexInfoTitle}</h2>
               
-              <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg">
-                <div className="space-y-6">
+              <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
+                <div className="space-y-4">
+                  {/* Plan seleccionado */}
+                  <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-md">
+                    <span className="font-medium text-indigo-700">
+                      {plan === "basic" ? t.basicPlan : (plan === "standard" ? t.standardPlan : t.premiumPlan)}
+                    </span>
+                  </div>
+                  
                   <div>
                     <label htmlFor="complexName" className="block mb-2 text-sm font-medium text-gray-700">{t.complexName}</label>
                     <input 
@@ -742,10 +873,10 @@ export default function RegisterComplex() {
           {/* Paso 3: Creación de Cuenta */}
           {step === 3 && (
             <div className="max-w-xl mx-auto">
-              <h2 className="text-2xl font-bold mb-8 text-center">{t.accountCreationTitle}</h2>
+              <h2 className="text-2xl font-bold mb-5 text-center">{t.accountCreationTitle}</h2>
               
-              <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg">
-                <div className="space-y-6">
+              <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
+                <div className="space-y-4">
                   <div>
                     <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-700">{t.username}</label>
                     <input 
@@ -808,6 +939,27 @@ export default function RegisterComplex() {
                     </label>
                   </div>
                   
+                  {/* Información de pago si es un plan pagado */}
+                  {(plan === "standard" || plan === "premium") && (
+                    <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
+                      <div className="flex items-start">
+                        <AlertCircle className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="text-sm font-medium text-blue-800">{plan === "standard" ? t.standardPlan : t.premiumPlan}</h4>
+                          {paymentCompleted && transactionId ? (
+                            <p className="text-xs text-blue-600 mt-1">
+                              {t.paymentVerified} (ID: {transactionId.slice(-8)})
+                            </p>
+                          ) : (
+                            <p className="text-xs text-blue-600 mt-1">
+                              {t.paymentNotVerified}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between pt-4">
                     <Button 
                       type="button" 
@@ -820,7 +972,7 @@ export default function RegisterComplex() {
                     <Button 
                       type="submit" 
                       className="bg-indigo-600 hover:bg-indigo-700"
-                      disabled={!formData.terms || formData.password !== formData.confirmPassword || isSubmitting}
+                      disabled={!formData.terms || formData.password !== formData.confirmPassword || isSubmitting || ((plan === "standard" || plan === "premium") && !paymentCompleted)}
                     >
                       {isSubmitting ? (
                         <>
@@ -843,7 +995,7 @@ export default function RegisterComplex() {
       </div>
       
       {/* Footer */}
-      <footer className="py-8 bg-gray-900 text-gray-400">
+      <footer className="py-4 bg-gray-900 text-gray-400">
         <div className="container mx-auto px-4 text-center">
           <p>{t.copyright}</p>
         </div>
