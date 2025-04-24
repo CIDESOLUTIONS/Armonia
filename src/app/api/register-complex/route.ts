@@ -1,4 +1,22 @@
-// src/app/api/register-complex/route.ts
+    // Verificar si ya existe un complejo con el mismo nombre
+    const existingComplex = await prisma.$queryRawUnsafe(
+      `SELECT id FROM "armonia"."ResidentialComplex" WHERE LOWER(name) = LOWER($1)`,
+      complexName
+    );
+    
+    if (existingComplex && existingComplex.length > 0) {
+      return NextResponse.json({ message: 'Ya existe un conjunto residencial con ese nombre' }, { status: 400 });
+    }
+    
+    // Verificar si ya existe un administrador con el mismo correo
+    const existingAdmin = await prisma.$queryRawUnsafe(
+      `SELECT id FROM "armonia"."User" WHERE LOWER(email) = LOWER($1)`,
+      adminEmail
+    );
+    
+    if (existingAdmin && existingAdmin.length > 0) {
+      return NextResponse.json({ message: 'Ya existe un usuario con ese correo electrónico' }, { status: 400 });
+    }// src/app/api/register-complex/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
@@ -17,15 +35,63 @@ export async function POST(req: NextRequest) {
       city, 
       state, 
       country, 
-      propertyTypes 
+      propertyTypes,
+      planCode = 'basic', // Valor por defecto: plan básico
+      transactionId = null, // ID de transacción para planes pagados
+      username
     } = body;
 
     // Validación de campos requeridos
     if (!complexName || !totalUnits || !adminName || !adminEmail || !adminPassword) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
+    
+    // Validación de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(adminEmail)) {
+      return NextResponse.json({ message: 'El correo electrónico no es válido' }, { status: 400 });
+    }
+    
+    // Validación de contraseña
+    if (adminPassword.length < 8) {
+      return NextResponse.json({ message: 'La contraseña debe tener al menos 8 caracteres' }, { status: 400 });
+    }
 
     const prisma = getPrisma(); // Usando el cliente para el esquema principal
+
+    // Validar el plan según la cantidad de unidades
+    const planData = await prisma.$queryRawUnsafe(
+      `SELECT * FROM "armonia"."Plan" WHERE code = $1 AND active = true`,
+      planCode
+    );
+
+    if (!planData || planData.length === 0) {
+      return NextResponse.json({ message: 'El plan seleccionado no existe o no está activo' }, { status: 400 });
+    }
+
+    const plan = planData[0];
+    if (totalUnits > plan.maxUnits) {
+      return NextResponse.json({ 
+        message: `El plan ${plan.name} solo permite hasta ${plan.maxUnits} unidades. Por favor, seleccione otro plan o reduzca el número de unidades.` 
+      }, { status: 400 });
+    }
+
+    // Verificar pago para planes de pago (standard, premium)
+    if ((planCode === 'standard' || planCode === 'premium') && transactionId) {
+      const paymentData = await prisma.$queryRawUnsafe(
+        `SELECT * FROM "armonia"."PaymentTransaction" WHERE "transactionId" = $1`,
+        transactionId
+      );
+
+      if (!paymentData || paymentData.length === 0) {
+        return NextResponse.json({ message: 'El pago no ha sido encontrado' }, { status: 400 });
+      }
+
+      const payment = paymentData[0];
+      if (payment.status !== 'COMPLETED') {
+        return NextResponse.json({ message: 'El pago no ha sido completado correctamente' }, { status: 400 });
+      }
+    }
 
     // Contar complejos existentes para generar schemaName
     const complexCountResult = await prisma.$queryRawUnsafe(
@@ -43,8 +109,9 @@ export async function POST(req: NextRequest) {
     const complex = await prisma.$queryRawUnsafe(
       `INSERT INTO "armonia"."ResidentialComplex" (
         name, "schemaName", "totalUnits", "adminEmail", "adminName", "adminPhone", 
-        address, city, state, country, "propertyTypes", "createdAt", "updatedAt"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, NOW(), NOW()) RETURNING *`,
+        address, city, state, country, "propertyTypes", "planCode", "planStatus",
+        "trialEndsAt", "createdAt", "updatedAt"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, NOW(), NOW()) RETURNING *`,
       complexName,
       schemaName,
       totalUnits,
@@ -55,9 +122,23 @@ export async function POST(req: NextRequest) {
       city || null,
       state || null,
       country || 'Colombia',
-      propertyTypesJson // Now we're explicitly casting to jsonb with ::jsonb
+      propertyTypesJson,
+      planCode,
+      planCode === 'basic' ? 'TRIAL' : 'ACTIVE',
+      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Trial de 30 días
     );
     console.log('[API Register-Complex] Resultado de complex:', complex[0]);
+
+    // Si hay una transacción de pago, actualizar su complexId
+    if (transactionId) {
+      await prisma.$queryRawUnsafe(
+        `UPDATE "armonia"."PaymentTransaction" 
+         SET "complexId" = $1, "updatedAt" = NOW() 
+         WHERE "transactionId" = $2`,
+        complex[0].id,
+        transactionId
+      );
+    }
 
     // Crear el usuario administrador en el esquema 'armonia'
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
@@ -91,7 +172,10 @@ export async function POST(req: NextRequest) {
           city TEXT,
           state TEXT,
           country TEXT,
-          "propertyTypes" JSONB
+          "propertyTypes" JSONB,
+          "planCode" TEXT DEFAULT 'basic',
+          "planStatus" TEXT DEFAULT 'TRIAL',
+          "trialEndsAt" TIMESTAMP
         )`
       },
       {
@@ -340,6 +424,9 @@ export async function POST(req: NextRequest) {
         state,
         country,
         "propertyTypes",
+        "planCode",
+        "planStatus",
+        "trialEndsAt",
         "createdAt",
         "updatedAt"
       ) SELECT 
@@ -353,7 +440,10 @@ export async function POST(req: NextRequest) {
         city,
         state,
         country,
-        "propertyTypes"::jsonb, -- Ensure proper casting here too
+        "propertyTypes"::jsonb,
+        "planCode",
+        "planStatus",
+        "trialEndsAt",
         "createdAt",
         "updatedAt"
       FROM "armonia"."ResidentialComplex"
@@ -387,8 +477,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { 
         message: 'Conjunto registrado con éxito', 
-        complex: complex[0],
-        schemaName 
+        complex: {
+          id: complex[0].id,
+          name: complex[0].name,
+          schemaName: complex[0].schemaName,
+          totalUnits: complex[0].totalUnits,
+          adminEmail: complex[0].adminEmail,
+          planCode: complex[0].planCode,
+          planStatus: complex[0].planStatus
+        }
       }, 
       { status: 201 }
     );

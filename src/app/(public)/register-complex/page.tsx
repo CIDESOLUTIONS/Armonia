@@ -1,34 +1,10 @@
 "use client";
 
-// Efecto para verificar el pago realizado
-  useEffect(() => {
-    // Si hay un plan seleccionado en la URL y no está marcado como pagado, verificamos el localStorage
-    if (planParam && (planParam === "standard" || planParam === "premium") && !paidParam) {
-      const storedPaymentCompleted = localStorage.getItem("paymentCompleted");
-      if (storedPaymentCompleted === "true") {
-        setPaymentCompleted(true);
-        // Limpiar el localStorage
-        localStorage.removeItem("paymentCompleted");
-      }
-    }
-  }, [planParam, paidParam]);  // Efecto para verificar el pago realizado
-  useEffect(() => {
-    // Si hay un plan seleccionado en la URL y no está marcado como pagado, verificamos el localStorage
-    if (planParam && (planParam === "standard" || planParam === "premium") && !paidParam) {
-      const storedPaymentCompleted = localStorage.getItem("paymentCompleted");
-      if (storedPaymentCompleted === "true") {
-        setPaymentCompleted(true);
-        // Limpiar el localStorage
-        localStorage.removeItem("paymentCompleted");
-      }
-    }
-  }, [planParam, paidParam]);
-
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
-import { Building, Check, ArrowLeft } from "lucide-react";
+import { Building, Check, ArrowLeft, AlertCircle } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 
 // Textos para soportar múltiples idiomas
@@ -62,6 +38,8 @@ const texts = {
     premiumPlanFeature2: "Módulo financiero avanzado",
     premiumPlanFeature3: "Personalización de la plataforma",
     premiumPlanFeature4: "API para integraciones",
+    paymentVerified: "Pago verificado",
+    paymentNotVerified: "Pago pendiente de verificación",
     selectPremiumPlan: "Seleccionar Plan Premium",
     complexInfoTitle: "Información del Conjunto",
     complexName: "Nombre del conjunto",
@@ -141,6 +119,8 @@ const texts = {
     premiumPlanFeature2: "Advanced financial module",
     premiumPlanFeature3: "Platform customization",
     premiumPlanFeature4: "API for integrations",
+    paymentVerified: "Payment verified",
+    paymentNotVerified: "Payment pending verification",
     selectPremiumPlan: "Select Premium Plan",
     complexInfoTitle: "Complex Information",
     complexName: "Complex name",
@@ -205,6 +185,7 @@ export default function RegisterComplex() {
   const [step, setStep] = useState(1);
   const [plan, setPlan] = useState(planParam || "basic");
   const [paymentCompleted, setPaymentCompleted] = useState(paidParam === "true");
+  const [transactionId, setTransactionId] = useState<string | null>(null);
 
   // Obtener los textos traducidos
   const t = language === "Español" ? texts.es : texts.en;
@@ -227,9 +208,154 @@ export default function RegisterComplex() {
     terms: false
   });
 
+  // Efectos para verificar pago y recuperar datos del formulario
+  useEffect(() => {
+    // Verificar el estado del pago
+    if (planParam && (planParam === "standard" || planParam === "premium")) {
+      const storedPaymentCompleted = localStorage.getItem("paymentCompleted");
+      if (storedPaymentCompleted === "true") {
+        setPaymentCompleted(true);
+        setTransactionId(localStorage.getItem("transactionId"));
+        localStorage.removeItem("paymentCompleted");
+      }
+
+      // Si estamos regresando de checkout, intentamos recuperar los datos del formulario
+      if (!paidParam) {
+        const storedFormData = localStorage.getItem("complexFormData");
+        if (storedFormData) {
+          try {
+            const parsedData = JSON.parse(storedFormData);
+            setFormData(prev => ({ ...prev, ...parsedData }));
+          } catch (error) {
+            console.error('Error al recuperar datos del formulario:', error);
+          }
+        }
+      }
+      
+      // Si el pago se completó, avanzamos al paso 2
+      if (paidParam === "true" || storedPaymentCompleted === "true") {
+        setStep(2);
+      }
+    }
+  }, [planParam, paidParam]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Limpiar error de validación al editar un campo
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const updated = {...prev};
+        delete updated[name];
+        return updated;
+      });
+    }
+  };
+  
+  // Función de validación para el formulario
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    // Validaciones paso 2: Información del conjunto
+    if (step === 2) {
+      if (!formData.complexName.trim()) {
+        errors.complexName = language === "Español" ? 'El nombre del conjunto es obligatorio' : 'Complex name is required';
+        isValid = false;
+      }
+
+      if (!formData.adminName.trim()) {
+        errors.adminName = language === "Español" ? 'El nombre del administrador es obligatorio' : 'Administrator name is required';
+        isValid = false;
+      }
+
+      if (!formData.adminEmail.trim()) {
+        errors.adminEmail = language === "Español" ? 'El correo electrónico es obligatorio' : 'Email is required';
+        isValid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.adminEmail)) {
+        errors.adminEmail = t.invalidEmail;
+        isValid = false;
+      }
+
+      if (!formData.adminPhone.trim()) {
+        errors.adminPhone = language === "Español" ? 'El teléfono es obligatorio' : 'Phone is required';
+        isValid = false;
+      } else if (!/^[0-9\s\-\+\(\)]+$/.test(formData.adminPhone)) {
+        errors.adminPhone = t.invalidPhone;
+        isValid = false;
+      }
+
+      if (!formData.address.trim()) {
+        errors.address = language === "Español" ? 'La dirección es obligatoria' : 'Address is required';
+        isValid = false;
+      }
+
+      if (!formData.city.trim()) {
+        errors.city = language === "Español" ? 'La ciudad es obligatoria' : 'City is required';
+        isValid = false;
+      }
+
+      if (!formData.state.trim()) {
+        errors.state = language === "Español" ? 'El departamento/estado es obligatorio' : 'State is required';
+        isValid = false;
+      }
+
+      if (!formData.units.trim()) {
+        errors.units = language === "Español" ? 'El número de unidades es obligatorio' : 'Number of units is required';
+        isValid = false;
+      } else {
+        const unitsNum = parseInt(formData.units);
+        if (isNaN(unitsNum) || unitsNum <= 0) {
+          errors.units = t.invalidUnit;
+          isValid = false;
+        } else {
+          // Validar límites según el plan
+          if (plan === "basic" && unitsNum > 30) {
+            errors.units = t.basicPlanLimit;
+            isValid = false;
+          } else if (plan === "standard" && unitsNum > 50) {
+            errors.units = t.standardPlanLimit;
+            isValid = false;
+          } else if (plan === "premium" && unitsNum > 120) {
+            errors.units = t.premiumPlanLimit;
+            isValid = false;
+          }
+        }
+      }
+    }
+
+    // Validaciones paso 3: Creación de cuenta
+    if (step === 3) {
+      if (!formData.username.trim()) {
+        errors.username = language === "Español" ? 'El nombre de usuario es obligatorio' : 'Username is required';
+        isValid = false;
+      }
+
+      if (!formData.password) {
+        errors.password = language === "Español" ? 'La contraseña es obligatoria' : 'Password is required';
+        isValid = false;
+      } else if (formData.password.length < 8) {
+        errors.password = t.passwordMinLength;
+        isValid = false;
+      }
+
+      if (!formData.confirmPassword) {
+        errors.confirmPassword = language === "Español" ? 'Debe confirmar la contraseña' : 'Password confirmation is required';
+        isValid = false;
+      } else if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = t.passwordsDoNotMatch;
+        isValid = false;
+      }
+
+      if (!formData.terms) {
+        errors.terms = t.acceptTerms;
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    return isValid;
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,9 +385,15 @@ export default function RegisterComplex() {
   // Actualizamos para conectar con el API y procesar la respuesta
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar formulario antes de proceder
+    if (!validateForm()) {
+      return;
+    }
     
     if (step < 3) {
       setStep(step + 1);
@@ -290,7 +422,9 @@ export default function RegisterComplex() {
         city: formData.city,
         state: formData.state,
         country: formData.country,
-        propertyTypes
+        propertyTypes,
+        planCode: plan,
+        transactionId: transactionId // Incluir el ID de transacción si completamos un pago
       };
       
       // Enviar datos al API
@@ -310,6 +444,11 @@ export default function RegisterComplex() {
       
       // Registro exitoso
       alert(`${t.successMessage}`);
+      
+      // Limpiar datos almacenados en localStorage
+      localStorage.removeItem("complexFormData");
+      localStorage.removeItem("selectedPlan");
+      localStorage.removeItem("transactionId");
       router.push(ROUTES.PORTAL_SELECTOR);
     } catch (err: any) {
       console.error('Error de registro:', err);
@@ -324,8 +463,9 @@ export default function RegisterComplex() {
     
     // Si el plan seleccionado es de pago, redirigir a la página de checkout
     if (selectedPlan === "standard" || selectedPlan === "premium") {
-      // Guardar la selección en localStorage para recuperarla después
+      // Guardar la selección y datos del formulario en localStorage para recuperarla después
       localStorage.setItem("selectedPlan", selectedPlan);
+      localStorage.setItem("complexFormData", JSON.stringify(formData));
       
       // Redirigir a la página de checkout con el plan seleccionado
       router.push(`/checkout?plan=${selectedPlan}`);
@@ -493,104 +633,18 @@ export default function RegisterComplex() {
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
                     <span className="text-gray-700">{t.premiumPlanFeature4}</span>
                     </li>
-                    </ul>
-                    
-                    <Button 
-                      className={`w-full ${plan === "premium" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
-                      onClick={() => handlePlanSelect("premium")}
-                    >
-                      {t.selectPremiumPlan}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* Paso 2: Información del Conjunto */}
-          {step === 2 && (
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-bold mb-5 text-center">{t.complexInfoTitle}</h2>
-              
-              <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
-                <div className="space-y-4">
-                  {/* Plan seleccionado */}
-                  <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-md">
-                    <span className="font-medium text-indigo-700">
-                      {plan === "basic" ? t.basicPlan : (plan === "standard" ? t.standardPlan : t.premiumPlan)}
-                    </span>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="complexName" className="block mb-2 text-sm font-medium text-gray-700">{t.complexName}</label>
-                    <input 
-                      type="text" 
-                      id="complexName" 
-                      name="complexName" 
-                      value={formData.complexName} 
-                      onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder={t.complexNamePlaceholder}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="adminName" className="block mb-2 text-sm font-medium text-gray-700">{t.adminName}</label>
-                      <input 
-                        type="text" 
-                        id="adminName" 
-                        name="adminName" 
-                        value={formData.adminName} 
-                        onChange={handleChange} 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                        placeholder={t.adminNamePlaceholder}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="adminPhone" className="block mb-2 text-sm font-medium text-gray-700">{t.phone}</label>
-                      <input 
-                        type="tel" 
-                        id="adminPhone" 
-                        name="adminPhone" 
-                        value={formData.adminPhone} 
-                        onChange={handleChange} 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                        placeholder={t.phonePlaceholder}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="adminEmail" className="block mb-2 text-sm font-medium text-gray-700">{t.email}</label>
-                    <input 
-                      type="email" 
-                      id="adminEmail" 
-                      name="adminEmail" 
-                      value={formData.adminEmail} 
-                      onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
-                      placeholder={t.emailPlaceholder}
-                      required
-                    />
-                  </div>
                   </ul>
-                  
-                  <Button 
-                    className={`w-full ${plan === "premium" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
-                    onClick={() => handlePlanSelect("premium")}
-                  >
-                    {t.selectPremiumPlan}
-                  </Button>
+                        
+                   <Button 
+                     className={`w-full ${plan === "premium" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-gray-800"}`}
+                     onClick={() => handlePlanSelect("premium")}
+                      >
+                     {t.selectPremiumPlan}
+                    </Button>
                 </div>
               </div>
-            </div>
+             </div>
           )}
-          
-          {/* Paso 2: Información del Conjunto */}
           {step === 2 && (
             <div className="max-w-2xl mx-auto">
               <h2 className="text-2xl font-bold mb-5 text-center">{t.complexInfoTitle}</h2>
@@ -612,10 +666,13 @@ export default function RegisterComplex() {
                       name="complexName" 
                       value={formData.complexName} 
                       onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      className={`w-full px-4 py-2 border ${validationErrors.complexName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.complexNamePlaceholder}
                       required
                     />
+                    {validationErrors.complexName && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.complexName}</p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -627,10 +684,13 @@ export default function RegisterComplex() {
                         name="adminName" 
                         value={formData.adminName} 
                         onChange={handleChange} 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        className={`w-full px-4 py-2 border ${validationErrors.adminName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                         placeholder={t.adminNamePlaceholder}
                         required
                       />
+                      {validationErrors.adminName && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors.adminName}</p>
+                      )}
                     </div>
                     <div>
                       <label htmlFor="adminPhone" className="block mb-2 text-sm font-medium text-gray-700">{t.phone}</label>
@@ -640,10 +700,13 @@ export default function RegisterComplex() {
                         name="adminPhone" 
                         value={formData.adminPhone} 
                         onChange={handleChange} 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                        className={`w-full px-4 py-2 border ${validationErrors.adminPhone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                         placeholder={t.phonePlaceholder}
                         required
                       />
+                      {validationErrors.adminPhone && (
+                        <p className="mt-1 text-sm text-red-600">{validationErrors.adminPhone}</p>
+                      )}
                     </div>
                   </div>
                   
@@ -655,10 +718,13 @@ export default function RegisterComplex() {
                       name="adminEmail" 
                       value={formData.adminEmail} 
                       onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      className={`w-full px-4 py-2 border ${validationErrors.adminEmail ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.emailPlaceholder}
                       required
                     />
+                    {validationErrors.adminEmail && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.adminEmail}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -669,10 +735,13 @@ export default function RegisterComplex() {
                       name="address" 
                       value={formData.address} 
                       onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      className={`w-full px-4 py-2 border ${validationErrors.address ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.addressPlaceholder}
                       required
                     />
+                    {validationErrors.address && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.address}</p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -730,18 +799,24 @@ export default function RegisterComplex() {
                       name="units" 
                       value={formData.units} 
                       onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      className={`w-full px-4 py-2 border ${validationErrors.units ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.unitsPlaceholder}
                       required
                     />
-                    {plan === "basic" && parseInt(formData.units) > 30 && (
-                      <p className="mt-1 text-sm text-red-600">{t.basicPlanLimit}</p>
-                    )}
-                    {plan === "standard" && parseInt(formData.units) > 50 && (
-                      <p className="mt-1 text-sm text-red-600">{t.standardPlanLimit}</p>
-                    )}
-                    {plan === "premium" && parseInt(formData.units) > 120 && (
-                      <p className="mt-1 text-sm text-red-600">{t.premiumPlanLimit}</p>
+                    {validationErrors.units ? (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.units}</p>
+                    ) : (
+                      <>
+                        {plan === "basic" && parseInt(formData.units) > 30 && (
+                          <p className="mt-1 text-sm text-red-600">{t.basicPlanLimit}</p>
+                        )}
+                        {plan === "standard" && parseInt(formData.units) > 50 && (
+                          <p className="mt-1 text-sm text-red-600">{t.standardPlanLimit}</p>
+                        )}
+                        {plan === "premium" && parseInt(formData.units) > 120 && (
+                          <p className="mt-1 text-sm text-red-600">{t.premiumPlanLimit}</p>
+                        )}
+                      </>
                     )}
                   </div>
                   
@@ -885,10 +960,13 @@ export default function RegisterComplex() {
                       name="username" 
                       value={formData.username} 
                       onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      className={`w-full px-4 py-2 border ${validationErrors.username ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.usernamePlaceholder}
                       required
                     />
+                    {validationErrors.username && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.username}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -899,11 +977,14 @@ export default function RegisterComplex() {
                       name="password" 
                       value={formData.password} 
                       onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      className={`w-full px-4 py-2 border ${validationErrors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.passwordPlaceholder}
                       minLength={8}
                       required
                     />
+                    {validationErrors.password && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -914,12 +995,14 @@ export default function RegisterComplex() {
                       name="confirmPassword" 
                       value={formData.confirmPassword} 
                       onChange={handleChange} 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
+                      className={`w-full px-4 py-2 border ${validationErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`}
                       placeholder={t.confirmPasswordPlaceholder}
                       minLength={8}
                       required
                     />
-                    {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                    {validationErrors.confirmPassword ? (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>
+                    ) : formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
                       <p className="mt-1 text-sm text-red-600">{t.passwordsDoNotMatch}</p>
                     )}
                   </div>
