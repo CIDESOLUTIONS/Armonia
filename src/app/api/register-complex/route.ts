@@ -1,22 +1,4 @@
-    // Verificar si ya existe un complejo con el mismo nombre
-    const existingComplex = await prisma.$queryRawUnsafe(
-      `SELECT id FROM "armonia"."ResidentialComplex" WHERE LOWER(name) = LOWER($1)`,
-      complexName
-    );
-    
-    if (existingComplex && existingComplex.length > 0) {
-      return NextResponse.json({ message: 'Ya existe un conjunto residencial con ese nombre' }, { status: 400 });
-    }
-    
-    // Verificar si ya existe un administrador con el mismo correo
-    const existingAdmin = await prisma.$queryRawUnsafe(
-      `SELECT id FROM "armonia"."User" WHERE LOWER(email) = LOWER($1)`,
-      adminEmail
-    );
-    
-    if (existingAdmin && existingAdmin.length > 0) {
-      return NextResponse.json({ message: 'Ya existe un usuario con ese correo electrónico' }, { status: 400 });
-    }// src/app/api/register-complex/route.ts
+// src/app/api/register-complex/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
@@ -58,6 +40,26 @@ export async function POST(req: NextRequest) {
     }
 
     const prisma = getPrisma(); // Usando el cliente para el esquema principal
+
+    // Verificar si ya existe un complejo con el mismo nombre
+    const existingComplex = await prisma.$queryRawUnsafe(
+      `SELECT id FROM "armonia"."ResidentialComplex" WHERE LOWER(name) = LOWER($1)`,
+      complexName
+    );
+    
+    if (existingComplex && existingComplex.length > 0) {
+      return NextResponse.json({ message: 'Ya existe un conjunto residencial con ese nombre' }, { status: 400 });
+    }
+    
+    // Verificar si ya existe un administrador con el mismo correo
+    const existingAdmin = await prisma.$queryRawUnsafe(
+      `SELECT id FROM "armonia"."User" WHERE LOWER(email) = LOWER($1)`,
+      adminEmail
+    );
+    
+    if (existingAdmin && existingAdmin.length > 0) {
+      return NextResponse.json({ message: 'Ya existe un usuario con ese correo electrónico' }, { status: 400 });
+    }
 
     // Validar el plan según la cantidad de unidades
     const planData = await prisma.$queryRawUnsafe(
