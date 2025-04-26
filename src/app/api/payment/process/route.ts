@@ -220,12 +220,17 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('[API Payment-Process] Error:', error);
     // Para pruebas, devolvemos un éxito simulado
-    const transactionId = generateTransactionId();
+    // El ID de transacción incluirá el planCode para identificar el tipo de plan
+    const planCodeInRequest = body ? body.planCode : 'standard';
+    const transactionId = generateTransactionId() + '-' + planCodeInRequest;
+    
+    console.log(`[API Payment-Process] Generando transacción simulada para plan ${planCodeInRequest}:`, transactionId);
+    
     return NextResponse.json({ 
       success: true, 
       message: 'Pago procesado correctamente (simulación de recuperación)',
       transactionId,
-      planCode: 'standard',
+      planCode: planCodeInRequest,
       isSimulation: true
     });
   }

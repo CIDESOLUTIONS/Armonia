@@ -123,13 +123,18 @@ export async function GET(req: NextRequest) {
       
       // Si no podemos encontrar la transacción, devolvemos una respuesta simulada para pruebas
       if (transactionId && transactionId.startsWith('TR-')) {
+        // Detectar si es un plan premium según el transactionId (para pruebas)
+        const isPremium = transactionId.includes('premium');
+        
+        console.log(`[API Payment-Verify] Simulando verificación para plan ${isPremium ? 'premium' : 'standard'}`);
+        
         return NextResponse.json({
           success: true,
           status: 'COMPLETED',
           message: 'Pago verificado (simulación)',
           transactionId,
-          planCode: 'standard',
-          planName: 'Plan Estándar',
+          planCode: isPremium ? 'premium' : 'standard',
+          planName: isPremium ? 'Plan Premium' : 'Plan Estándar',
           isSimulation: true
         });
       } else {

@@ -144,7 +144,7 @@ async function analyzeProject() {
     database: { tables: { armonia: {}, tenants: {} } },
     potentialCleanup: [],
     notes: [
-      "No se usa el cliente Prisma automático debido a un bug. En su lugar, se generó manualmente en src/lib/manual-prisma-client.ts y src/lib/prisma.ts."
+      "Recuerda revisar los archivos de configuración y las dependencias no utilizadas.",
     ],
   };
 

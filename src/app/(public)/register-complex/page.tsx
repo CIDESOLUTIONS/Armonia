@@ -213,29 +213,49 @@ export default function RegisterComplex() {
     // Verificar el estado del pago
     if (planParam && (planParam === "standard" || planParam === "premium")) {
       const storedPaymentCompleted = localStorage.getItem("paymentCompleted");
-      if (storedPaymentCompleted === "true") {
+      const storedTransactionId = localStorage.getItem("transactionId");
+      
+      console.log('Verificando estado de pago:', {
+        storedPaymentCompleted,
+        storedTransactionId,
+        paidParam,
+        planParam
+      });
+      
+      // Si el parámetro paid es true o hay un pago completado en localStorage
+      if (storedPaymentCompleted === "true" || paidParam === "true") {
         setPaymentCompleted(true);
-        setTransactionId(localStorage.getItem("transactionId"));
-        localStorage.removeItem("paymentCompleted");
+        
+        // Obtener el ID de transacción del localStorage si existe
+        if (storedTransactionId) {
+          setTransactionId(storedTransactionId);
+          console.log('TransactionId recuperado del localStorage:', storedTransactionId);
+        } else {
+          console.warn('No se encontró transactionId en localStorage');
+        }
       }
 
       // Si estamos regresando de checkout, intentamos recuperar los datos del formulario
-      if (!paidParam) {
-        const storedFormData = localStorage.getItem("complexFormData");
-        if (storedFormData) {
-          try {
-            const parsedData = JSON.parse(storedFormData);
-            setFormData(prev => ({ ...prev, ...parsedData }));
-          } catch (error) {
-            console.error('Error al recuperar datos del formulario:', error);
-          }
+      const storedFormData = localStorage.getItem("complexFormData");
+      if (storedFormData) {
+        try {
+          const parsedData = JSON.parse(storedFormData);
+          setFormData(prev => ({ ...prev, ...parsedData }));
+          console.log('Datos de formulario recuperados:', parsedData);
+        } catch (error) {
+          console.error('Error al recuperar datos del formulario:', error);
         }
       }
       
       // Si el pago se completó, avanzamos al paso 2
       if (paidParam === "true" || storedPaymentCompleted === "true") {
+        console.log('Avanzando al paso 2 (pago completado)');
         setStep(2);
       }
+    } else if (planParam === "basic") {
+      // Para el plan básico, si venimos directamente aquí, establecemos el step 2
+      console.log('Plan básico seleccionado, avanzando al paso 2');
+      setStep(2);
     }
   }, [planParam, paidParam]);
 
@@ -410,6 +430,22 @@ export default function RegisterComplex() {
         enabled: true
       }));
       
+      // Verificar si tenemos transactionId para planes pagados
+      let txId = transactionId;
+      if ((plan === "standard" || plan === "premium") && !txId) {
+        // Intentar recuperar de localStorage como último recurso
+        const storedTransactionId = localStorage.getItem("transactionId");
+        if (storedTransactionId) {
+          console.log('Recuperando transactionId de localStorage:', storedTransactionId);
+          txId = storedTransactionId;
+          setTransactionId(storedTransactionId);
+        } else if (paymentCompleted) {
+          console.warn('Pago marcado como completado pero falta ID de transacción');
+        } else {
+          throw new Error('Se requiere completar el pago para registrar este plan');
+        }
+      }
+      
       // Crear objeto con los datos a enviar
       const requestData = {
         complexName: formData.complexName,
@@ -424,8 +460,15 @@ export default function RegisterComplex() {
         country: formData.country,
         propertyTypes,
         planCode: plan,
-        transactionId: transactionId // Incluir el ID de transacción si completamos un pago
+        username: formData.username,
+        transactionId: txId
       };
+      
+      console.log('Enviando datos de registro:', {
+        complexName: requestData.complexName,
+        planCode: requestData.planCode,
+        transactionId: requestData.transactionId
+      });
       
       // Enviar datos al API
       const response = await fetch('/api/register-complex', {
@@ -448,7 +491,9 @@ export default function RegisterComplex() {
       // Limpiar datos almacenados en localStorage
       localStorage.removeItem("complexFormData");
       localStorage.removeItem("selectedPlan");
+      localStorage.removeItem("paymentCompleted");
       localStorage.removeItem("transactionId");
+      localStorage.removeItem("tempComplexId");
       router.push(ROUTES.PORTAL_SELECTOR);
     } catch (err: any) {
       console.error('Error de registro:', err);

@@ -276,11 +276,20 @@ export default function Checkout() {
         // Si el pago fue exitoso, almacenamos en localStorage
         localStorage.setItem("paymentCompleted", "true");
         localStorage.setItem("transactionId", data.transactionId);
+        // Asegurar que el planCode también se almacene
+        localStorage.setItem("selectedPlan", planType);
         
         // Si hay un complexId, lo almacenamos también
         if (data.complexId) {
           localStorage.setItem("tempComplexId", data.complexId.toString());
         }
+        
+        // Imprimir en consola para depuración
+        console.log('Pago procesado correctamente', {
+          transactionId: data.transactionId,
+          planType: planType,
+          paymentCompleted: true
+        });
         
         // Cambiar al estado de éxito
         setPaymentStep("success");
@@ -307,6 +316,7 @@ export default function Checkout() {
       
       if (data.success) {
         localStorage.setItem("paymentCompleted", "true");
+        localStorage.setItem("transactionId", txId);
         setPaymentStep("success");
       } else {
         setErrorMessage(data.message || t.errorMessage);
@@ -325,6 +335,22 @@ export default function Checkout() {
   };
   
   const handleContinue = () => {
+    // Asegurarnos que tenemos todos los datos necesarios en localStorage
+    const tId = localStorage.getItem("transactionId");
+    
+    if (!tId && transactionId) {
+      localStorage.setItem("transactionId", transactionId);
+    }
+    
+    localStorage.setItem("paymentCompleted", "true");
+    localStorage.setItem("selectedPlan", planType);
+    
+    console.log('Redirigiendo a registro con plan pagado', {
+      transactionId: tId || transactionId,
+      planType: planType,
+      paymentCompleted: true
+    });
+    
     // Continuar al registro con el plan ya pagado
     router.push(`/register-complex?plan=${planType}&paid=true`);
   };
