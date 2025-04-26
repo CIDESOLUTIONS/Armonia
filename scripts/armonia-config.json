@@ -1,0 +1,56 @@
+{
+  "projectInfo": {
+    "name": "Armonía",
+    "type": "WebApp FREEMIUM",
+    "description": "Sistema de gestión para conjuntos residenciales con modelo multitenant",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "projectRoot": "C:\\Users\\meciz\\Documents\\armonia",
+    "frontendRoot": "C:\\Users\\meciz\\Documents\\armonia\\frontend",
+    "docsRoot": "C:\\Users\\meciz\\Documents\\Desarrollos\\Armonia_Info",
+    "structureDocs": "C:\\Users\\meciz\\OneDrive\\Escritorio\\Desarrollos\\Armonia",
+    "scriptsRoot": "C:\\Users\\meciz\\Documents\\armonia\\scripts"
+  },
+  "database": {
+    "name": "armonia",
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "useEnvCredentials": true
+  },
+  "github": {
+    "repository": "https://github.com/CIDESOLUTIONS/Armonia.git",
+    "branch": "main"
+  },
+  "analysis": {
+    "excludedDirectories": [
+      "node_modules",
+      ".next",
+      "dist",
+      ".git",
+      "cypress/downloads",
+      "cypress/screenshots",
+      "cypress/videos",
+      "coverage"
+    ],
+    "excludedExtensions": [
+      ".log",
+      ".pem",
+      ".exe",
+      ".mp4",
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif"
+    ],
+    "maxDirectoryDepth": 4,
+    "includeFileContents": false,
+    "analyzeUnusedDependencies": true,
+    "analyzeDatabaseSchema": true
+  },
+  "features": {
+    "multitenant": true,
+    "tenantPrefix": "tenant_"
+  }
+}
