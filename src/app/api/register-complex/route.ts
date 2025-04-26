@@ -98,70 +98,30 @@ export async function POST(req: NextRequest) {
       await prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "armonia"`);
       console.log('[API Register-Complex] Esquema armonia creado o verificado');
       
-      // Verificar y actualizar estructura de la tabla ResidentialComplex
-      try {
-        // Primero verificamos si la tabla existe
-        const tableExists = await prisma.$queryRawUnsafe(`
-          SELECT EXISTS (
-            SELECT 1 FROM information_schema.tables 
-            WHERE table_schema = 'armonia' 
-            AND table_name = 'ResidentialComplex'
-          );
-        `);
-        
-        if (!tableExists[0].exists) {
-          // Si la tabla no existe, la creamos con la estructura completa
-          await prisma.$executeRawUnsafe(`
-            CREATE TABLE "armonia"."ResidentialComplex" (
-              id SERIAL PRIMARY KEY,
-              "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
-              "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
-              name TEXT NOT NULL,
-              "schemaName" TEXT NOT NULL,
-              "totalUnits" INTEGER NOT NULL,
-              "adminEmail" TEXT NOT NULL,
-              "adminName" TEXT NOT NULL,
-              "adminPhone" TEXT,
-              address TEXT,
-              city TEXT,
-              state TEXT,
-              country TEXT,
-              "propertyTypes" JSONB DEFAULT '[]'::jsonb,
-              "planCode" TEXT DEFAULT 'basic',
-              "planStatus" TEXT DEFAULT 'TRIAL',
-              "trialEndsAt" TIMESTAMP,
-              "lastPaymentId" INTEGER
-            )
-          `);
-          console.log('[API Register-Complex] Tabla ResidentialComplex creada');
-        } else {
-          // Si la tabla existe, verificamos si tiene las columnas necesarias
-          const columnsCheck = await prisma.$queryRawUnsafe(`
-            SELECT 
-              EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = 'armonia' AND table_name = 'ResidentialComplex' AND column_name = 'planCode') as has_plan_code,
-              EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = 'armonia' AND table_name = 'ResidentialComplex' AND column_name = 'planStatus') as has_plan_status
-          `);
-          
-          // Si faltan columnas, las añadimos
-          if (!columnsCheck[0].has_plan_code) {
-            await prisma.$executeRawUnsafe(`
-              ALTER TABLE "armonia"."ResidentialComplex" 
-              ADD COLUMN "planCode" TEXT DEFAULT 'basic'
-            `);
-            console.log('[API Register-Complex] Columna planCode añadida a ResidentialComplex');
-          }
-          
-          if (!columnsCheck[0].has_plan_status) {
-            await prisma.$executeRawUnsafe(`
-              ALTER TABLE "armonia"."ResidentialComplex" 
-              ADD COLUMN "planStatus" TEXT DEFAULT 'TRIAL'
-            `);
-            console.log('[API Register-Complex] Columna planStatus añadida a ResidentialComplex');
-          }
-        }
-      } catch (err) {
-        console.error('Error al verificar/actualizar estructura de ResidentialComplex:', err);
-      }
+      // Crear tabla ResidentialComplex con todos los campos necesarios
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "armonia"."ResidentialComplex" (
+          id SERIAL PRIMARY KEY,
+          "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+          "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+          name TEXT NOT NULL,
+          "schemaName" TEXT NOT NULL,
+          "totalUnits" INTEGER NOT NULL,
+          "adminEmail" TEXT NOT NULL,
+          "adminName" TEXT NOT NULL,
+          "adminPhone" TEXT,
+          address TEXT,
+          city TEXT,
+          state TEXT,
+          country TEXT,
+          "propertyTypes" JSONB DEFAULT '[]'::jsonb,
+          "planCode" TEXT DEFAULT 'basic',
+          "planStatus" TEXT DEFAULT 'TRIAL',
+          "trialEndsAt" TIMESTAMP,
+          "lastPaymentId" INTEGER
+        )
+      `);
+      console.log('[API Register-Complex] Tabla ResidentialComplex creada o verificada');
       
       // Crear tabla User si no existe
       await prisma.$executeRawUnsafe(`
@@ -277,36 +237,30 @@ export async function POST(req: NextRequest) {
     // Convert propertyTypes to a JSON string and then cast it to JSONB in the query
     const propertyTypesJson = propertyTypes ? JSON.stringify(propertyTypes) : '[]';
 
-    // Crear el complejo residencial en el esquema 'armonia'
+    // Solución simplificada: usar valores fijos para minimizar errores
     try {
       console.log('[API Register-Complex] Insertando complejo residencial en la base de datos');
       
-      // Verificamos las columnas existentes para construir una consulta apropiada
-      const columns = await prisma.$queryRawUnsafe(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_schema = 'armonia' 
-        AND table_name = 'ResidentialComplex'
-      `);
-      
-      const columnNames = columns.map((col: any) => col.column_name);
-      console.log('[API Register-Complex] Columnas disponibles:', columnNames);
-      
-      // Determinamos qué columnas usar basados en las disponibles
-      const insertColumns = [
-        'name', 
-        '"schemaName"', 
-        '"totalUnits"', 
-        '"adminEmail"', 
-        '"adminName"', 
-        '"adminPhone"', 
-        'address', 
-        'city', 
-        'state', 
-        'country'
-      ];
-      
-      const insertValues = [
+      // Enfoque simplificado: Usar INSERT con DEFAULT para valores que falten
+      const complex = await prisma.$queryRawUnsafe(`
+        INSERT INTO "armonia"."ResidentialComplex" (
+          name, 
+          "schemaName", 
+          "totalUnits", 
+          "adminEmail", 
+          "adminName", 
+          "adminPhone", 
+          address, 
+          city, 
+          state, 
+          country, 
+          "propertyTypes", 
+          "createdAt", 
+          "updatedAt"
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, NOW(), NOW()
+        ) RETURNING *
+      `, 
         complexName,
         schemaName,
         totalUnits,
@@ -316,50 +270,10 @@ export async function POST(req: NextRequest) {
         address || null,
         city || null,
         state || null,
-        country || 'Colombia'
-      ];
-      
-      // Añadir columnas opcionales si existen
-      if (columnNames.includes('propertyTypes')) {
-        insertColumns.push('"propertyTypes"');
-        insertValues.push(propertyTypesJson);
-      }
-      
-      if (columnNames.includes('planCode')) {
-        insertColumns.push('"planCode"');
-        insertValues.push(planCode);
-      }
-      
-      if (columnNames.includes('planStatus')) {
-        insertColumns.push('"planStatus"');
-        insertValues.push(planCode === 'basic' ? 'TRIAL' : 'ACTIVE');
-      }
-      
-      if (columnNames.includes('trialEndsAt')) {
-        insertColumns.push('"trialEndsAt"');
-        insertValues.push(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)); // Trial de 30 días
-      }
-      
-      // Añadir timestamps
-      insertColumns.push('"createdAt"', '"updatedAt"');
-      
-      // Construir la consulta con parámetros numerados
-      let query = `
-        INSERT INTO "armonia"."ResidentialComplex" (
-          ${insertColumns.join(', ')}
-        ) VALUES (
-          ${insertColumns.map((_, index) => `$${index + 1}`).join(', ')}
-        ) RETURNING *
-      `;
-      
-      // Para las fechas de creación y actualización (estos siempre están presentes)
-      const finalValues = [...insertValues, 'NOW()', 'NOW()'];
-      
-      console.log('[API Register-Complex] Consulta construida:', query);
-      console.log('[API Register-Complex] Valores a insertar:', finalValues.slice(0, -2));
-      
-      // Ejecutar consulta
-      const complex = await prisma.$queryRawUnsafe(query, ...finalValues);
+        country || 'Colombia',
+        propertyTypesJson
+      );
+
       console.log('[API Register-Complex] Complejo creado con ID:', complex[0].id);
 
       // Si hay una transacción de pago, actualizar su complexId
@@ -413,10 +327,7 @@ export async function POST(req: NextRequest) {
             city TEXT,
             state TEXT,
             country TEXT,
-            "propertyTypes" JSONB,
-            "planCode" TEXT DEFAULT 'basic',
-            "planStatus" TEXT DEFAULT 'TRIAL',
-            "trialEndsAt" TIMESTAMP
+            "propertyTypes" JSONB
           )`
         },
         {
@@ -676,31 +587,23 @@ export async function POST(req: NextRequest) {
             state,
             country,
             "propertyTypes",
-            "planCode",
-            "planStatus",
-            "trialEndsAt",
             "createdAt",
             "updatedAt"
-          ) SELECT 
-            id,
-            name,
-            "totalUnits",
-            "adminEmail",
-            "adminName",
-            "adminPhone",
-            address,
-            city,
-            state,
-            country,
-            "propertyTypes"::jsonb,
-            "planCode",
-            "planStatus",
-            "trialEndsAt",
-            "createdAt",
-            "updatedAt"
-          FROM "armonia"."ResidentialComplex"
-          WHERE id = $1
-        `, complex[0].id);
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, NOW(), NOW()
+          )`,
+          complex[0].id,
+          complex[0].name,
+          complex[0].totalunits,
+          complex[0].adminEmail,
+          complex[0].adminName,
+          complex[0].adminPhone,
+          complex[0].address,
+          complex[0].city,
+          complex[0].state,
+          complex[0].country,
+          propertyTypesJson
+        );
         console.log('[API Register-Complex] Complejo copiado al esquema tenant');
       } catch (err) {
         console.error(`Error al copiar complejo al esquema ${schemaName}:`, err);
@@ -718,18 +621,16 @@ export async function POST(req: NextRequest) {
             role,
             "createdAt",
             "updatedAt"
-          ) SELECT 
-            id,
-            email,
-            name,
-            password,
-            "complexId",
-            role,
-            "createdAt",
-            "updatedAt"
-          FROM "armonia"."User"
-          WHERE id = $1
-        `, user[0].id);
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, NOW(), NOW()
+          )`,
+          user[0].id,
+          user[0].email,
+          user[0].name,
+          user[0].password,
+          user[0].complexId,
+          user[0].role
+        );
         console.log('[API Register-Complex] Usuario copiado al esquema tenant');
       } catch (err) {
         console.error(`Error al copiar usuario al esquema ${schemaName}:`, err);
@@ -743,9 +644,9 @@ export async function POST(req: NextRequest) {
           complex: {
             id: complex[0].id,
             name: complex[0].name,
-            schemaName: complex[0].schemaName,
-            totalUnits: complex[0].totalUnits,
-            adminEmail: complex[0].adminEmail,
+            schemaName: schemaName,
+            totalUnits: complex[0].totalunits,
+            adminEmail: complex[0].adminemail,
             planCode: planCode,
             planStatus: planCode === 'basic' ? 'TRIAL' : 'ACTIVE'
           }
