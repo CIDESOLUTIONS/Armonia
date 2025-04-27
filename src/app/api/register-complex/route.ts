@@ -18,10 +18,13 @@ export async function POST(req: NextRequest) {
       state, 
       country, 
       propertyTypes,
-      planCode = 'basic', // Valor por defecto: plan básico
+      planCode: originalPlanCode = 'basic', // Valor por defecto: plan básico
       transactionId = null, // ID de transacción para planes pagados
       username
     } = body;
+
+    // Usar una variable que podamos modificar
+    let planCode = originalPlanCode;
 
     console.log('[API Register-Complex] Recibiendo datos:', { 
       complexName, 

@@ -60,11 +60,15 @@ export function Header({
   const t = language === 'Español' ? headerTexts.es : headerTexts.en;
 
   const toggleLanguage = () => {
-    setLanguage(language === 'Español' ? 'Inglés' : 'Español');
+    setLanguage(language === 'Español' ? 'English' : 'Español');
   };
 
   const toggleTheme = () => {
     setTheme(theme === 'Claro' ? 'Oscuro' : 'Claro');
+    // Aplicar el tema en el body
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('dark-mode', theme === 'Claro');
+    }
   };
 
   const toggleCurrency = () => {
@@ -116,24 +120,27 @@ export function Header({
           <div className="flex items-center gap-4">
             <button
               onClick={toggleLanguage}
-              className="text-white hover:text-indigo-200 focus:outline-none"
+              className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               title={language === 'Español' ? 'Cambiar a Inglés' : 'Switch to Spanish'}
             >
               <Globe className="w-5 h-5" />
+              <span className="text-xs">{language.substring(0, 2)}</span>
             </button>
             <button
               onClick={toggleTheme}
-              className="text-white hover:text-indigo-200 focus:outline-none"
+              className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               title={theme === 'Claro' ? 'Cambiar a Oscuro' : 'Switch to Light'}
             >
               {theme === 'Claro' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              <span className="text-xs">{theme.substring(0, 1)}</span>
             </button>
             <button
               onClick={toggleCurrency}
-              className="text-white hover:text-indigo-200 focus:outline-none"
+              className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               title={currency === 'Dólares' ? 'Cambiar a Pesos' : 'Switch to Dollars'}
             >
               <DollarSign className="w-5 h-5" />
+              <span className="text-xs">{currency.substring(0, 1)}</span>
             </button>
           </div>
           {isLoggedIn ? (
@@ -211,21 +218,24 @@ export function Header({
             <div className="flex items-center gap-4 px-4">
               <button
                 onClick={toggleLanguage}
-                className="text-white hover:text-indigo-200 focus:outline-none"
+                className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               >
                 <Globe className="w-5 h-5" />
+                <span className="text-xs">{language.substring(0, 2)}</span>
               </button>
               <button
                 onClick={toggleTheme}
-                className="text-white hover:text-indigo-200 focus:outline-none"
+                className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               >
                 {theme === 'Claro' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                <span className="text-xs">{theme.substring(0, 1)}</span>
               </button>
               <button
                 onClick={toggleCurrency}
-                className="text-white hover:text-indigo-200 focus:outline-none"
+                className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               >
                 <DollarSign className="w-5 h-5" />
+                <span className="text-xs">{currency.substring(0, 1)}</span>
               </button>
             </div>
             <div className="flex flex-col space-y-2 px-4">
