@@ -25,7 +25,8 @@ export default function PortalSelector() {
         "Gestión de propiedades y residentes",
         "Administración financiera",
         "Gestión de asambleas",
-        "Configuración del sistema"
+        "Configuración del sistema",
+        "Control de seguridad y accesos"
       ],
       adminButton: "Acceder como Administrador",
       residentPortal: "Portal Residentes",
@@ -34,7 +35,8 @@ export default function PortalSelector() {
         "Consulta de estado de cuenta",
         "Reserva de servicios comunes",
         "Participación en asambleas",
-        "Gestión de PQR"
+        "Gestión de PQR",
+        "Acceso a documentos del conjunto"
       ],
       residentButton: "Acceder como Residente",
       receptionPortal: "Portal Recepción",
@@ -43,7 +45,8 @@ export default function PortalSelector() {
         "Registro de visitantes",
         "Control de correspondencia",
         "Registro de incidentes",
-        "Monitoreo de vigilancia"
+        "Monitoreo de vigilancia",
+        "Gestión de paquetería"
       ],
       receptionButton: "Acceder como Recepción",
       registerQuestion: "¿Necesita registrar un nuevo conjunto?",
@@ -59,7 +62,8 @@ export default function PortalSelector() {
         "Property and resident management",
         "Financial administration",
         "Assembly management",
-        "System configuration"
+        "System configuration",
+        "Security and access control"
       ],
       adminButton: "Access as Administrator",
       residentPortal: "Resident Portal",
@@ -68,7 +72,8 @@ export default function PortalSelector() {
         "View account status",
         "Book common services",
         "Participate in assemblies",
-        "Manage requests and complaints"
+        "Manage requests and complaints",
+        "Access to complex documents"
       ],
       residentButton: "Access as Resident",
       receptionPortal: "Reception Portal",
@@ -77,7 +82,8 @@ export default function PortalSelector() {
         "Visitor registration",
         "Mail control",
         "Incident logging",
-        "Security monitoring"
+        "Security monitoring",
+        "Package management"
       ],
       receptionButton: "Access as Reception",
       registerQuestion: "Need to register a new complex?",
@@ -112,7 +118,7 @@ export default function PortalSelector() {
         hideNavLinks={true}
       />
       
-      <div className="container max-w-5xl px-4 py-8 mx-auto mt-16 flex-grow">
+      <div className="container max-w-5xl px-4 py-8 mx-auto mt-6 flex-grow">
         <div className="flex items-center mb-6">
           <Button 
             variant="ghost" 
