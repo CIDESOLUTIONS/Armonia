@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 interface RealTimeVotingProps {
   assemblyId: number;
   agendaNumeral: number;
   topic: string;
-  token: string;
   language: string;
   userVote: 'YES' | 'NO' | null;
   onVoteSubmitted: () => void;
@@ -29,25 +30,25 @@ export default function RealTimeVoting({
   assemblyId,
   agendaNumeral,
   topic,
-  token,
   language,
   userVote,
   onVoteSubmitted
 }: RealTimeVotingProps) {
   const [stats, setStats] = useState<VotingStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, _setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchVotingStats = async () => {
     try {
-      // Variable response eliminada por lint
+      const response = await fetch(`/api/assemblies/${assemblyId}/agenda/${agendaNumeral}/votes`);
       
       if (!response.ok) {
         throw new Error(language === 'Español' ? 'Error al cargar estadísticas de votación' : 'Error loading voting statistics');
       }
       
-      const _data = await response.json();
+      const data = await response.json();
       setStats(data);
       setLastUpdate(new Date());
       setError(null);
@@ -56,6 +57,45 @@ export default function RealTimeVoting({
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const submitVote = async (value: 'YES' | 'NO') => {
+    if (submitting) return;
+    
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/assemblies/${assemblyId}/agenda/${agendaNumeral}/votes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ value }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || (language === 'Español' ? 'Error al enviar voto' : 'Error submitting vote'));
+      }
+      
+      toast({
+        title: language === 'Español' ? 'Voto registrado' : 'Vote submitted',
+        description: language === 'Español' ? 'Tu voto ha sido registrado exitosamente' : 'Your vote has been successfully recorded',
+        variant: 'default',
+      });
+      
+      // Actualizar estadísticas y notificar al componente padre
+      fetchVotingStats();
+      onVoteSubmitted();
+    } catch (err) {
+      console.error('[RealTimeVoting] Error submitting vote:', err);
+      toast({
+        title: language === 'Español' ? 'Error' : 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -69,7 +109,7 @@ export default function RealTimeVoting({
     }, 15000);
     
     return () => clearInterval(intervalId);
-  }, [assemblyId, agendaNumeral, token]);
+  }, [assemblyId, agendaNumeral]);
 
   if (loading) {
     return (
@@ -131,6 +171,32 @@ export default function RealTimeVoting({
           </div>
         </div>
       </div>
+      
+      {/* Botones de votación (solo mostrar si la votación está abierta y el usuario no ha votado) */}
+      {stats.isOpen && userVote === null && (
+        <div className="flex space-x-2 mt-4 mb-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 bg-green-50 hover:bg-green-100 border-green-200"
+            onClick={() => submitVote('YES')}
+            disabled={submitting}
+          >
+            {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+            {language === 'Español' ? 'Votar a favor' : 'Vote in favor'}
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 bg-red-50 hover:bg-red-100 border-red-200"
+            onClick={() => submitVote('NO')}
+            disabled={submitting}
+          >
+            {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />}
+            {language === 'Español' ? 'Votar en contra' : 'Vote against'}
+          </Button>
+        </div>
+      )}
       
       {stats.endTime && !stats.isOpen && (
         <div className="text-xs text-gray-500">
