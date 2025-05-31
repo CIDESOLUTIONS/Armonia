@@ -259,3 +259,105 @@ model Resident {
   
   @@schema("tenant")
 }
+// Modelos para el sistema de votaciones en tiempo real
+
+// Modelo para Asambleas
+model Assembly {
+  id              Int         @id @default(autoincrement())
+  title           String      // Título de la asamblea
+  description     String?     // Descripción opcional
+  date            DateTime    // Fecha programada
+  startTime       DateTime?   // Hora de inicio real
+  endTime         DateTime?   // Hora de finalización
+  status          String      // 'scheduled', 'in_progress', 'completed', 'cancelled'
+  location        String?     // Ubicación física o virtual
+  quorumRequired  Float       // Porcentaje de coeficiente requerido para quórum (ej: 0.51 para 51%)
+  quorumReached   Boolean     @default(false) // Si se alcanzó el quórum
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  agendaItems     AgendaItem[] // Relación con los puntos de agenda
+  attendees       Attendance[] // Relación con los asistentes
+  
+  @@schema("tenant")
+}
+
+// Modelo para Puntos de Agenda
+model AgendaItem {
+  id              Int         @id @default(autoincrement())
+  assemblyId      Int         // ID de la asamblea
+  assembly        Assembly    @relation(fields: [assemblyId], references: [id])
+  numeral         Int         // Número de orden en la agenda
+  topic           String      // Tema o título
+  description     String?     // Descripción detallada
+  votingStatus    String      // 'pending', 'open', 'closed'
+  votingStartTime DateTime?   // Hora de inicio de la votación
+  votingEndTime   DateTime?   // Hora de finalización de la votación
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  votes           Vote[]      // Relación con los votos
+  documents       Document[]  // Relación con documentos asociados
+  
+  @@schema("tenant")
+}
+
+// Modelo para Votos
+model Vote {
+  id              Int         @id @default(autoincrement())
+  agendaItemId    Int         // ID del punto de agenda
+  agendaItem      AgendaItem  @relation(fields: [agendaItemId], references: [id])
+  userId          Int         // ID del usuario que vota
+  value           String      // 'YES', 'NO', 'ABSTAIN'
+  coefficient     Float       // Coeficiente de propiedad para ponderación
+  createdAt       DateTime    @default(now())
+  
+  @@unique([agendaItemId, userId]) // Un usuario solo puede votar una vez por punto de agenda
+  @@schema("tenant")
+}
+
+// Modelo para Asistencia
+model Attendance {
+  id              Int         @id @default(autoincrement())
+  assemblyId      Int         // ID de la asamblea
+  assembly        Assembly    @relation(fields: [assemblyId], references: [id])
+  userId          Int         // ID del usuario asistente
+  status          String      // 'confirmed', 'attended', 'absent', 'proxy'
+  proxyUserId     Int?        // ID del usuario que tiene el poder (si aplica)
+  coefficient     Float       // Coeficiente de propiedad
+  joinTime        DateTime?   // Hora de ingreso
+  leaveTime       DateTime?   // Hora de salida
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@unique([assemblyId, userId]) // Un usuario solo puede tener un registro de asistencia por asamblea
+  @@schema("tenant")
+}
+
+// Modelo para Documentos de Asamblea
+model Document {
+  id              Int         @id @default(autoincrement())
+  agendaItemId    Int?        // ID del punto de agenda (opcional)
+  agendaItem      AgendaItem? @relation(fields: [agendaItemId], references: [id])
+  title           String      // Título del documento
+  type            String      // 'minutes', 'attachment', 'presentation', 'report'
+  fileUrl         String      // URL del archivo
+  version         Int         @default(1) // Versión del documento
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para Auditoría
+model AuditLog {
+  id              Int         @id @default(autoincrement())
+  userId          Int         // ID del usuario que realizó la acción
+  entityType      String      // Tipo de entidad ('ASSEMBLY', 'VOTING', etc.)
+  entityId        String      // ID de la entidad (puede ser compuesto, ej: "1-2" para agendaItem)
+  action          String      // Acción realizada ('VOTE_SUBMITTED', 'VOTING_OPENED', etc.)
+  details         String      // Detalles en formato JSON
+  ipAddress       String?     // Dirección IP
+  userAgent       String?     // User agent
+  createdAt       DateTime    @default(now())
+  
+  @@schema("tenant")
+}
