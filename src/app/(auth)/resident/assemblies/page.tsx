@@ -1,4 +1,3 @@
-// src/app/(auth)/resident/assemblies/page.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -6,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import QuorumVerification from '@/components/assemblies/QuorumVerification';
+import RealTimeVoting from '@/components/assemblies/RealTimeVoting';
 
 interface AgendaItem {
   numeral: number;
@@ -18,6 +19,8 @@ interface Assembly {
   title: string;
   date: string;
   agenda: AgendaItem[];
+  totalUnits: number;
+  quorumPercentage: number;
 }
 
 interface Document {
@@ -38,6 +41,7 @@ export default function ResidentAssembliesPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedAssembly, setSelectedAssembly] = useState<number | null>(null);
+  const [userVotes, setUserVotes] = useState<{ [key: string]: 'YES' | 'NO' | null }>({});
 
   useEffect(() => {
     setIsClient(true);
@@ -56,7 +60,10 @@ export default function ResidentAssembliesPage() {
       const data = await response.json();
       if (response.ok) {
         setAssemblies(data.assemblies || []);
-        data.assemblies.forEach((assembly: Assembly) => fetchDocuments(assembly.id));
+        data.assemblies.forEach((assembly: Assembly) => {
+          fetchDocuments(assembly.id);
+          fetchUserVotes(assembly.id);
+        });
       } else {
         console.error('[Resident Assemblies] Error al cargar asambleas:', data.message);
       }
@@ -78,6 +85,27 @@ export default function ResidentAssembliesPage() {
       }
     } catch (err) {
       console.error('[Resident Assemblies] Error al cargar documentos:', err);
+    }
+  };
+
+  const fetchUserVotes = async (assemblyId: number) => {
+    try {
+      const response = await fetch(`/api/assemblies/voting/user-votes?assemblyId=${assemblyId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const newUserVotes = { ...userVotes };
+        (data.votes || []).forEach((vote: { agendaNumeral: number, vote: 'YES' | 'NO' }) => {
+          const key = `${assemblyId}-${vote.agendaNumeral}`;
+          newUserVotes[key] = vote.vote;
+        });
+        setUserVotes(newUserVotes);
+      } else {
+        console.error('[Resident Assemblies] Error al cargar votos del usuario:', data.message);
+      }
+    } catch (err) {
+      console.error('[Resident Assemblies] Error al cargar votos del usuario:', err);
     }
   };
 
@@ -134,6 +162,12 @@ export default function ResidentAssembliesPage() {
         throw new Error(data.message || 'Error al registrar voto');
       }
 
+      // Actualizar el voto del usuario localmente
+      setUserVotes(prev => ({
+        ...prev,
+        [`${assemblyId}-${numeral}`]: vote
+      }));
+
       setSuccess(language === 'Español' ? 'Voto registrado con éxito.' : 'Vote registered successfully.');
     } catch (err) {
       console.error('[Resident Assemblies] Error al registrar voto:', err);
@@ -179,6 +213,16 @@ export default function ResidentAssembliesPage() {
           <div key={assembly.id} className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-2">{assembly.title}</h3>
             <p className="text-gray-600 mb-4">{new Date(assembly.date).toLocaleString()}</p>
+            
+            {/* Componente de verificación de quórum */}
+            <QuorumVerification 
+              assemblyId={assembly.id}
+              token={token}
+              language={language}
+              totalUnits={assembly.totalUnits}
+              quorumPercentage={assembly.quorumPercentage}
+            />
+            
             <Button
               onClick={() => handleConfirmAttendance(assembly.id)}
               disabled={isSubmitting[assembly.id] === 0}
@@ -189,13 +233,24 @@ export default function ResidentAssembliesPage() {
               ) : null}
               {language === 'Español' ? 'Confirmar Asistencia' : 'Confirm Attendance'}
             </Button>
+            
             <div className="mt-6">
               <h4 className="text-lg font-medium mb-3">{language === 'Español' ? 'Votaciones' : 'Voting'}</h4>
               <div className="space-y-4">
                 {assembly.agenda.map(item => (
                   <div key={item.numeral} className="bg-gray-50 p-4 rounded-md">
-                    <p className="mb-2"><span className="font-medium">#{item.numeral}:</span> {item.topic}</p>
-                    <div className="flex space-x-3">
+                    {/* Componente de votación en tiempo real */}
+                    <RealTimeVoting
+                      assemblyId={assembly.id}
+                      agendaNumeral={item.numeral}
+                      topic={item.topic}
+                      token={token}
+                      language={language}
+                      userVote={userVotes[`${assembly.id}-${item.numeral}`] || null}
+                      onVoteSubmitted={() => fetchUserVotes(assembly.id)}
+                    />
+                    
+                    <div className="flex space-x-3 mt-3">
                       <Button
                         onClick={() => handleVote(assembly.id, item.numeral, 'YES')}
                         disabled={isSubmitting[assembly.id] === item.numeral}
@@ -223,6 +278,7 @@ export default function ResidentAssembliesPage() {
                 ))}
               </div>
             </div>
+            
             <div className="mt-6">
               <h4 className="text-lg font-medium mb-3">{language === 'Español' ? 'Documentos' : 'Documents'}</h4>
               <div className="space-y-2">
