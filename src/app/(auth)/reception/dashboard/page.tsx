@@ -29,6 +29,9 @@ import {
   Bell,
   Phone
 } from 'lucide-react';
+import NotificationCenterThemed from '@/components/communications/NotificationCenterThemed';
+import { useRealTimeCommunication } from '@/lib/communications/real-time-context';
+import { translate, Language, ThemeMode } from '@/lib/communications/theme-config';
 
 interface Visitor {
   id: string;
@@ -84,12 +87,13 @@ interface DashboardData {
 }
 
 export default function ReceptionDashboard() {
-  const { isLoggedIn, token, schemaName, userName } = useAuth();
+  const { isLoggedIn, token, schemaName, userName, language = 'Español', themeMode = 'light' } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { notifications, unreadNotificationsCount } = useRealTimeCommunication();
 
   // Datos de ejemplo para desarrollo y pruebas
   const mockData: DashboardData = {
@@ -244,7 +248,7 @@ export default function ReceptionDashboard() {
       month: '2-digit',
       year: 'numeric'
     };
-    return new Date(dateTimeStr).toLocaleString('es-CO', options);
+    return new Date(dateTimeStr).toLocaleString(language === 'Español' ? 'es-CO' : 'en-US', options);
   };
 
   // Función para formatear solo la hora
@@ -254,7 +258,7 @@ export default function ReceptionDashboard() {
       minute: '2-digit',
       hour12: true
     };
-    return new Date(dateTimeStr).toLocaleString('es-CO', options);
+    return new Date(dateTimeStr).toLocaleString(language === 'Español' ? 'es-CO' : 'en-US', options);
   };
 
   // Función para calcular el tiempo transcurrido
@@ -275,20 +279,20 @@ export default function ReceptionDashboard() {
   // Función para obtener el color según el tipo de severidad
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+      case 'low': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }
   };
 
   // Función para obtener el color según el tipo de visitante
   const getVisitorTypeColor = (type: string) => {
     switch (type) {
-      case 'visitor': return 'bg-green-100 text-green-800';
-      case 'service': return 'bg-blue-100 text-blue-800';
-      case 'delivery': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'visitor': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'service': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'delivery': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }
   };
 
@@ -335,7 +339,7 @@ export default function ReceptionDashboard() {
           className="mt-4"
           onClick={() => window.location.reload()}
         >
-          Reintentar
+          {language === 'Español' ? 'Reintentar' : 'Retry'}
         </Button>
       </div>
     );
@@ -347,9 +351,11 @@ export default function ReceptionDashboard() {
       <div className="container mx-auto p-6">
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>Información no disponible</AlertTitle>
+          <AlertTitle>{language === 'Español' ? 'Información no disponible' : 'Information not available'}</AlertTitle>
           <AlertDescription>
-            No se pudo cargar la información del dashboard. Por favor, contacte al administrador.
+            {language === 'Español' 
+              ? 'No se pudo cargar la información del dashboard. Por favor, contacte al administrador.' 
+              : 'Could not load dashboard information. Please contact the administrator.'}
           </AlertDescription>
         </Alert>
       </div>
@@ -360,65 +366,91 @@ export default function ReceptionDashboard() {
     <div className="container mx-auto p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Panel de Control - Recepción</h1>
-          <p className="text-gray-500">Bienvenido, {userName || 'Usuario'}</p>
+          <h1 className="text-2xl font-bold">
+            {language === 'Español' ? 'Panel de Control - Recepción' : 'Control Panel - Reception'}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            {language === 'Español' ? 'Bienvenido, ' : 'Welcome, '}{userName || 'Usuario'}
+          </p>
         </div>
-        <div className="flex items-center mt-2 md:mt-0">
-          <Clock className="w-5 h-5 mr-2 text-indigo-600" />
-          <span>{new Date().toLocaleString('es-CO', { dateStyle: 'full', timeStyle: 'short' })}</span>
+        <div className="flex items-center mt-2 md:mt-0 gap-4">
+          <div className="flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
+            <span>{new Date().toLocaleString(language === 'Español' ? 'es-CO' : 'en-US', { dateStyle: 'full', timeStyle: 'short' })}</span>
+          </div>
+          <NotificationCenterThemed 
+            language={language as Language} 
+            themeMode={themeMode as ThemeMode} 
+          />
         </div>
       </div>
 
       {/* Tarjetas de estadísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Visitantes Hoy</p>
-              <p className="text-3xl font-bold text-indigo-600">{data.stats.visitorsToday}</p>
-              <p className="text-sm text-gray-500 mt-1">{data.activeVisitors.length} activos</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {language === 'Español' ? 'Visitantes Hoy' : 'Today\'s Visitors'}
+              </p>
+              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{data.stats.visitorsToday}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {data.activeVisitors.length} {language === 'Español' ? 'activos' : 'active'}
+              </p>
             </div>
-            <div className="bg-indigo-100 p-3 rounded-full">
-              <UserPlus className="h-8 w-8 text-indigo-600" />
+            <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-full">
+              <UserPlus className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Paquetes Pendientes</p>
-              <p className="text-3xl font-bold text-indigo-600">{data.stats.pendingPackages}</p>
-              <p className="text-sm text-gray-500 mt-1">por entregar</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {language === 'Español' ? 'Paquetes Pendientes' : 'Pending Packages'}
+              </p>
+              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{data.stats.pendingPackages}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {language === 'Español' ? 'por entregar' : 'to deliver'}
+              </p>
             </div>
-            <div className="bg-amber-100 p-3 rounded-full">
-              <Package className="h-8 w-8 text-amber-600" />
+            <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-full">
+              <Package className="h-8 w-8 text-amber-600 dark:text-amber-400" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Incidentes Activos</p>
-              <p className="text-3xl font-bold text-indigo-600">{data.stats.activeIncidents}</p>
-              <p className="text-sm text-gray-500 mt-1">por resolver</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {language === 'Español' ? 'Incidentes Activos' : 'Active Incidents'}
+              </p>
+              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{data.stats.activeIncidents}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {language === 'Español' ? 'por resolver' : 'to resolve'}
+              </p>
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <AlertCircle className="h-8 w-8 text-red-600" />
+            <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-full">
+              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Alertas de Seguridad</p>
-              <p className="text-3xl font-bold text-indigo-600">{data.stats.securityAlerts}</p>
-              <p className="text-sm text-gray-500 mt-1">actualmente</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {language === 'Español' ? 'Alertas de Seguridad' : 'Security Alerts'}
+              </p>
+              <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{data.stats.securityAlerts}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {language === 'Español' ? 'actualmente' : 'currently'}
+              </p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <ShieldAlert className="h-8 w-8 text-green-600" />
+            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+              <ShieldAlert className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
           </CardContent>
         </Card>
@@ -427,26 +459,31 @@ export default function ReceptionDashboard() {
       {/* Sección principal */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="md:col-span-2">
-          <Card className="h-full">
+          <Card className="h-full dark:border-gray-700">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">Visitantes Activos</CardTitle>
+                <CardTitle className="text-xl">
+                  {language === 'Español' ? 'Visitantes Activos' : 'Active Visitors'}
+                </CardTitle>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => router.push('/reception/visitors/check-in')}
+                  className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Registrar Visitante
+                  {language === 'Español' ? 'Registrar Visitante' : 'Register Visitor'}
                 </Button>
               </div>
-              <CardDescription>Personas actualmente dentro del conjunto</CardDescription>
+              <CardDescription>
+                {language === 'Español' ? 'Personas actualmente dentro del conjunto' : 'People currently inside the complex'}
+              </CardDescription>
               <div className="mt-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Buscar por nombre o destino..."
-                    className="pl-10"
+                    placeholder={language === 'Español' ? "Buscar por nombre o destino..." : "Search by name or destination..."}
+                    className="pl-10 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -457,37 +494,38 @@ export default function ReceptionDashboard() {
               {filteredVisitors.length > 0 ? (
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Nombre</TableHead>
-                      <TableHead>Destino</TableHead>
-                      <TableHead>Ingreso</TableHead>
-                      <TableHead>Tiempo</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead className="text-right">Acción</TableHead>
+                    <TableRow className="dark:border-gray-700">
+                      <TableHead className="dark:text-gray-300">{language === 'Español' ? 'Nombre' : 'Name'}</TableHead>
+                      <TableHead className="dark:text-gray-300">{language === 'Español' ? 'Destino' : 'Destination'}</TableHead>
+                      <TableHead className="dark:text-gray-300">{language === 'Español' ? 'Ingreso' : 'Check-in'}</TableHead>
+                      <TableHead className="dark:text-gray-300">{language === 'Español' ? 'Tiempo' : 'Time'}</TableHead>
+                      <TableHead className="dark:text-gray-300">{language === 'Español' ? 'Tipo' : 'Type'}</TableHead>
+                      <TableHead className="text-right dark:text-gray-300">{language === 'Español' ? 'Acción' : 'Action'}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredVisitors.map((visitor) => (
-                      <TableRow key={visitor.id}>
-                        <TableCell className="font-medium">{visitor.name}</TableCell>
-                        <TableCell>{visitor.destinationUnit}</TableCell>
-                        <TableCell>{formatTime(visitor.checkInTime)}</TableCell>
-                        <TableCell>{getElapsedTime(visitor.checkInTime)}</TableCell>
+                      <TableRow key={visitor.id} className="dark:border-gray-700">
+                        <TableCell className="font-medium dark:text-gray-200">{visitor.name}</TableCell>
+                        <TableCell className="dark:text-gray-300">{visitor.destinationUnit}</TableCell>
+                        <TableCell className="dark:text-gray-300">{formatTime(visitor.checkInTime)}</TableCell>
+                        <TableCell className="dark:text-gray-300">{getElapsedTime(visitor.checkInTime)}</TableCell>
                         <TableCell>
                           <Badge className={getVisitorTypeColor(visitor.type)}>
-                            {visitor.type === 'visitor' ? 'Visitante' : 
-                             visitor.type === 'service' ? 'Servicio' : 'Entrega'}
+                            {visitor.type === 'visitor' ? (language === 'Español' ? 'Visitante' : 'Visitor') : 
+                             visitor.type === 'service' ? (language === 'Español' ? 'Servicio' : 'Service') : 
+                             (language === 'Español' ? 'Entrega' : 'Delivery')}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            className="text-indigo-600 hover:text-indigo-800"
+                            className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                             onClick={() => router.push(`/reception/visitors/check-out?id=${visitor.id}`)}
                           >
-                            <LogOut className="mr-1 h-4 w-4" />
-                            Registrar Salida
+                            <LogOut className="mr-2 h-4 w-4" />
+                            {language === 'Español' ? 'Registrar Salida' : 'Check Out'}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -495,138 +533,161 @@ export default function ReceptionDashboard() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="text-center py-12">
-                  <UserPlus className="h-12 w-12 mx-auto text-gray-300" />
-                  <p className="mt-3 text-gray-500">
-                    {searchTerm 
-                      ? "No se encontraron visitantes que coincidan con su búsqueda" 
-                      : "No hay visitantes activos en este momento"}
-                  </p>
-                  {searchTerm && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setSearchTerm('')}
-                      className="mt-2"
-                    >
-                      Limpiar búsqueda
-                    </Button>
-                  )}
+                <div className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-gray-400">
+                  <UserPlus className="h-10 w-10 mb-2 text-gray-400 dark:text-gray-500" />
+                  <p>{language === 'Español' ? 'No hay visitantes activos' : 'No active visitors'}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div>
+          <Card className="mb-6 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center">
+                <Package className="h-5 w-5 mr-2 text-amber-600 dark:text-amber-400" />
+                {language === 'Español' ? 'Paquetes Pendientes' : 'Pending Packages'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.pendingPackages.length > 0 ? (
+                <div className="space-y-4">
+                  {data.pendingPackages.slice(0, 3).map((pkg) => (
+                    <div key={pkg.id} className="flex items-start border-b pb-3 last:border-0 last:pb-0 dark:border-gray-700">
+                      <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-md mr-3">
+                        <Package className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium dark:text-gray-200">{pkg.description}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{pkg.recipient} - {pkg.unit}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatDateTime(pkg.receivedAt)}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        onClick={() => router.push(`/reception/packages?id=${pkg.id}`)}
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+                  <Package className="h-8 w-8 mb-2 text-gray-400 dark:text-gray-500" />
+                  <p>{language === 'Español' ? 'No hay paquetes pendientes' : 'No pending packages'}</p>
                 </div>
               )}
             </CardContent>
             <CardFooter>
               <Button 
-                variant="ghost" 
-                className="w-full justify-between text-indigo-600"
-                onClick={() => router.push('/reception/visitors/history')}
+                variant="outline" 
+                size="sm" 
+                className="w-full dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                onClick={() => router.push('/reception/packages')}
               >
-                <span>Ver historial completo</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-        
-        {/* Eventos del día y vigilancia */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-indigo-600" />
-                Eventos de Hoy
-              </CardTitle>
-              <CardDescription>Actividades programadas para hoy</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {data.todayEvents.length > 0 ? (
-                  data.todayEvents.map((event) => (
-                    <div key={event.id} className="p-3 border rounded-md">
-                      <div className="font-medium">{event.title}</div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        {event.location} | {event.startTime} - {event.endTime}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    No hay eventos programados para hoy
-                  </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="ghost" 
-                className="w-full text-indigo-600"
-                onClick={() => router.push('/reception/calendar')}
-              >
-                Ver calendario completo
+                {language === 'Español' ? 'Ver Todos los Paquetes' : 'View All Packages'}
               </Button>
             </CardFooter>
           </Card>
           
-          <Card>
-            <CardHeader className="pb-2">
+          <Card className="dark:border-gray-700">
+            <CardHeader>
               <CardTitle className="text-lg flex items-center">
-                <Camera className="h-5 w-5 mr-2 text-indigo-600" />
-                Vigilancia
+                <AlertCircle className="h-5 w-5 mr-2 text-red-600 dark:text-red-400" />
+                {language === 'Español' ? 'Incidentes Recientes' : 'Recent Incidents'}
               </CardTitle>
-              <CardDescription>Cámaras de seguridad</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="aspect-video bg-gray-100 rounded-md flex items-center justify-center">
-                <Button 
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                  onClick={() => router.push('/reception/surveillance')}
-                >
-                  <Camera className="mr-2 h-4 w-4" />
-                  Acceder a Cámaras
-                </Button>
-              </div>
+              {data.recentIncidents.length > 0 ? (
+                <div className="space-y-4">
+                  {data.recentIncidents.map((incident) => (
+                    <div key={incident.id} className="flex items-start border-b pb-3 last:border-0 last:pb-0 dark:border-gray-700">
+                      <div className={`p-2 rounded-md mr-3 ${getSeverityColor(incident.severity)}`}>
+                        <AlertTriangle className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium dark:text-gray-200">{incident.title}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{incident.description}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatDateTime(incident.reportedAt)}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        onClick={() => router.push(`/reception/incidents?id=${incident.id}`)}
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+                  <CheckCircle className="h-8 w-8 mb-2 text-gray-400 dark:text-gray-500" />
+                  <p>{language === 'Español' ? 'No hay incidentes recientes' : 'No recent incidents'}</p>
+                </div>
+              )}
             </CardContent>
+            <CardFooter>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                onClick={() => router.push('/reception/incidents')}
+              >
+                {language === 'Español' ? 'Ver Todos los Incidentes' : 'View All Incidents'}
+              </Button>
+            </CardFooter>
           </Card>
         </div>
       </div>
-
-      {/* Sección de acciones rápidas */}
-      <Card className="mb-8">
+      
+      {/* Eventos de hoy */}
+      <Card className="dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Acciones Rápidas</CardTitle>
-          <CardDescription>Accesos directos a funciones frecuentes</CardDescription>
+          <CardTitle className="flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-indigo-600 dark:text-indigo-400" />
+            {language === 'Español' ? 'Eventos de Hoy' : 'Today\'s Events'}
+          </CardTitle>
+          <CardDescription>
+            {language === 'Español' ? 'Reservas y actividades programadas para hoy' : 'Reservations and activities scheduled for today'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              className="flex flex-col items-center justify-center h-24 bg-indigo-600 hover:bg-indigo-700"
-              onClick={() => router.push('/reception/visitors/check-in')}
-            >
-              <UserPlus className="h-8 w-8 mb-2" />
-              <span>Registrar Visitante</span>
-            </Button>
-            <Button 
-              className="flex flex-col items-center justify-center h-24 bg-indigo-600 hover:bg-indigo-700"
-              onClick={() => router.push('/reception/packages/reception')}
-            >
-              <Package className="h-8 w-8 mb-2" />
-              <span>Recibir Paquete</span>
-            </Button>
-            <Button 
-              className="flex flex-col items-center justify-center h-24 bg-indigo-600 hover:bg-indigo-700"
-              onClick={() => router.push('/reception/log/incident')}
-            >
-              <Clipboard className="h-8 w-8 mb-2" />
-              <span>Registrar Incidente</span>
-            </Button>
-            <Button 
-              className="flex flex-col items-center justify-center h-24 bg-indigo-600 hover:bg-indigo-700"
-              onClick={() => router.push('/reception/communications/intercom')}
-            >
-              <Phone className="h-8 w-8 mb-2" />
-              <span>Citofonía</span>
-            </Button>
-          </div>
+          {data.todayEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {data.todayEvents.map((event) => (
+                <Card key={event.id} className="dark:border-gray-700">
+                  <CardContent className="p-4">
+                    <div className="flex items-start">
+                      <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-md mr-3">
+                        {event.type === 'reservation' ? (
+                          <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                        ) : (
+                          <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium dark:text-gray-200">{event.title}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{event.location}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {event.startTime} - {event.endTime}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+              <Calendar className="h-8 w-8 mb-2 text-gray-400 dark:text-gray-500" />
+              <p>{language === 'Español' ? 'No hay eventos programados para hoy' : 'No events scheduled for today'}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
