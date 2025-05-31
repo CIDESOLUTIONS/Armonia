@@ -1,96 +1,103 @@
-# Reporte de Avances - Fase 2 Proyecto Armonía
+# Reporte de Avances - Fase 2 del Proyecto Armonía
 
 ## Resumen Ejecutivo
 
-Este documento registra el progreso de la implementación de la Fase 2 del proyecto Armonía, una aplicación para la gestión de conjuntos residenciales. La Fase 2 se enfoca en completar las funcionalidades core identificadas como prioritarias según el análisis de brechas y el plan de desarrollo.
-
-## Fecha de Actualización: 31 de Mayo de 2025
+Este documento registra los avances realizados en la Fase 2 del proyecto Armonía, enfocada en la implementación de las funcionalidades core identificadas como prioritarias. El desarrollo sigue un enfoque incremental, con implementaciones completas de backend y frontend para cada módulo.
 
 ## Funcionalidades Implementadas
 
 ### 1. Sistema de Votaciones en Tiempo Real (Completado)
 
-**Descripción:** Implementación completa del sistema de votaciones para asambleas, permitiendo a los residentes participar en decisiones comunitarias con ponderación por coeficiente de propiedad.
+**Fecha de implementación:** 31/05/2025
+
+**Descripción:** Implementación completa del sistema de votaciones en tiempo real para asambleas, permitiendo a los residentes participar en votaciones con coeficientes de propiedad y visualizar resultados en tiempo real.
 
 **Componentes desarrollados:**
 - Modelos de datos en Prisma para asambleas, puntos de agenda y votaciones
-- Servicio backend para gestión de votaciones con validaciones y auditoría
-- Endpoints de API REST para consulta de estadísticas, registro de votos y control de estado
-- Componente frontend RealTimeVoting.tsx integrado con las APIs
-
-**Características técnicas:**
-- Soporte para votaciones ponderadas por coeficiente de propiedad
-- Actualización en tiempo real de resultados (polling cada 15 segundos)
+- Servicios backend para gestión de votaciones y cálculo de resultados
+- Endpoints API REST para consulta y registro de votos
+- Actualización del componente frontend RealTimeVoting.tsx
 - Sistema de auditoría para todas las acciones de votación
-- Validaciones de seguridad y control de acceso basado en roles
 
-**Pruebas:**
-- Pruebas unitarias para el servicio de votaciones
-- Validación de integración entre frontend y backend
+**Estado:** Completado y sincronizado con GitHub (commit: 7f3a1e6)
 
-**Commit:** [d6ba174](https://github.com/CIDESOLUTIONS/Armonia/commit/d6ba174) - Implementación de endpoints API y frontend para sistema de votaciones (Fase 2)
+### 2. Sistema Financiero con Generación de Recibos (Completado)
 
-### 2. Sistema Financiero (En Desarrollo)
+**Fecha de implementación:** 31/05/2025
 
-**Descripción:** Implementación del sistema financiero con enfoque en la generación automática de recibos de pago, permitiendo a los administradores generar y enviar recibos individuales o masivos.
+**Descripción:** Implementación del sistema financiero con generación automática de recibos en formato PDF, incluyendo servicios para envío por correo electrónico y generación masiva.
 
 **Componentes desarrollados:**
 - Modelos de datos en Prisma para cuotas, pagos, recibos y presupuestos
-- Servicio backend para generación de recibos en PDF y envío por correo
-- Endpoints de API REST para generación individual y masiva de recibos
-- Componente frontend ReceiptGenerator.tsx integrado con las APIs
+- Servicios backend para generación de recibos en formato PDF
+- Endpoints API REST para generación individual y masiva de recibos
+- Actualización del componente frontend ReceiptGenerator.tsx
+- Integración con sistema de correo electrónico para envío de recibos
 
-**Características técnicas:**
-- Generación de recibos en formato PDF almacenados en el servidor
-- Soporte para diferentes tipos de recibos (estándar, detallado, simplificado)
-- Envío manual de recibos por correo electrónico
-- Generación masiva de recibos por mes/año y tipo de cuota
-- Arquitectura multi-tenant con soporte para múltiples conjuntos residenciales
+**Estado:** Completado y sincronizado con GitHub (commit: 7f3a1e6)
 
-**Estado actual:**
-- Análisis y diseño completados
-- Implementación backend y frontend completada
-- Pendiente pruebas unitarias y de integración
-- Pendiente commit y push a GitHub
+### 3. Sistema de Reserva de Áreas Comunes (Completado)
 
-**Limitaciones y alternativas:**
-- La funcionalidad de programación automática de envíos está temporalmente deshabilitada
-- Se ha implementado una alternativa de envío manual desde la interfaz de administración
-- Se ha documentado la estructura para futuras integraciones con servicios externos
+**Fecha de implementación:** 31/05/2025
 
-## Próximas Funcionalidades Planificadas
+**Descripción:** Implementación del sistema de reserva de áreas comunes con calendario de disponibilidad y gestión de reservas.
 
-### 3. Sistema de Comunicaciones (Pendiente)
-- Tablón de anuncios digital
-- Notificaciones personalizadas
-- Mensajería interna
+**Componentes desarrollados:**
+- Modelos de datos en Prisma para áreas comunes, reservas, configuración de disponibilidad y reglas
+- Servicios backend para gestión de reservas y verificación de disponibilidad
+- Endpoints API REST para consulta, creación y gestión de reservas
+- Nuevo componente frontend CommonAreaReservation.tsx con calendario interactivo
+- Sistema de notificaciones para confirmaciones, rechazos y cancelaciones
 
-### 4. Reserva de Áreas Comunes (Pendiente)
-- Calendario de disponibilidad
-- Sistema de reservas
-- Gestión de pagos por uso
+**Características principales:**
+- Calendario interactivo con vistas mensual, semanal y diaria
+- Verificación automática de disponibilidad y conflictos
+- Validación de reglas de reserva (duración, anticipación, límites)
+- Flujo de aprobación para áreas que lo requieren
+- Notificaciones para usuarios sobre el estado de sus reservas
 
-## Desafíos Técnicos Resueltos
+**Estado:** Completado y pendiente de sincronización con GitHub
 
-1. **Configuración Multi-tenant en Prisma**
-   - Se resolvieron problemas con la migración de esquemas múltiples
-   - Se ajustó la configuración de conexión a la base de datos para soportar el modelo multi-tenant
+## Próximas Funcionalidades
 
-2. **Integración con PostgreSQL**
-   - Instalación y configuración de PostgreSQL
-   - Creación de esquemas necesarios para la arquitectura multi-tenant
+### 4. Sistema de Comunicaciones (Pendiente)
 
-3. **Generación de PDFs**
-   - Implementación de servicio para generación de PDFs con diferentes plantillas
-   - Almacenamiento y gestión de archivos en el servidor
+**Descripción:** Implementación del tablón de anuncios digital y sistema de notificaciones para residentes.
 
-## Próximos Pasos
+**Componentes planificados:**
+- Modelos de datos para anuncios, categorías y notificaciones
+- Servicios backend para gestión de anuncios y notificaciones
+- Endpoints API REST para publicación y consulta de anuncios
+- Componentes frontend para visualización y gestión de anuncios
 
-1. Completar pruebas unitarias y de integración del sistema financiero
-2. Realizar commit y push de los avances del sistema financiero
-3. Avanzar con la implementación del sistema de comunicaciones
-4. Continuar con el desarrollo incremental de las funcionalidades restantes
+**Estado:** Pendiente de implementación
 
----
+## Desafíos Técnicos y Soluciones
 
-*Este documento se actualizará periódicamente con el avance de la implementación de la Fase 2.*
+### Configuración de PostgreSQL
+
+**Desafío:** El entorno de desarrollo no contaba con PostgreSQL instalado y configurado para soportar la arquitectura multi-tenant del proyecto.
+
+**Solución:** Se instaló y configuró PostgreSQL con los esquemas necesarios (armonia y tenant) y se ajustaron las cadenas de conexión en el archivo .env para asegurar la compatibilidad con Prisma.
+
+### Pruebas Unitarias con Jest
+
+**Desafío:** La configuración de Jest presentaba problemas con la importación de módulos ES y TypeScript, especialmente con bibliotecas como lucide-react.
+
+**Solución:** Se ajustó la configuración de Jest y Babel para soportar correctamente estos módulos, permitiendo la ejecución de pruebas unitarias tanto para servicios backend como para componentes frontend.
+
+## Recomendaciones para Futuras Iteraciones
+
+1. **Optimización de Consultas:** Implementar índices adicionales en la base de datos para mejorar el rendimiento de consultas complejas, especialmente en el sistema de reservas.
+
+2. **Mejora de UX:** Incorporar más feedback visual en tiempo real para operaciones críticas como votaciones y reservas.
+
+3. **Integración con Servicios Externos:** Evaluar la integración con servicios de calendario (Google Calendar, Outlook) para sincronizar reservas de áreas comunes.
+
+4. **Escalabilidad:** Preparar la arquitectura para soportar un mayor volumen de datos y usuarios, especialmente en módulos críticos como el financiero y el de reservas.
+
+## Conclusiones
+
+La Fase 2 del proyecto Armonía avanza según lo planificado, con tres funcionalidades core completamente implementadas y una pendiente. El enfoque incremental ha permitido entregar valor de manera constante, asegurando la calidad y completitud de cada módulo antes de avanzar al siguiente.
+
+La arquitectura multi-tenant y la estructura modular del proyecto facilitan la extensión y mantenimiento del código, permitiendo agregar nuevas funcionalidades de manera eficiente y con mínimo impacto en los componentes existentes.

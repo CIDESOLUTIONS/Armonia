@@ -1,0 +1,144 @@
+// Modelos Prisma para el sistema de reservas de áreas comunes
+
+// Modelo para áreas comunes (instalaciones que pueden ser reservadas)
+model CommonArea {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(100)
+  description       String?             @db.Text
+  location          String              @db.VarChar(100)
+  capacity          Int                 @default(0)
+  imageUrl          String?             @db.VarChar(255)
+  isActive          Boolean             @default(true)
+  requiresApproval  Boolean             @default(false)
+  hasFee            Boolean             @default(false)
+  feeAmount         Decimal?            @db.Decimal(10, 2)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relaciones
+  availabilityConfig AvailabilityConfig?
+  reservationRules   ReservationRule[]
+  reservations       Reservation[]
+  
+  // Esquema multi-tenant
+  @@schema("tenant")
+}
+
+// Modelo para configuración de disponibilidad de áreas comunes
+model AvailabilityConfig {
+  id                Int                 @id @default(autoincrement())
+  commonAreaId      Int                 @unique
+  mondayStart       String?             @db.VarChar(5) // Formato "HH:MM"
+  mondayEnd         String?             @db.VarChar(5)
+  tuesdayStart      String?             @db.VarChar(5)
+  tuesdayEnd        String?             @db.VarChar(5)
+  wednesdayStart    String?             @db.VarChar(5)
+  wednesdayEnd      String?             @db.VarChar(5)
+  thursdayStart     String?             @db.VarChar(5)
+  thursdayEnd       String?             @db.VarChar(5)
+  fridayStart       String?             @db.VarChar(5)
+  fridayEnd         String?             @db.VarChar(5)
+  saturdayStart     String?             @db.VarChar(5)
+  saturdayEnd       String?             @db.VarChar(5)
+  sundayStart       String?             @db.VarChar(5)
+  sundayEnd         String?             @db.VarChar(5)
+  holidaysAvailable Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relaciones
+  commonArea        CommonArea          @relation(fields: [commonAreaId], references: [id], onDelete: Cascade)
+  
+  // Esquema multi-tenant
+  @@schema("tenant")
+}
+
+// Modelo para reglas de reserva
+model ReservationRule {
+  id                Int                 @id @default(autoincrement())
+  commonAreaId      Int
+  name              String              @db.VarChar(100)
+  description       String              @db.Text
+  maxDurationHours  Int                 @default(2)
+  minDurationHours  Int                 @default(1)
+  maxAdvanceDays    Int                 @default(30)
+  minAdvanceDays    Int                 @default(1)
+  maxReservationsPerMonth Int           @default(4)
+  maxReservationsPerWeek Int            @default(2)
+  maxConcurrentReservations Int         @default(1)
+  allowCancellation Boolean             @default(true)
+  cancellationHours Int                 @default(24)
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relaciones
+  commonArea        CommonArea          @relation(fields: [commonAreaId], references: [id], onDelete: Cascade)
+  
+  // Esquema multi-tenant
+  @@schema("tenant")
+}
+
+// Enumeración para el estado de las reservas
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+// Modelo para reservas de áreas comunes
+model Reservation {
+  id                Int                 @id @default(autoincrement())
+  commonAreaId      Int
+  userId            Int
+  propertyId        Int
+  title             String              @db.VarChar(100)
+  description       String?             @db.Text
+  startDateTime     DateTime
+  endDateTime       DateTime
+  status            ReservationStatus   @default(PENDING)
+  attendees         Int                 @default(1)
+  requiresPayment   Boolean             @default(false)
+  paymentAmount     Decimal?            @db.Decimal(10, 2)
+  paymentStatus     String?             @db.VarChar(20)
+  rejectionReason   String?             @db.Text
+  approvedById      Int?
+  approvedAt        DateTime?
+  cancellationReason String?            @db.Text
+  cancelledAt       DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relaciones
+  commonArea        CommonArea          @relation(fields: [commonAreaId], references: [id])
+  
+  // Esquema multi-tenant
+  @@schema("tenant")
+  
+  // Índices para búsquedas eficientes
+  @@index([userId])
+  @@index([propertyId])
+  @@index([startDateTime, endDateTime])
+  @@index([status])
+}
+
+// Modelo para notificaciones de reserva
+model ReservationNotification {
+  id                Int                 @id @default(autoincrement())
+  reservationId     Int
+  userId            Int
+  type              String              @db.VarChar(50) // confirmation, reminder, cancellation, etc.
+  message           String              @db.Text
+  isRead            Boolean             @default(false)
+  sentAt            DateTime            @default(now())
+  readAt            DateTime?
+  
+  // Esquema multi-tenant
+  @@schema("tenant")
+  
+  // Índices para búsquedas eficientes
+  @@index([userId])
+  @@index([reservationId])
+}

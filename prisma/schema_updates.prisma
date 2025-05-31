@@ -1,184 +1,102 @@
-// Actualizaciones al esquema Prisma para soportar las nuevas funcionalidades
+// Modelos para el sistema de votaciones en tiempo real
 
-// Modelos para el esquema "tenant" que soportan las funcionalidades implementadas
-
-// Modelo para Pagos y Estado de Cuenta
-model Payment {
-  id              Int       @id @default(autoincrement())
-  residentId      Int       // ID del residente asociado
-  amount          Float     // Monto del pago
-  concept         String    // Concepto del pago (cuota ordinaria, extraordinaria, etc.)
-  dueDate         DateTime  // Fecha de vencimiento
-  paymentDate     DateTime? // Fecha de pago (null si está pendiente)
-  status          String    // 'PENDING', 'PAID', 'OVERDUE', 'CANCELLED'
-  paymentMethod   String?   // Método de pago utilizado
-  reference       String?   // Referencia o número de transacción
-  receiptUrl      String?   // URL del comprobante de pago
-  notes           String?   // Notas adicionales
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+// Modelo para Asambleas
+model Assembly {
+  id              Int         @id @default(autoincrement())
+  title           String      // Título de la asamblea
+  description     String?     // Descripción opcional
+  date            DateTime    // Fecha programada
+  startTime       DateTime?   // Hora de inicio real
+  endTime         DateTime?   // Hora de finalización
+  status          String      // 'scheduled', 'in_progress', 'completed', 'cancelled'
+  location        String?     // Ubicación física o virtual
+  quorumRequired  Float       // Porcentaje de coeficiente requerido para quórum (ej: 0.51 para 51%)
+  quorumReached   Boolean     @default(false) // Si se alcanzó el quórum
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  agendaItems     AgendaItem[] // Relación con los puntos de agenda
+  attendees       Attendance[] // Relación con los asistentes
   
   @@schema("tenant")
 }
 
-// Modelo para Áreas Comunes
-model CommonArea {
-  id              Int       @id @default(autoincrement())
-  name            String    // Nombre del área común
-  description     String?   // Descripción del área
-  capacity        Int       // Capacidad máxima de personas
-  location        String?   // Ubicación dentro del conjunto
-  rules           String?   // Reglas de uso
-  imageUrl        String?   // URL de la imagen del área
-  isActive        Boolean   @default(true) // Si está disponible para reservas
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  reservations    Reservation[] // Relación con las reservas
+// Modelo para Puntos de Agenda
+model AgendaItem {
+  id              Int         @id @default(autoincrement())
+  assemblyId      Int         // ID de la asamblea
+  assembly        Assembly    @relation(fields: [assemblyId], references: [id])
+  numeral         Int         // Número de orden en la agenda
+  topic           String      // Tema o título
+  description     String?     // Descripción detallada
+  votingStatus    String      // 'pending', 'open', 'closed'
+  votingStartTime DateTime?   // Hora de inicio de la votación
+  votingEndTime   DateTime?   // Hora de finalización de la votación
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  votes           Vote[]      // Relación con los votos
+  documents       Document[]  // Relación con documentos asociados
   
   @@schema("tenant")
 }
 
-// Modelo para Reservas de Áreas Comunes
-model Reservation {
-  id              Int       @id @default(autoincrement())
-  residentId      Int       // ID del residente que hace la reserva
-  areaId          Int       // ID del área común reservada
-  area            CommonArea @relation(fields: [areaId], references: [id])
-  startTime       DateTime  // Hora de inicio de la reserva
-  endTime         DateTime  // Hora de fin de la reserva
-  attendees       Int       // Número de asistentes
-  purpose         String?   // Propósito de la reserva
-  status          String    // 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'
-  approvedBy      Int?      // ID del administrador que aprobó la reserva
-  notes           String?   // Notas adicionales
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+// Modelo para Votos
+model Vote {
+  id              Int         @id @default(autoincrement())
+  agendaItemId    Int         // ID del punto de agenda
+  agendaItem      AgendaItem  @relation(fields: [agendaItemId], references: [id])
+  userId          Int         // ID del usuario que vota
+  value           String      // 'YES', 'NO', 'ABSTAIN'
+  coefficient     Float       // Coeficiente de propiedad para ponderación
+  createdAt       DateTime    @default(now())
+  
+  @@unique([agendaItemId, userId]) // Un usuario solo puede votar una vez por punto de agenda
+  @@schema("tenant")
+}
+
+// Modelo para Asistencia
+model Attendance {
+  id              Int         @id @default(autoincrement())
+  assemblyId      Int         // ID de la asamblea
+  assembly        Assembly    @relation(fields: [assemblyId], references: [id])
+  userId          Int         // ID del usuario asistente
+  status          String      // 'confirmed', 'attended', 'absent', 'proxy'
+  proxyUserId     Int?        // ID del usuario que tiene el poder (si aplica)
+  coefficient     Float       // Coeficiente de propiedad
+  joinTime        DateTime?   // Hora de ingreso
+  leaveTime       DateTime?   // Hora de salida
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@unique([assemblyId, userId]) // Un usuario solo puede tener un registro de asistencia por asamblea
+  @@schema("tenant")
+}
+
+// Modelo para Documentos de Asamblea
+model Document {
+  id              Int         @id @default(autoincrement())
+  agendaItemId    Int?        // ID del punto de agenda (opcional)
+  agendaItem      AgendaItem? @relation(fields: [agendaItemId], references: [id])
+  title           String      // Título del documento
+  type            String      // 'minutes', 'attachment', 'presentation', 'report'
+  fileUrl         String      // URL del archivo
+  version         Int         @default(1) // Versión del documento
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
   
   @@schema("tenant")
 }
 
-// Modelo para PQR (Peticiones, Quejas, Reclamos)
-model PQR {
-  id              Int       @id @default(autoincrement())
-  residentId      Int       // ID del residente que crea la solicitud
-  title           String    // Título de la solicitud
-  description     String    // Descripción detallada
-  category        String    // 'PETITION', 'COMPLAINT', 'CLAIM', 'SUGGESTION'
-  priority        String    // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
-  status          String    // 'SUBMITTED', 'IN_REVIEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'
-  assignedTo      Int?      // ID del administrador asignado
-  resolvedAt      DateTime? // Fecha de resolución
-  attachments     Json?     // URLs de archivos adjuntos
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  responses       PQRResponse[] // Relación con las respuestas
-  
-  @@schema("tenant")
-}
-
-// Modelo para Respuestas a PQR
-model PQRResponse {
-  id              Int       @id @default(autoincrement())
-  pqrId           Int       // ID de la solicitud PQR
-  pqr             PQR       @relation(fields: [pqrId], references: [id])
-  authorId        Int       // ID del usuario que responde
-  content         String    // Contenido de la respuesta
-  attachments     Json?     // URLs de archivos adjuntos
-  createdAt       DateTime  @default(now())
-  
-  @@schema("tenant")
-}
-
-// Modelo para Visitantes
-model Visitor {
-  id              Int       @id @default(autoincrement())
-  name            String    // Nombre del visitante
-  documentType    String    // Tipo de documento ('CC', 'CE', 'PASSPORT', 'OTHER')
-  documentNumber  String    // Número de documento
-  destination     String    // Destino dentro del conjunto (ej: "Apartamento 101")
-  residentName    String?   // Nombre del residente que visita
-  entryTime       DateTime  // Hora de entrada
-  exitTime        DateTime? // Hora de salida (null si aún no ha salido)
-  plate           String?   // Placa del vehículo (si aplica)
-  photoUrl        String?   // URL de la foto del visitante
-  status          String    // 'ACTIVE', 'DEPARTED'
-  notes           String?   // Notas adicionales
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  @@schema("tenant")
-}
-
-// Modelo para Paquetes y Correspondencia
-model Package {
-  id              Int       @id @default(autoincrement())
-  type            String    // 'PACKAGE', 'MAIL', 'DOCUMENT'
-  trackingNumber  String?   // Número de seguimiento (si aplica)
-  courier         String?   // Empresa de mensajería (si aplica)
-  destination     String    // Destino dentro del conjunto (ej: "Apartamento 101")
-  residentName    String    // Nombre del residente destinatario
-  receivedAt      DateTime  // Fecha y hora de recepción
-  deliveredAt     DateTime? // Fecha y hora de entrega al destinatario
-  receivedBy      String?   // Nombre de quien recibió el paquete
-  notes           String?   // Notas adicionales
-  photoUrl        String?   // URL de la foto del paquete
-  status          String    // 'PENDING', 'DELIVERED', 'RETURNED'
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  @@schema("tenant")
-}
-
-// Modelo para Incidentes
-model Incident {
-  id              Int       @id @default(autoincrement())
-  title           String    // Título del incidente
-  description     String    // Descripción detallada
-  category        String    // 'SECURITY', 'MAINTENANCE', 'EMERGENCY', 'OTHER'
-  priority        String    // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
-  location        String    // Ubicación del incidente
-  reportedAt      DateTime  // Fecha y hora del reporte
-  reportedBy      String    // Nombre de quien reporta
-  assignedTo      String?   // Nombre de quien está a cargo
-  resolvedAt      DateTime? // Fecha y hora de resolución
-  status          String    // 'REPORTED', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'
-  attachments     Json?     // URLs de archivos adjuntos
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  updates         IncidentUpdate[] // Relación con las actualizaciones
-  
-  @@schema("tenant")
-}
-
-// Modelo para Actualizaciones de Incidentes
-model IncidentUpdate {
-  id              Int       @id @default(autoincrement())
-  incidentId      Int       // ID del incidente
-  incident        Incident  @relation(fields: [incidentId], references: [id])
-  content         String    // Contenido de la actualización
-  author          String    // Autor de la actualización
-  timestamp       DateTime  @default(now()) // Fecha y hora de la actualización
-  attachments     Json?     // URLs de archivos adjuntos
-  
-  @@schema("tenant")
-}
-
-// Modelo para Residentes (ampliación del modelo User)
-model Resident {
-  id              Int       @id @default(autoincrement())
-  userId          Int       // ID del usuario asociado
-  unit            String    // Unidad habitacional (ej: "Apartamento 101")
-  residentType    String    // 'OWNER', 'TENANT', 'FAMILY_MEMBER'
-  documentType    String    // Tipo de documento
-  documentNumber  String    // Número de documento
-  phone           String?   // Teléfono de contacto
-  emergencyContact String?  // Contacto de emergencia
-  vehicles        Json?     // Información de vehículos
-  moveInDate      DateTime? // Fecha de mudanza
-  moveOutDate     DateTime? // Fecha de salida (para inquilinos)
-  isActive        Boolean   @default(true) // Si el residente está activo
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+// Modelo para Auditoría
+model AuditLog {
+  id              Int         @id @default(autoincrement())
+  userId          Int         // ID del usuario que realizó la acción
+  entityType      String      // Tipo de entidad ('ASSEMBLY', 'VOTING', etc.)
+  entityId        String      // ID de la entidad (puede ser compuesto, ej: "1-2" para agendaItem)
+  action          String      // Acción realizada ('VOTE_SUBMITTED', 'VOTING_OPENED', etc.)
+  details         String      // Detalles en formato JSON
+  ipAddress       String?     // Dirección IP
+  userAgent       String?     // User agent
+  createdAt       DateTime    @default(now())
   
   @@schema("tenant")
 }
