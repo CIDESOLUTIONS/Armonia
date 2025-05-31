@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Printer, FileText, Settings } from 'lucide-react';
+import { Printer, FileText, Settings, Mail } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 interface ReceiptGeneratorProps {
   token: string;
@@ -16,20 +17,24 @@ interface ReceiptGeneratorProps {
 }
 
 export default function ReceiptGenerator({ token, language, onReceiptGenerated }: ReceiptGeneratorProps) {
-  // useState activeTab eliminado por lint
+  const [activeTab, setActiveTab] = useState('individual');
   const [loading, setLoading] = useState(false);
-  const [error, _setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
   // Estados para generación individual
   const [propertyUnit, setPropertyUnit] = useState('');
   const [feeId, setFeeId] = useState('');
-  const [receiptType, setReceiptType] = useState('standard');
+  const [receiptType, setReceiptType] = useState('STANDARD');
   
   // Estados para generación masiva
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('2024');
-  const [feeType, setFeeType] = useState('regular');
+  const [feeType, setFeeType] = useState('ORDINARY');
+  
+  // Estado para envío por correo
+  const [emailAddress, setEmailAddress] = useState('');
+  const [generatedReceiptId, setGeneratedReceiptId] = useState<number | null>(null);
   
   const handleGenerateIndividual = async () => {
     if (!propertyUnit || !feeId) {
@@ -42,19 +47,56 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
     setSuccess(null);
     
     try {
-      // Variable response eliminada por lint
+      // Obtener ID de propiedad a partir de la unidad
+      const propertyResponse = await fetch(`/api/properties?unitNumber=${propertyUnit}`);
+      const propertyData = await propertyResponse.json();
       
-      const _data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al generar recibo');
+      if (!propertyResponse.ok || !propertyData.properties || propertyData.properties.length === 0) {
+        throw new Error(language === 'Español' ? 'Unidad no encontrada' : 'Unit not found');
       }
       
+      const propertyId = propertyData.properties[0].id;
+      
+      // Generar recibo
+      const response = await fetch('/api/finances/receipts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          propertyId,
+          feeIds: [parseInt(feeId)],
+          type: receiptType
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al generar recibo');
+      }
+      
+      setGeneratedReceiptId(data.id);
       setSuccess(language === 'Español' ? 'Recibo generado exitosamente' : 'Receipt generated successfully');
-      onReceiptGenerated(data.receiptUrl);
-    } catch (err) {
+      onReceiptGenerated(data.pdfUrl);
+      
+      toast({
+        title: language === 'Español' ? 'Recibo generado' : 'Receipt generated',
+        description: language === 'Español' 
+          ? `Recibo #${data.receiptNumber} generado exitosamente` 
+          : `Receipt #${data.receiptNumber} successfully generated`,
+        variant: 'default',
+      });
+    } catch (err: any) {
       console.error('[ReceiptGenerator] Error:', err);
       setError(err.message);
+      
+      toast({
+        title: language === 'Español' ? 'Error' : 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -71,12 +113,24 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
     setSuccess(null);
     
     try {
-      // Variable response eliminada por lint
+      const response = await fetch('/api/finances/receipts/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          month: parseInt(month),
+          year: parseInt(year),
+          feeType,
+          type: receiptType
+        })
+      });
       
-      const _data = await response.json();
+      const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'Error al generar recibos');
+        throw new Error(data.error || 'Error al generar recibos');
       }
       
       const generatedCount = data.generatedReceipts || 0;
@@ -85,9 +139,73 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
           ? `${generatedCount} recibos generados exitosamente` 
           : `${generatedCount} receipts generated successfully`
       );
-    } catch (err) {
+      
+      toast({
+        title: language === 'Español' ? 'Recibos generados' : 'Receipts generated',
+        description: language === 'Español' 
+          ? `${generatedCount} recibos generados exitosamente` 
+          : `${generatedCount} receipts successfully generated`,
+        variant: 'default',
+      });
+    } catch (err: any) {
       console.error('[ReceiptGenerator] Error:', err);
       setError(err.message);
+      
+      toast({
+        title: language === 'Español' ? 'Error' : 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleSendEmail = async () => {
+    if (!generatedReceiptId || !emailAddress) {
+      setError(language === 'Español' ? 'Recibo no generado o correo no especificado' : 'Receipt not generated or email not specified');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/finances/receipts/${generatedReceiptId}/email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: emailAddress
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al enviar correo');
+      }
+      
+      setSuccess(language === 'Español' ? 'Recibo enviado por correo exitosamente' : 'Receipt successfully sent by email');
+      
+      toast({
+        title: language === 'Español' ? 'Correo enviado' : 'Email sent',
+        description: language === 'Español' 
+          ? `Recibo enviado exitosamente a ${emailAddress}` 
+          : `Receipt successfully sent to ${emailAddress}`,
+        variant: 'default',
+      });
+    } catch (err: any) {
+      console.error('[ReceiptGenerator] Error sending email:', err);
+      setError(err.message);
+      
+      toast({
+        title: language === 'Español' ? 'Error' : 'Error',
+        description: err.message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -148,13 +266,13 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
                     <SelectValue placeholder={language === 'Español' ? 'Seleccionar tipo' : 'Select type'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="standard">
+                    <SelectItem value="STANDARD">
                       {language === 'Español' ? 'Estándar' : 'Standard'}
                     </SelectItem>
-                    <SelectItem value="detailed">
+                    <SelectItem value="DETAILED">
                       {language === 'Español' ? 'Detallado' : 'Detailed'}
                     </SelectItem>
-                    <SelectItem value="simplified">
+                    <SelectItem value="SIMPLIFIED">
                       {language === 'Español' ? 'Simplificado' : 'Simplified'}
                     </SelectItem>
                   </SelectContent>
@@ -179,6 +297,48 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
                 )}
               </Button>
             </div>
+            
+            {/* Sección de envío por correo (solo visible cuando se ha generado un recibo) */}
+            {generatedReceiptId && (
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-medium mb-3">
+                  {language === 'Español' ? 'Enviar Recibo por Correo' : 'Send Receipt by Email'}
+                </h4>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="emailAddress">
+                      {language === 'Español' ? 'Correo Electrónico' : 'Email Address'}
+                    </Label>
+                    <Input
+                      id="emailAddress"
+                      type="email"
+                      placeholder={language === 'Español' ? 'correo@ejemplo.com' : 'email@example.com'}
+                      value={emailAddress}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailAddress(e.target.value)}
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleSendEmail} 
+                    disabled={loading || !emailAddress}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent mr-2"></div>
+                        {language === 'Español' ? 'Enviando...' : 'Sending...'}
+                      </div>
+                    ) : (
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 mr-2" />
+                        {language === 'Español' ? 'Enviar por Correo' : 'Send by Email'}
+                      </div>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </TabsContent>
           
           {/* Generación Masiva */}
@@ -235,13 +395,13 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
                   <SelectValue placeholder={language === 'Español' ? 'Seleccionar tipo' : 'Select type'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="regular">
+                  <SelectItem value="ORDINARY">
                     {language === 'Español' ? 'Ordinaria' : 'Regular'}
                   </SelectItem>
-                  <SelectItem value="extra">
+                  <SelectItem value="EXTRAORDINARY">
                     {language === 'Español' ? 'Extraordinaria' : 'Extra'}
                   </SelectItem>
-                  <SelectItem value="all">
+                  <SelectItem value="ALL">
                     {language === 'Español' ? 'Todas' : 'All'}
                   </SelectItem>
                 </SelectContent>
@@ -257,13 +417,13 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
                   <SelectValue placeholder={language === 'Español' ? 'Seleccionar tipo' : 'Select type'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">
+                  <SelectItem value="STANDARD">
                     {language === 'Español' ? 'Estándar' : 'Standard'}
                   </SelectItem>
-                  <SelectItem value="detailed">
+                  <SelectItem value="DETAILED">
                     {language === 'Español' ? 'Detallado' : 'Detailed'}
                   </SelectItem>
-                  <SelectItem value="simplified">
+                  <SelectItem value="SIMPLIFIED">
                     {language === 'Español' ? 'Simplificado' : 'Simplified'}
                   </SelectItem>
                 </SelectContent>

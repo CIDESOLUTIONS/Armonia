@@ -1,0 +1,207 @@
+// Modelos Prisma para el sistema financiero - Proyecto Armonía
+
+// Modelo para cuotas (fees)
+model Fee {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+  amount      Decimal       @db.Decimal(10, 2)
+  type        FeeType
+  dueDate     DateTime
+  status      PaymentStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relaciones
+  property    Property      @relation(fields: [propertyId], references: [id])
+  propertyId  Int
+  payments    Payment[]
+  receipts    Receipt[]
+
+  @@index([propertyId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([type])
+  @@schema("tenant")
+}
+
+// Modelo para pagos (payments)
+model Payment {
+  id              Int           @id @default(autoincrement())
+  amount          Decimal       @db.Decimal(10, 2)
+  paymentDate     DateTime
+  paymentMethod   PaymentMethod
+  reference       String?
+  status          PaymentStatus @default(PENDING)
+  notes           String?
+  transactionId   String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relaciones
+  fee             Fee           @relation(fields: [feeId], references: [id])
+  feeId           Int
+  paidBy          User          @relation("PaymentsPaid", fields: [paidById], references: [id])
+  paidById        Int
+  receivedBy      User?         @relation("PaymentsReceived", fields: [receivedById], references: [id])
+  receivedById    Int?
+  receipt         Receipt?      @relation(fields: [receiptId], references: [id])
+  receiptId       Int?
+
+  @@index([feeId])
+  @@index([paidById])
+  @@index([paymentDate])
+  @@index([status])
+  @@schema("tenant")
+}
+
+// Modelo para recibos (receipts)
+model Receipt {
+  id              Int           @id @default(autoincrement())
+  receiptNumber   String        @unique
+  issueDate       DateTime      @default(now())
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  type            ReceiptType   @default(STANDARD)
+  status          ReceiptStatus @default(GENERATED)
+  pdfUrl          String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relaciones
+  fees            Fee[]
+  payments        Payment[]
+  issuedBy        User          @relation(fields: [issuedById], references: [id])
+  issuedById      Int
+  property        Property      @relation(fields: [propertyId], references: [id])
+  propertyId      Int
+
+  @@index([receiptNumber])
+  @@index([issueDate])
+  @@index([propertyId])
+  @@index([status])
+  @@schema("tenant")
+}
+
+// Modelo para presupuestos (budgets)
+model Budget {
+  id              Int           @id @default(autoincrement())
+  year            Int
+  month           Int
+  title           String
+  description     String?
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  approvedDate    DateTime?
+  status          BudgetStatus  @default(DRAFT)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relaciones
+  items           BudgetItem[]
+  approvedBy      User?         @relation(fields: [approvedById], references: [id])
+  approvedById    Int?
+
+  @@unique([year, month])
+  @@index([year, month])
+  @@index([status])
+  @@schema("tenant")
+}
+
+// Modelo para items de presupuesto (budget items)
+model BudgetItem {
+  id              Int           @id @default(autoincrement())
+  description     String
+  amount          Decimal       @db.Decimal(10, 2)
+  category        String
+  order           Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relaciones
+  budget          Budget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  budgetId        Int
+
+  @@index([budgetId])
+  @@index([category])
+  @@schema("tenant")
+}
+
+// Modelo para reportes financieros (financial reports)
+model FinancialReport {
+  id              Int           @id @default(autoincrement())
+  title           String
+  type            ReportType
+  startDate       DateTime
+  endDate         DateTime
+  format          ReportFormat  @default(PDF)
+  fileUrl         String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relaciones
+  createdBy       User          @relation(fields: [createdById], references: [id])
+  createdById     Int
+
+  @@index([type])
+  @@index([startDate, endDate])
+  @@index([createdById])
+  @@schema("tenant")
+}
+
+// Enumeraciones
+enum FeeType {
+  ORDINARY
+  EXTRAORDINARY
+  PENALTY
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+  PARTIAL
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  CHECK
+  OTHER
+}
+
+enum ReceiptType {
+  STANDARD
+  DETAILED
+  SIMPLIFIED
+}
+
+enum ReceiptStatus {
+  GENERATED
+  SENT
+  VIEWED
+  CANCELLED
+}
+
+enum BudgetStatus {
+  DRAFT
+  APPROVED
+  EXECUTED
+  CANCELLED
+}
+
+enum ReportType {
+  INCOME_EXPENSE
+  BALANCE
+  BUDGET_COMPARISON
+  CASH_FLOW
+  DEBTORS
+  PAYMENTS
+}
+
+enum ReportFormat {
+  PDF
+  EXCEL
+  CSV
+}

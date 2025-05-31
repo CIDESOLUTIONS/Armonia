@@ -28,14 +28,37 @@ Este documento registra el progreso de la implementación de la Fase 2 del proye
 - Pruebas unitarias para el servicio de votaciones
 - Validación de integración entre frontend y backend
 
-**Commit:** [dc36113](https://github.com/CIDESOLUTIONS/Armonia/commit/dc36113) - Implementación del sistema de votaciones en tiempo real (Fase 2)
+**Commit:** [d6ba174](https://github.com/CIDESOLUTIONS/Armonia/commit/d6ba174) - Implementación de endpoints API y frontend para sistema de votaciones (Fase 2)
+
+### 2. Sistema Financiero (En Desarrollo)
+
+**Descripción:** Implementación del sistema financiero con enfoque en la generación automática de recibos de pago, permitiendo a los administradores generar y enviar recibos individuales o masivos.
+
+**Componentes desarrollados:**
+- Modelos de datos en Prisma para cuotas, pagos, recibos y presupuestos
+- Servicio backend para generación de recibos en PDF y envío por correo
+- Endpoints de API REST para generación individual y masiva de recibos
+- Componente frontend ReceiptGenerator.tsx integrado con las APIs
+
+**Características técnicas:**
+- Generación de recibos en formato PDF almacenados en el servidor
+- Soporte para diferentes tipos de recibos (estándar, detallado, simplificado)
+- Envío manual de recibos por correo electrónico
+- Generación masiva de recibos por mes/año y tipo de cuota
+- Arquitectura multi-tenant con soporte para múltiples conjuntos residenciales
+
+**Estado actual:**
+- Análisis y diseño completados
+- Implementación backend y frontend completada
+- Pendiente pruebas unitarias y de integración
+- Pendiente commit y push a GitHub
+
+**Limitaciones y alternativas:**
+- La funcionalidad de programación automática de envíos está temporalmente deshabilitada
+- Se ha implementado una alternativa de envío manual desde la interfaz de administración
+- Se ha documentado la estructura para futuras integraciones con servicios externos
 
 ## Próximas Funcionalidades Planificadas
-
-### 2. Sistema Financiero (Pendiente)
-- Generación automática de recibos de pago
-- Registro y seguimiento de pagos
-- Reportes financieros
 
 ### 3. Sistema de Comunicaciones (Pendiente)
 - Tablón de anuncios digital
@@ -57,11 +80,16 @@ Este documento registra el progreso de la implementación de la Fase 2 del proye
    - Instalación y configuración de PostgreSQL
    - Creación de esquemas necesarios para la arquitectura multi-tenant
 
+3. **Generación de PDFs**
+   - Implementación de servicio para generación de PDFs con diferentes plantillas
+   - Almacenamiento y gestión de archivos en el servidor
+
 ## Próximos Pasos
 
-1. Completar pruebas de integración del sistema de votaciones
-2. Avanzar con la implementación del sistema financiero
-3. Continuar con el desarrollo incremental de las funcionalidades restantes
+1. Completar pruebas unitarias y de integración del sistema financiero
+2. Realizar commit y push de los avances del sistema financiero
+3. Avanzar con la implementación del sistema de comunicaciones
+4. Continuar con el desarrollo incremental de las funcionalidades restantes
 
 ---
 
