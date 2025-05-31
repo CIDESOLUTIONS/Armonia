@@ -1,8 +1,8 @@
-// src/app/(auth)/dashboard/finances/page.tsx
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   DollarSign,
   FileText,
@@ -15,7 +15,6 @@ import {
   Download
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -41,6 +40,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from '@/context/AuthContext';
+import ReceiptGenerator from '@/components/finances/ReceiptGenerator';
+import CustomReportGenerator from '@/components/finances/CustomReportGenerator';
 
 // Interfaces para los diferentes tipos de datos
 interface Budget {
@@ -78,7 +80,7 @@ interface Payment {
 }
 
 export default function FinancesPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState('budget');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -86,6 +88,8 @@ export default function FinancesPage() {
   const [filterMonth, setFilterMonth] = useState('all');
   const [filterYear, setFilterYear] = useState<string>('2024');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [language, setLanguage] = useState('Español');
+  const [generatedFiles, setGeneratedFiles] = useState<{url: string, type: string}[]>([]);
   
   // Estados para las diferentes entidades
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -359,6 +363,14 @@ export default function FinancesPage() {
     
     return matchesSearch && matchesStatus;
   });
+
+  const handleReceiptGenerated = (receiptUrl: string) => {
+    setGeneratedFiles(prev => [...prev, { url: receiptUrl, type: 'receipt' }]);
+  };
+
+  const handleReportGenerated = (reportUrl: string, reportType: string) => {
+    setGeneratedFiles(prev => [...prev, { url: reportUrl, type: `report-${reportType}` }]);
+  };
   
   if (loading) {
     return (
@@ -389,7 +401,7 @@ export default function FinancesPage() {
           <Button
             variant="outline"
             className="flex items-center gap-2"
-            onClick={() => {}}
+            onClick={() => setActiveTab('reports')}
           >
             <Download className="h-4 w-4" />
             Reportes
@@ -406,7 +418,7 @@ export default function FinancesPage() {
 
       {/* Tabs de Finanzas */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-8">
+        <TabsList className="grid grid-cols-5 mb-8">
           <TabsTrigger value="budget" className="flex items-center gap-2">
             <BarChart2 className="w-4 h-4" />
             <span>Presupuestos</span>
@@ -418,6 +430,10 @@ export default function FinancesPage() {
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <CreditCard className="w-4 h-4" />
             <span>Pagos</span>
+          </TabsTrigger>
+          <TabsTrigger value="receipts" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            <span>Recibos</span>
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <BarChart className="w-4 h-4" />
@@ -496,58 +512,38 @@ export default function FinancesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Periodo</TableHead>
+                    <TableHead>Año</TableHead>
+                    <TableHead>Mes</TableHead>
                     <TableHead>Ingresos</TableHead>
                     <TableHead>Gastos</TableHead>
                     <TableHead>Balance</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Creado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>Fecha Creación</TableHead>
+                    <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBudgets.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4">
-                        No se encontraron presupuestos con los filtros actuales
+                  {filteredBudgets.map(budget => (
+                    <TableRow key={budget.id}>
+                      <TableCell>{budget.year}</TableCell>
+                      <TableCell>{getMonthName(budget.month)}</TableCell>
+                      <TableCell>{formatCurrency(budget.totalIncome)}</TableCell>
+                      <TableCell>{formatCurrency(budget.totalExpense)}</TableCell>
+                      <TableCell className={budget.totalIncome - budget.totalExpense >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        {formatCurrency(budget.totalIncome - budget.totalExpense)}
+                      </TableCell>
+                      <TableCell>{getBudgetStatusBadge(budget.status)}</TableCell>
+                      <TableCell>{formatDate(budget.createdAt)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          Ver
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredBudgets.map(budget => (
-                      <TableRow key={budget.id}>
-                        <TableCell>{budget.id}</TableCell>
-                        <TableCell>{getMonthName(budget.month)} {budget.year}</TableCell>
-                        <TableCell>{formatCurrency(budget.totalIncome)}</TableCell>
-                        <TableCell>{formatCurrency(budget.totalExpense)}</TableCell>
-                        <TableCell>
-                          {formatCurrency(budget.totalIncome - budget.totalExpense)}
-                        </TableCell>
-                        <TableCell>{getBudgetStatusBadge(budget.status)}</TableCell>
-                        <TableCell>{formatDate(budget.createdAt)}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm">Ver</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <div>
-                <span className="text-sm text-gray-500">
-                  Mostrando {filteredBudgets.length} de {budgets.length} presupuestos
-                </span>
-              </div>
-              <Button
-                onClick={() => {}}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Nuevo Presupuesto
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
         
@@ -559,15 +555,15 @@ export default function FinancesPage() {
               <CardDescription>Gestión de cuotas ordinarias y extraordinarias</CardDescription>
               
               {/* Filtros para cuotas */}
-              <div className="flex flex-col md:flex-row gap-4 mt-4">
+              <div className="flex flex-col sm:flex-row gap-4 mt-4">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
-                      placeholder="Buscar por título o inmueble..."
+                      placeholder="Buscar por título o unidad..."
                       className="pl-8"
                       value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
                 </div>
@@ -576,8 +572,8 @@ export default function FinancesPage() {
                     value={filterStatus}
                     onValueChange={setFilterStatus}
                   >
-                    <SelectTrigger className="w-full md:w-[180px]">
-                      <SelectValue placeholder="Estado" />
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filtrar por estado" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos los estados</SelectItem>
@@ -596,37 +592,36 @@ export default function FinancesPage() {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Título</TableHead>
-                    <TableHead>Inmueble</TableHead>
+                    <TableHead>Unidad</TableHead>
                     <TableHead>Monto</TableHead>
                     <TableHead>Fecha Vencimiento</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredFees.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4">
-                        No se encontraron cuotas con los filtros actuales
+                  {filteredFees.map(fee => (
+                    <TableRow key={fee.id}>
+                      <TableCell>{fee.id}</TableCell>
+                      <TableCell>{fee.title}</TableCell>
+                      <TableCell>{fee.propertyUnit}</TableCell>
+                      <TableCell>{formatCurrency(fee.amount)}</TableCell>
+                      <TableCell>{formatDate(fee.dueDate)}</TableCell>
+                      <TableCell>{getFeeStatusBadge(fee.status)}</TableCell>
+                      <TableCell>{getFeeTypeBadge(fee.type)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="ghost" size="sm" onClick={() => setActiveTab('receipts')}>
+                            Recibo
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            Ver
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredFees.map(fee => (
-                      <TableRow key={fee.id}>
-                        <TableCell>{fee.id}</TableCell>
-                        <TableCell>{fee.title}</TableCell>
-                        <TableCell>{fee.propertyUnit}</TableCell>
-                        <TableCell>{formatCurrency(fee.amount)}</TableCell>
-                        <TableCell>{formatDate(fee.dueDate)}</TableCell>
-                        <TableCell>{getFeeStatusBadge(fee.status)}</TableCell>
-                        <TableCell>{getFeeTypeBadge(fee.type)}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm">Detalles</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
@@ -638,118 +633,160 @@ export default function FinancesPage() {
           <Card>
             <CardHeader>
               <CardTitle>Pagos</CardTitle>
-              <CardDescription>Registro de pagos recibidos</CardDescription>
+              <CardDescription>Registro de pagos realizados</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Inmueble</TableHead>
+                    <TableHead>ID Cuota</TableHead>
+                    <TableHead>Unidad</TableHead>
                     <TableHead>Monto</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Método</TableHead>
                     <TableHead>Referencia</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4">
-                        No hay pagos registrados
+                  {payments.map(payment => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{payment.id}</TableCell>
+                      <TableCell>{payment.feeId}</TableCell>
+                      <TableCell>{payment.propertyUnit}</TableCell>
+                      <TableCell>{formatCurrency(payment.amount)}</TableCell>
+                      <TableCell>{formatDate(payment.date)}</TableCell>
+                      <TableCell>{getPaymentMethodBadge(payment.method)}</TableCell>
+                      <TableCell>{payment.reference}</TableCell>
+                      <TableCell>
+                        <Badge className={
+                          payment.status === 'completed' ? 'bg-green-500' :
+                          payment.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                        }>
+                          {payment.status === 'completed' ? 'Completado' :
+                           payment.status === 'pending' ? 'Pendiente' : 'Cancelado'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => setActiveTab('receipts')}>
+                          Recibo
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    payments.map(payment => (
-                      <TableRow key={payment.id}>
-                        <TableCell>{payment.id}</TableCell>
-                        <TableCell>{payment.propertyUnit}</TableCell>
-                        <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                        <TableCell>{formatDate(payment.date)}</TableCell>
-                        <TableCell>{getPaymentMethodBadge(payment.method)}</TableCell>
-                        <TableCell>{payment.reference}</TableCell>
-                        <TableCell>
-                          <Badge className={payment.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}>
-                            {payment.status === 'completed' ? 'Completado' : 
-                              payment.status === 'pending' ? 'Pendiente' : 'Cancelado'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm">Ver Comprobante</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={() => {}}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Registrar Pago
-              </Button>
-            </CardFooter>
           </Card>
+        </TabsContent>
+
+        {/* Contenido de Recibos */}
+        <TabsContent value="receipts">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ReceiptGenerator 
+              token={token || ''} 
+              language={language}
+              onReceiptGenerated={handleReceiptGenerated}
+            />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Recibos Generados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {generatedFiles.filter(file => file.type === 'receipt').length > 0 ? (
+                  <div className="space-y-3">
+                    {generatedFiles
+                      .filter(file => file.type === 'receipt')
+                      .map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                          <div className="flex items-center">
+                            <FileText className="h-5 w-5 text-indigo-600 mr-3" />
+                            <div>
+                              <p className="font-medium">Recibo #{index + 1}</p>
+                              <p className="text-sm text-gray-500">{new Date().toLocaleString()}</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm" className="flex items-center gap-1">
+                            <Download className="h-3 w-3" />
+                            <span>Descargar</span>
+                          </Button>
+                        </div>
+                      ))
+                    }
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <p>No hay recibos generados</p>
+                    <p className="text-sm mt-1">Utilice el generador para crear recibos</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         {/* Contenido de Reportes */}
         <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reportes Financieros</CardTitle>
-              <CardDescription>Generación de reportes y estadísticas</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Balance Mensual</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500">
-                      Reporte detallado de ingresos y gastos mensuales con cálculo de saldos.
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full">Generar</Button>
-                  </CardFooter>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Estado de Pagos</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500">
-                      Reporte de estado de pagos por inmueble con cuotas pendientes y vencidas.
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full">Generar</Button>
-                  </CardFooter>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Histórico Anual</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500">
-                      Comparativo de ingresos y gastos anual con gráficos y tendencias.
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full">Generar</Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CustomReportGenerator 
+              token={token || ''} 
+              language={language}
+              onReportGenerated={handleReportGenerated}
+            />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart className="h-5 w-5" />
+                  Reportes Generados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {generatedFiles.filter(file => file.type.startsWith('report')).length > 0 ? (
+                  <div className="space-y-3">
+                    {generatedFiles
+                      .filter(file => file.type.startsWith('report'))
+                      .map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                          <div className="flex items-center">
+                            <BarChart className="h-5 w-5 text-indigo-600 mr-3" />
+                            <div>
+                              <p className="font-medium">
+                                {file.type.includes('income-expense') ? 'Reporte de Ingresos y Gastos' :
+                                 file.type.includes('balance') ? 'Balance General' :
+                                 file.type.includes('budget') ? 'Comparativo Presupuestal' :
+                                 file.type.includes('cash-flow') ? 'Flujo de Caja' :
+                                 file.type.includes('debtors') ? 'Cartera de Deudores' :
+                                 file.type.includes('payments') ? 'Reporte de Pagos' : 'Reporte'}
+                              </p>
+                              <p className="text-sm text-gray-500">{new Date().toLocaleString()}</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm" className="flex items-center gap-1">
+                            <Download className="h-3 w-3" />
+                            <span>Descargar</span>
+                          </Button>
+                        </div>
+                      ))
+                    }
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <BarChart className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <p>No hay reportes generados</p>
+                    <p className="text-sm mt-1">Utilice el generador para crear reportes personalizados</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
