@@ -1,0 +1,17 @@
+
+# Archivos generados automáticamente
+node_modules
+.next
+build
+dist
+out
+coverage
+
+# Archivos de configuración
+next.config.js
+postcss.config.js
+tailwind.config.ts
+
+# Archivos temporales
+*.tmp
+*.temp
