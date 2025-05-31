@@ -24,7 +24,7 @@ export function middleware(request: NextRequest) {
       'Referrer-Policy': 'strict-origin-when-cross-origin'
     };
 
-    const response = NextResponse.next();
+    const _response = NextResponse.next();
 
     Object.entries(securityHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);

@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 /**
  * Combina múltiples clases de Tailwind de manera segura
@@ -58,7 +58,7 @@ export function randomColor(): string {
  * Convierte un camelCase a Title Case
  */
 export function camelToTitleCase(text: string): string {
-  const result = text.replace(/([A-Z])/g, ' $1');
+  const _result = text.replace(/([A-Z])/g, ' $1');
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 

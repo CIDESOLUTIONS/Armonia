@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { pool } from '@/lib/db';
 
 // GET /api/financial/payments/summary
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
     const client = await pool.connect();
     try {

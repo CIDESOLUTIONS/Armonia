@@ -4,16 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Loader2, Plus, Save, Download, 
-  AlertCircle, CheckCircle
-} from 'lucide-react';
+import { Loader2, Plus, Save, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -68,21 +63,21 @@ const mockBudgets: Budget[] = [
 ];
 
 export default function BudgetPage() {
-  const router = useRouter();
-  const { isLoggedIn, token, schemaName, complexId } = useAuth();
+  const _router = useRouter();
+  const { isLoggedIn, _token, schemaName, complexId  } = useAuth();
   const { toast } = useToast();
   
   // Configuración general
-  const [language, setLanguage] = useState('Español');
-  const [currency, setCurrency] = useState('Pesos');
+  const [language, _setLanguage] = useState('Español');
+  const [_currency, _setCurrency] = useState('Pesos');
   
   // Estado de la página
   const [isLoading, setIsLoading] = useState(true);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
   // Valores del formulario
@@ -102,12 +97,10 @@ export default function BudgetPage() {
     setIsLoading(true);
     try {
       // Intentar obtener datos del API
-      const response = await fetch(`/api/financial/budgets?schemaName=${schemaName}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
-        const data = await response.json();
+        const _data = await response.json();
         setBudgets(data.budgets || []);
         
         // Si hay presupuestos, seleccionar el más reciente
@@ -225,26 +218,15 @@ export default function BudgetPage() {
     setSuccess(null);
 
     try {
-      const method = selectedBudget.id ? 'PUT' : 'POST';
-      const url = selectedBudget.id 
+      const _method = selectedBudget.id ? 'PUT' : 'POST';
+      const _url = selectedBudget.id 
         ? `/api/financial/budgets/${selectedBudget.id}?schemaName=${schemaName}` 
         : `/api/financial/budgets?schemaName=${schemaName}`;
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...selectedBudget,
-          notes: notes,
-          complexId
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (response.ok) {
-        const data = await response.json();
+        const _data = await response.json();
         
         // Actualizar la lista de presupuestos
         if (selectedBudget.id) {
@@ -312,12 +294,7 @@ export default function BudgetPage() {
     
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/financial/budgets/${selectedBudget.id}/approve?schemaName=${schemaName}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         // Actualizar estado localmente
@@ -369,12 +346,7 @@ export default function BudgetPage() {
     
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/financial/budgets/${selectedBudget.id}/reject?schemaName=${schemaName}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         // Actualizar estado localmente

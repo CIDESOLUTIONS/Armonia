@@ -41,7 +41,7 @@ export function Toast({ variant, title, description, onClose }: ToastProps) {
   );
 }
 
-export function ToastContainer({ toasts }: { toasts: any[] }) {
+export function ToastContainer({ toasts }: { toasts: unknown[] }) {
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
       <AnimatePresence>

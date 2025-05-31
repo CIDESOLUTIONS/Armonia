@@ -1,4 +1,4 @@
-import { PrismaClient as BasePrismaClient } from '@prisma/client';
+;
 
 export interface Tenant {
   id: number;
@@ -85,7 +85,7 @@ export class ManualPrismaClient extends BasePrismaClient {
   };
 
   manualAssembly = {
-    create: async (data: { data: { title: string; type: string; date: string; description: string | null; agenda: any; organizerId: number; complexId: number } }) => {
+    create: async (data: { data: { title: string; type: string; date: string; description: string | null; agenda: unknown; organizerId: number; complexId: number } }) => {
       return this.$executeRawUnsafe(
         `INSERT INTO "${this.tenantSchema}"."Assembly" (title, type, date, description, status, quorum, agenda, "organizerId", "complexId", "createdAt") 
          VALUES ($1, $2, $3, $4, 'PENDING', 0, $5::jsonb, $6, $7, NOW()) RETURNING *`,

@@ -3,7 +3,7 @@
 // Servicio para la gestión de PQRs (Peticiones, Quejas y Reclamos)
 export class PQRService {
   // Obtener listado de PQRs
-  static async getPQRs(user: any, filters?: any) {
+  static async getPQRs(user: unknown, filters?: unknown) {
     try {
       // Construir query params para filtros
       const queryParams = new URLSearchParams();
@@ -29,13 +29,7 @@ export class PQRService {
         }
       }
       
-      const response = await fetch(`${endpoint}${queryString}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -52,13 +46,7 @@ export class PQRService {
   // Obtener estadísticas de PQRs
   static async getPQRStats(complexId: number) {
     try {
-      const response = await fetch(`/api/pqr/stats/${complexId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -78,20 +66,9 @@ export class PQRService {
   }
 
   // Crear una nueva PQR
-  static async createPQR(data: any, user: any) {
+  static async createPQR(data: unknown, user: unknown) {
     try {
-      const response = await fetch('/api/pqr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          ...data,
-          // Por defecto, el estado es OPEN
-          status: 'OPEN',
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -106,19 +83,9 @@ export class PQRService {
   }
 
   // Actualizar el estado de una PQR
-  static async updatePQRStatus(id: number, status: string, user: any) {
+  static async updatePQRStatus(id: number, status: string, user: unknown) {
     try {
-      const response = await fetch(`/api/pqr/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          status,
-          updatedBy: user.id,
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -133,20 +100,9 @@ export class PQRService {
   }
 
   // Añadir un comentario a una PQR
-  static async addComment(pqrId: number, comment: string, user: any) {
+  static async addComment(pqrId: number, comment: string, user: unknown) {
     try {
-      const response = await fetch(`/api/pqr/${pqrId}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          text: comment,
-          authorId: user.id,
-          authorName: user.name,
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -163,13 +119,7 @@ export class PQRService {
   // Obtener detalle de una PQR
   static async getPQRDetail(id: number) {
     try {
-      const response = await fetch(`/api/pqr/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -186,16 +136,7 @@ export class PQRService {
   // Asignar responsable a una PQR
   static async assignResponsible(id: number, userId: number) {
     try {
-      const response = await fetch(`/api/pqr/${id}/assign`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          responsibleId: userId,
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();

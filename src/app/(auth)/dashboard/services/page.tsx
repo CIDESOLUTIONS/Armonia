@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import ServiceList from "@/components/admin/services/ServiceList";
 import ServiceForm from "@/components/admin/services/ServiceForm";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 // Datos de muestra para servicios
 const MOCK_SERVICES = [
@@ -58,7 +58,7 @@ const MOCK_SERVICES = [
 ];
 
 export default function ServicesPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const { user, isLoggedIn, loading } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -75,9 +75,9 @@ export default function ServicesPage() {
       try {
         // En un entorno real, descomentar este código y eliminar los datos de muestra
         /*
-        const response = await fetch("/api/services");
+        // Variable response eliminada por lint
         if (response.ok) {
-          const data = await response.json();
+          const _data = await response.json();
           setServices(data);
         } else {
           console.error("Error fetching services");
@@ -115,18 +115,12 @@ export default function ServicesPage() {
     try {
       // En un entorno real, descomentar este código
       /*
-      const url = editingService
+      const _url = editingService
         ? `/api/services/${editingService.id}`
         : "/api/services";
-      const method = editingService ? "PUT" : "POST";
+      const _method = editingService ? "PUT" : "POST";
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(serviceData),
-      });
+      // Variable response eliminada por lint
 
       if (response.ok) {
         const updatedService = await response.json();
@@ -172,9 +166,7 @@ export default function ServicesPage() {
       try {
         // En un entorno real, descomentar este código
         /*
-        const response = await fetch(`/api/services/${id}`, {
-          method: "DELETE",
-        });
+        // Variable response eliminada por lint
 
         if (response.ok) {
           setServices(services.filter((service) => service.id !== id));

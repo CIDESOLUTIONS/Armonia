@@ -1,32 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Loader2, 
-  Save, 
-  AlertTriangle, 
-  Key, 
-  MessageSquare, 
-  Phone, 
-  CheckCircle, 
-  XCircle, 
-  RefreshCw,
-  Link
-} from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Save, AlertTriangle, Key, MessageSquare, Phone, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function WhatsAppConfigPage() {
-  const { token, complexId, schemaName } = useAuth();
+  const { _token, complexId, schemaName  } = useAuth();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -521,7 +510,7 @@ export default function WhatsAppConfigPage() {
                   <div className="border-t border-gray-200 pt-4">
                     <Label>Variables Detectadas</Label>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {(editingTemplate.content.match(/\{\{([^}]+)\}\}/g) || [])
+                      {(editingTemplate.content.match(/{{([^}]+)}}/g) || [])
                         .map(match => match.slice(2, -2))
                         .map((variable, index) => (
                           <div key={index} className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-md text-sm">
@@ -529,7 +518,7 @@ export default function WhatsAppConfigPage() {
                           </div>
                         ))
                       }
-                      {!(editingTemplate.content.match(/\{\{([^}]+)\}\}/g) || []).length && (
+                      {!(editingTemplate.content.match(/{{([^}]+)}}/g) || []).length && (
                         <p className="text-gray-500 text-sm">No se han detectado variables</p>
                       )}
                     </div>

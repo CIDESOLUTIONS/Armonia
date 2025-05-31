@@ -1,17 +1,17 @@
 
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Calendar, Building } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { ROUTES } from "@/constants/routes";
-import { useState, FormEvent, ChangeEvent } from "react";
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Calendar, Building } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
+import { useState, FormEvent, ChangeEvent } from 'react';
 
 interface ContactFormProps {
   theme: string;
 }
 
 export function ContactForm({ theme }: ContactFormProps) {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
+  const _router = useRouter();
+  const [_formData, _setFormData] = useState({
     name: "",
     email: "",
     phone: "",

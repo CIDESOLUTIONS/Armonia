@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ROUTES } from "@/constants/routes";
-import { Header } from "@/components/layout/header";
-import { LandingPart1 } from "./landing-part1";
-import { LandingPart2 } from "./landing-part2";
-import { LandingPart3 } from "./landing-part3";
-import { VideoShowcase } from "./video-showcase";
-import { FooterContact } from "./footer-contact";
-import { ChevronDown } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
+import { Header } from '@/components/layout/header';
+import { LandingPart1 } from './landing-part1';
+import { LandingPart2 } from './landing-part2';
+import { LandingPart3 } from './landing-part3';
+import { VideoShowcase } from './video-showcase';
+import { FooterContact } from './footer-contact';
+import { ChevronDown } from 'lucide-react';
 import Image from "next/image";
 
 // Textos para soportar múltiples idiomas
@@ -45,15 +45,15 @@ const texts = {
 };
 
 export default function LandingPage() {
-  const router = useRouter();
-  const [language, setLanguage] = useState("Español");
-  const [currency, setCurrency] = useState("Pesos");
-  const [theme, setTheme] = useState("Claro");
+  const _router = useRouter();
+  const [uage, _setLanguageUnused] = useState("Español");
+  const [setCurrency] = useState("Pesos");
+  const [_theme, _setTheme] = useState("Claro");
   
   // Efecto para aplicar el idioma seleccionado
   useEffect(() => {
     // Aquí se podrían cargar textos según el idioma seleccionado
-    document.documentElement.lang = language === "Español" ? "es" : "en";
+    document.documentElement.= uage === "Español" ? "es" : "en";
   }, [language]);
 
   // Efecto para aplicar el tema seleccionado
@@ -76,9 +76,9 @@ export default function LandingPage() {
       <Header 
         theme={theme}
         setTheme={setTheme}
-        language={language}
+        language={uage}
         setLanguage={setLanguage}
-        currency={currency}
+        currency={}
         setCurrency={setCurrency}
       />
 
@@ -93,10 +93,10 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                  {language === "Español" ? texts.es.title : texts.en.title}
+                  {uage === "Español" ? texts.es.title : texts.en.title}
                 </h1>
                 <p className="text-lg mb-8 text-gray-600 leading-relaxed">
-                  {language === "Español" ? texts.es.description : texts.en.description}
+                  {uage === "Español" ? texts.es.description : texts.en.description}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button
@@ -104,14 +104,14 @@ export default function LandingPage() {
                     onClick={() => router.push(ROUTES.PORTAL_SELECTOR)}
                     data-testid="iniciar-sesion-btn"
                   >
-                    {language === "Español" ? texts.es.loginButton : texts.en.loginButton}
+                    {uage === "Español" ? texts.es.loginButton : texts.en.loginButton}
                   </button>
                   <button
                     className="bg-transparent border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-6 py-3 rounded-md font-medium"
                     onClick={() => router.push(ROUTES.REGISTER_COMPLEX)}
                     data-testid="registrar-conjunto-btn"
                   >
-                    {language === "Español" ? texts.es.registerButton : texts.en.registerButton}
+                    {uage === "Español" ? texts.es.registerButton : texts.en.registerButton}
                   </button>
                 </div>
               </div>
@@ -128,7 +128,7 @@ export default function LandingPage() {
                       priority
                     />
                     <div className="absolute inset-0 bg-indigo-100 bg-opacity-50 flex items-center justify-center">
-                      <p className="text-indigo-700 font-bold text-lg shadow-sm">{language === "Español" ? texts.es.dashboardPreview : texts.en.dashboardPreview}</p>
+                      <p className="text-indigo-700 font-bold text-lg shadow-sm">{uage === "Español" ? texts.es.dashboardPreview : texts.en.dashboardPreview}</p>
                     </div>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export default function LandingPage() {
                 className="text-white flex flex-col items-center focus:outline-none group"
                 aria-label="Ver más"
               >
-                <span className="mb-2 group-hover:opacity-80 text-indigo-600">{language === "Español" ? texts.es.learnMore : texts.en.learnMore}</span>
+                <span className="mb-2 group-hover:opacity-80 text-indigo-600">{uage === "Español" ? texts.es.learnMore : texts.en.learnMore}</span>
                 <ChevronDown className="h-6 w-6 animate-bounce text-indigo-600" />
               </button>
             </div>
@@ -152,21 +152,21 @@ export default function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div className="p-6 rounded-lg bg-indigo-50">
-                <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.integralManagement : texts.en.integralManagement}</div>
+                <div className="text-indigo-600 font-bold text-xl mb-2">{uage === "Español" ? texts.es.integralManagement : texts.en.integralManagement}</div>
                 <p className="text-gray-700">
-                  {language === "Español" ? texts.es.managementDesc : texts.en.managementDesc}
+                  {uage === "Español" ? texts.es.managementDesc : texts.en.managementDesc}
                 </p>
               </div>
               <div className="p-6 rounded-lg bg-indigo-50">
-                <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.efficientCommunication : texts.en.efficientCommunication}</div>
+                <div className="text-indigo-600 font-bold text-xl mb-2">{uage === "Español" ? texts.es.efficientCommunication : texts.en.efficientCommunication}</div>
                 <p className="text-gray-700">
-                  {language === "Español" ? texts.es.communicationDesc : texts.en.communicationDesc}
+                  {uage === "Español" ? texts.es.communicationDesc : texts.en.communicationDesc}
                 </p>
               </div>
               <div className="p-6 rounded-lg bg-indigo-50">
-                <div className="text-indigo-600 font-bold text-xl mb-2">{language === "Español" ? texts.es.easyToUse : texts.en.easyToUse}</div>
+                <div className="text-indigo-600 font-bold text-xl mb-2">{uage === "Español" ? texts.es.easyToUse : texts.en.easyToUse}</div>
                 <p className="text-gray-700">
-                  {language === "Español" ? texts.es.easyDesc : texts.en.easyDesc}
+                  {uage === "Español" ? texts.es.easyDesc : texts.en.easyDesc}
                 </p>
               </div>
             </div>
@@ -174,20 +174,20 @@ export default function LandingPage() {
         </section>
         
         {/* Incluir componentes de las partes 1, 2 y 3 */}
-        <LandingPart1 theme={theme} language={language} />
-        <LandingPart2 theme={theme} language={language} />
+        <LandingPart1 theme={theme} language={uage} />
+        <LandingPart2 theme={theme} language={uage} />
         
         {/* Video de demostración */}
-        <VideoShowcase theme={theme} language={language} />
+        <VideoShowcase theme={theme} language={uage} />
         
         <LandingPart3 
           theme={theme} 
-          currency={currency}
-          language={language}
+          currency={}
+          language={uage}
         />
         
         {/* Sección de contacto */}
-        <FooterContact theme={theme} language={language} />
+        <FooterContact theme={theme} language={uage} />
       </div>
     </div>
   );

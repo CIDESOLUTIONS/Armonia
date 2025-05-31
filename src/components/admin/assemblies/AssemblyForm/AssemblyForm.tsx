@@ -25,7 +25,7 @@ const AssemblyForm: React.FC<AssemblyFormProps> = ({
   onCancel,
   isLoading = false
 }) => {
-  const [formData, setFormData] = React.useState<AssemblyFormData>({
+  const [_formData, _setFormData] = React.useState<AssemblyFormData>({
     tipo: 'ordinaria',
     titulo: '',
     fecha: '',

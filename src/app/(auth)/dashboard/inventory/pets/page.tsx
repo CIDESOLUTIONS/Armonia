@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PawPrint, Plus, Pencil, Trash2, Save, X, Search } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PawPrint, Plus, Pencil, Trash2, Save, Search } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Pet {
   id: number;
@@ -28,15 +28,15 @@ interface Pet {
 const PET_TYPES = ["Perro", "Gato", "Ave", "Pez", "Reptil", "Otro"];
 
 const PetsPage = () => {
-  const { token, complexId, schemaName } = useAuth();
+  const { _token, complexId, schemaName  } = useAuth();
   const { toast } = useToast();
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [error, _setError] = useState("");
+  const [_showDialog, _setShowDialog] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
-  const [formData, setFormData] = useState<Partial<Pet>>({
+  const [_formData, _setFormData] = useState<Partial<Pet>>({
     propertyUnit: "",
     ownerName: "",
     name: "",
@@ -46,8 +46,8 @@ const PetsPage = () => {
     age: 0,
     registrationNumber: ""
   });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [properties, setProperties] = useState<{id: number, unitNumber: string, ownerName: string}[]>([]);
+  const [_searchTerm, _setSearchTerm] = useState("");
+  const [_properties, _setProperties] = useState<{id: number, unitNumber: string, ownerName: string}[]>([]);
 
   useEffect(() => {
     fetchPets();
@@ -103,15 +103,13 @@ const PetsPage = () => {
       
       // En una implementación real, descomentar este código
       /*
-      const response = await fetch(`/api/inventory/pets?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error("Error al cargar las mascotas");
       }
       
-      const data = await response.json();
+      const _data = await response.json();
       setPets(data.pets);
       setIsLoading(false);
       */
@@ -138,15 +136,13 @@ const PetsPage = () => {
       
       // En una implementación real, descomentar este código
       /*
-      const response = await fetch(`/api/inventory/properties?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error("Error al cargar las propiedades");
       }
       
-      const data = await response.json();
+      const _data = await response.json();
       setProperties(data.properties);
       */
     } catch (err) {
@@ -244,23 +240,13 @@ const PetsPage = () => {
       
       // En una implementación real, enviar datos al backend
       /*
-      const url = isEditing 
+      const _url = isEditing 
         ? `/api/inventory/pets/${selectedPet.id}` 
         : '/api/inventory/pets';
       
-      const method = isEditing ? 'PUT' : 'POST';
+      const _method = isEditing ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...formData,
-          complexId
-        })
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error("Error al guardar la mascota");
@@ -296,10 +282,7 @@ const PetsPage = () => {
       
       // En una implementación real, enviar solicitud al backend
       /*
-      const response = await fetch(`/api/inventory/pets/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error("Error al eliminar la mascota");

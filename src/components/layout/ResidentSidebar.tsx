@@ -1,23 +1,9 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { usePassiveEvent } from '@/hooks/use-passive-event';
-import {
-  BarChart2,
-  Calendar,
-  DollarSign,
-  Home,
-  CalendarClock,
-  AlertCircle,
-  MessageSquare,
-  User,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  Coffee
-} from "lucide-react";
+import { BarChart2, Calendar, DollarSign, Home, AlertCircle, MessageSquare, User, ChevronDown, ChevronLeft, ChevronRight, Coffee } from 'lucide-react';
 
 interface ResidentSidebarProps {
   language: string;
@@ -42,7 +28,7 @@ export default function ResidentSidebar({
   setIsCollapsed,
   addToast
 }: ResidentSidebarProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
   const toggleSidebar = () => {

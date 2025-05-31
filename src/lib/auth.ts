@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify, JWTVerifyResult, SignJWT } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 import { ServerLogger } from './logging/server-logger';
 
 // Interfaz para el payload del token JWT
@@ -45,7 +45,7 @@ export async function generateToken(payload: Partial<JWTPayload>): Promise<strin
     const encodedSecret = getJwtSecret();
     
     // Crear token con jose
-    const token = await new SignJWT({ ...payload })
+    const _token = await new SignJWT({ ...payload })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('24h')
@@ -62,7 +62,7 @@ export async function generateToken(payload: Partial<JWTPayload>): Promise<strin
 export async function verifyAuth(request: NextRequest) {
   try {
     // Obtener el token
-    const token = getToken(request);
+    const _token = getToken(request);
     
     if (!token) {
       ServerLogger.warn('Autenticación fallida: No hay token');

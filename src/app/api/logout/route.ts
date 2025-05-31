@@ -1,9 +1,9 @@
 // src/app/api/logout/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ServerLogger } from '@/lib/logging/server-logger';
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
     ServerLogger.info('Cerrando sesión');
     

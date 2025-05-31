@@ -3,23 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Clock, AlertCircle, CheckCircle, Info, ArrowRight, Calendar } from 'lucide-react';
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Calendar as AlertCircle, CheckCircle, Calendar } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+;
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+;
+import { Textarea } from '@/components/ui/textarea';
+;
 
 interface CommonArea {
   id: string;
@@ -54,13 +54,13 @@ interface TimeSlot {
 }
 
 export default function ResidentReservationsPage() {
-  const { isLoggedIn, token, schemaName, residentName } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName,  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [commonAreas, setCommonAreas] = useState<CommonArea[]>([]);
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('areas');
+  const [error, _setError] = useState<string | null>(null);
+  // useState activeTab eliminado por lint
   const [selectedArea, setSelectedArea] = useState<CommonArea | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
@@ -209,10 +209,8 @@ export default function ResidentReservationsPage() {
       // En un entorno real, esto sería una llamada a la API para obtener disponibilidad
       // const fetchAvailability = async () => {
       //   try {
-      //     const response = await fetch(`/api/resident/availability?areaId=${selectedArea.id}&date=${format(selectedDate, 'yyyy-MM-dd')}&schemaName=${schemaName}`, {
-      //       headers: { 'Authorization': `Bearer ${token}` },
-      //     });
-      //     const data = await response.json();
+      //     // Variable response eliminada por lint
+      //     const _data = await response.json();
       //     setAvailableTimeSlots(data.timeSlots);
       //   } catch (err) {
       //     console.error("[ResidentReservations] Error:", err);
@@ -299,7 +297,7 @@ export default function ResidentReservationsPage() {
   };
 
   // Función para manejar cambios en el formulario de reserva
-  const handleReservationFormChange = (field: string, value: any) => {
+  const handleReservationFormChange = (field: string, value: unknown) => {
     setReservationForm(prev => ({
       ...prev,
       [field]: value
@@ -316,21 +314,7 @@ export default function ResidentReservationsPage() {
     
     try {
       // En un entorno real, esto sería una llamada a la API
-      // const response = await fetch(`/api/resident/reservations?schemaName=${schemaName}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({
-      //     areaId: selectedArea.id,
-      //     date: format(selectedDate, 'yyyy-MM-dd'),
-      //     startTime: selectedTimeSlot.startTime,
-      //     endTime: selectedTimeSlot.endTime,
-      //     attendees: reservationForm.attendees,
-      //     notes: reservationForm.notes
-      //   })
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al crear reserva');
@@ -383,16 +367,7 @@ export default function ResidentReservationsPage() {
     
     try {
       // En un entorno real, esto sería una llamada a la API
-      // const response = await fetch(`/api/resident/reservations/${reservationId}?schemaName=${schemaName}`, {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({
-      //     status: 'cancelled'
-      //   })
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al cancelar reserva');
@@ -729,7 +704,7 @@ export default function ResidentReservationsPage() {
                   min={1} 
                   max={selectedArea.capacity}
                   value={reservationForm.attendees}
-                  onChange={(e) => handleReservationFormChange('attendees', parseInt(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleReservationFormChange('attendees', parseInt(e.target.value))}
                 />
                 <p className="text-xs text-gray-500">Máximo {selectedArea.capacity} personas</p>
               </div>
@@ -740,7 +715,7 @@ export default function ResidentReservationsPage() {
                   id="notes" 
                   placeholder="Ej: Celebración de cumpleaños, reunión familiar, etc."
                   value={reservationForm.notes}
-                  onChange={(e) => handleReservationFormChange('notes', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleReservationFormChange('notes', e.target.value)}
                 />
               </div>
               
@@ -763,7 +738,7 @@ export default function ResidentReservationsPage() {
                     id="acceptRules" 
                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     checked={reservationForm.acceptedRules}
-                    onChange={(e) => handleReservationFormChange('acceptedRules', e.target.checked)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleReservationFormChange('acceptedRules', e.target.checked)}
                   />
                   <Label htmlFor="acceptRules" className="text-sm">
                     Acepto las reglas y condiciones para el uso del área común

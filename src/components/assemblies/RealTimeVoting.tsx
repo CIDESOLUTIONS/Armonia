@@ -36,20 +36,18 @@ export default function RealTimeVoting({
 }: RealTimeVotingProps) {
   const [stats, setStats] = useState<VotingStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchVotingStats = async () => {
     try {
-      const response = await fetch(`/api/assemblies/voting/stats?assemblyId=${assemblyId}&agendaNumeral=${agendaNumeral}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error(language === 'Español' ? 'Error al cargar estadísticas de votación' : 'Error loading voting statistics');
       }
       
-      const data = await response.json();
+      const _data = await response.json();
       setStats(data);
       setLastUpdate(new Date());
       setError(null);

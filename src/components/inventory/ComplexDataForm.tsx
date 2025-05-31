@@ -20,13 +20,13 @@ interface ComplexFormData {
 }
 
 interface ComplexDataFormProps {
-  initialData: any;
+  initialData: unknown;
   onSave: (data: ComplexFormData) => Promise<void>;
   onCancel: () => void;
 }
 
 export function ComplexDataForm({ initialData, onSave, onCancel }: ComplexDataFormProps) {
-  const [formData, setFormData] = useState<ComplexFormData>({
+  const [_formData, _setFormData] = useState<ComplexFormData>({
     name: initialData?.name || '',
     address: initialData?.address || '',
     city: initialData?.city || '',
@@ -39,7 +39,7 @@ export function ComplexDataForm({ initialData, onSave, onCancel }: ComplexDataFo
     adminAddress: initialData?.adminAddress || '',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, _setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

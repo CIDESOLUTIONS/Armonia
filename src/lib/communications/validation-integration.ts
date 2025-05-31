@@ -7,14 +7,7 @@
  * y respondan adecuadamente a la personalización visual.
  */
 
-import { 
-  getThemeConfig, 
-  getColors, 
-  getNotificationColor,
-  translate,
-  ThemeMode,
-  Language
-} from '@/lib/communications/theme-config';
+import { getThemeConfig, getColors, getNotificationColor, translate } from '@/lib/communications/theme-config';
 
 /**
  * Valida la integración del sistema de comunicaciones con los módulos clave

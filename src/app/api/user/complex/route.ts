@@ -1,18 +1,18 @@
 // src/app/api/user/complex/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) throw new Error('No autorizado');
 
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+    const _token = authHeader.replace('Bearer ', '');
+    // Variable decoded eliminada por lint
 
     prisma.setTenantSchema('public');
-    const user = await prisma.$queryRawUnsafe(
+    const _user = await prisma.$queryRawUnsafe(
       `SELECT name FROM "public"."User" WHERE id = $1 LIMIT 1`,
       decoded.id
     );

@@ -1,47 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 // Importamos los componentes UI directamente desde sus archivos específicos
 // en lugar de usar importaciones agrupadas
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from '@/components/ui/button';
+;
+;
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+;
+import { useToast } from '@/components/ui/use-toast';
 
 // Importación explícita del diálogo
-import { 
-  Dialog,
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from "@/components/ui/dialog";
+import { Dialog } from '@/components/ui/dialog';
 
 // Importación explícita del select
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+;
 
 // Importamos los iconos individualmente
-import { 
-  Car, 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Save, 
-  X, 
-  Truck, 
-  Motorcycle, 
-  Loader2 
-} from "lucide-react";
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 
 interface Vehicle {
   id: number;
@@ -56,18 +34,18 @@ interface Vehicle {
   parkingSpot: string;
 }
 
-const VEHICLE_TYPES = ["Automóvil", "Camioneta", "Motocicleta", "Bicicleta", "Otro"];
+const _VEHICLE_TYPES = ["Automóvil", "Camioneta", "Motocicleta", "Bicicleta", "Otro"];
 
 const VehiclesPage = () => {
-  const { token, complexId, schemaName } = useAuth();
+  const { _token, complexId, schemaName  } = useAuth();
   const { toast } = useToast();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [formData, setFormData] = useState<Partial<Vehicle>>({
+  const [error, _setError] = useState("");
+  const [_showDialog, _setShowDialog] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
+  const [_selectedVehicle, _setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [_formData, _setFormData] = useState<Partial<Vehicle>>({
     propertyUnit: "",
     ownerName: "",
     licensePlate: "",
@@ -78,8 +56,8 @@ const VehiclesPage = () => {
     type: "Automóvil",
     parkingSpot: ""
   });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [properties, setProperties] = useState<{id: number, unitNumber: string, ownerName: string}[]>([]);
+  const [_searchTerm, _setSearchTerm] = useState("");
+  const [_properties, _setProperties] = useState<{id: number, unitNumber: string, ownerName: string}[]>([]);
 
   // Al cargar la página, mostrar un mensaje para diagnóstico
   useEffect(() => {

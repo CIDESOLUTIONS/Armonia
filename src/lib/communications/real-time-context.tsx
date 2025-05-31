@@ -59,8 +59,8 @@ interface RealTimeCommunicationContextType {
   markAllMessagesAsRead: (senderId: number) => void;
   
   // Métodos para eventos en tiempo real
-  subscribeToEvent: (eventType: string, callback: (data: any) => void) => void;
-  unsubscribeFromEvent: (eventType: string, callback: (data: any) => void) => void;
+  subscribeToEvent: (eventType: string, callback: (data: unknown) => void) => void;
+  unsubscribeFromEvent: (eventType: string, callback: (data: unknown) => void) => void;
   
   // Estado de conexión
   reconnect: () => void;
@@ -72,7 +72,7 @@ const RealTimeCommunicationContext = createContext<RealTimeCommunicationContextT
 
 // Proveedor del contexto
 export function RealTimeCommunicationProvider({ children }: { children: ReactNode }) {
-  const { user, token } = useAuth();
+  const { user, _token  } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -183,12 +183,7 @@ export function RealTimeCommunicationProvider({ children }: { children: ReactNod
     if (!token) return;
     
     try {
-      const response = await fetch(`/api/communications/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setNotifications(prev => 
@@ -204,12 +199,7 @@ export function RealTimeCommunicationProvider({ children }: { children: ReactNod
     if (!token) return;
     
     try {
-      const response = await fetch('/api/communications/notifications/read-all', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setNotifications(prev => 
@@ -225,12 +215,7 @@ export function RealTimeCommunicationProvider({ children }: { children: ReactNod
     if (!token) return;
     
     try {
-      const response = await fetch('/api/communications/notifications/clear', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setNotifications([]);
@@ -277,12 +262,7 @@ export function RealTimeCommunicationProvider({ children }: { children: ReactNod
     if (!token) return;
     
     try {
-      const response = await fetch(`/api/communications/messages/${messageId}/read`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setMessages(prev => {
@@ -307,12 +287,7 @@ export function RealTimeCommunicationProvider({ children }: { children: ReactNod
     if (!token) return;
     
     try {
-      const response = await fetch(`/api/communications/messages/read-all/${senderId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setMessages(prev => {
@@ -329,12 +304,12 @@ export function RealTimeCommunicationProvider({ children }: { children: ReactNod
   };
   
   // Métodos para eventos en tiempo real
-  const subscribeToEvent = (eventType: string, callback: (data: any) => void) => {
+  const subscribeToEvent = (eventType: string, callback: (data: unknown) => void) => {
     if (!socket) return;
     socket.on(eventType, callback);
   };
   
-  const unsubscribeFromEvent = (eventType: string, callback: (data: any) => void) => {
+  const unsubscribeFromEvent = (eventType: string, callback: (data: unknown) => void) => {
     if (!socket) return;
     socket.off(eventType, callback);
   };

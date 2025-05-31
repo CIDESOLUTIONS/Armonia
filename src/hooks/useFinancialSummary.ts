@@ -32,16 +32,16 @@ export const useFinancialSummary = () => {
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [trends, setTrends] = useState<MonthlyTrend[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   const fetchSummary = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/financial/summary');
+      const _response = await fetch('/api/financial/summary');
       if (!response.ok) throw new Error('Error al obtener resumen financiero');
 
-      const data = await response.json();
+      const _data = await response.json();
       setSummary(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
@@ -55,10 +55,10 @@ export const useFinancialSummary = () => {
   const fetchTrends = useCallback(async (months: number = 12) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/trends?months=${months}`);
+      const _response = await fetch(`/api/financial/trends?months=${months}`);
       if (!response.ok) throw new Error('Error al obtener tendencias');
 
-      const data = await response.json();
+      const _data = await response.json();
       setTrends(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
@@ -114,14 +114,14 @@ export const useFinancialSummary = () => {
   const generateReport = useCallback(async (type: 'monthly' | 'quarterly' | 'annual') => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/reports?type=${type}`);
+      const _response = await fetch(`/api/financial/reports?type=${type}`);
       if (!response.ok) throw new Error('Error al generar reporte');
 
-      const data = await response.json();
+      const _data = await response.json();
       
       // Convertir a Excel o PDF según necesidad
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
+      const _url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `reporte_financiero_${type}_${new Date().toISOString().slice(0,10)}.json`;

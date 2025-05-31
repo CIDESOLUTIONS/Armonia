@@ -1,7 +1,7 @@
 // src/lib/services/pqr-service.ts
 'use client';
 
-import { fetcher, get, post, put, del } from '@/lib/api/fetcher';
+import { get, post, put, del } from '@/lib/api/fetcher';
 import { ServerLogger } from '../logging/server-logger';
 
 // Tipos para el módulo PQR
@@ -116,7 +116,7 @@ class PQRService {
       });
       
       const query = queryParams.toString();
-      const url = `/api/pqr${query ? `?${query}` : ''}`;
+      const _url = `/api/pqr${query ? `?${query}` : ''}`;
       
       return await get<PQRListResponse>(url, { schema: this.schema });
     } catch (error) {

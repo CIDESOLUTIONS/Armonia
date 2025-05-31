@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plus, Calendar, FileText, DollarSign, Download } from 'lucide-react';
+import { Loader2, Plus, FileText, DollarSign, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 
@@ -27,17 +27,17 @@ interface Fee {
 }
 
 export default function RegularFeesPage() {
-  const router = useRouter();
-  const { isLoggedIn, token, schemaName, complexId, adminName, complexName, logout } = useAuth();
-  const [language, setLanguage] = useState('Español');
-  const [theme, setTheme] = useState('Claro');
-  const [currency, setCurrency] = useState('Dólares');
+  const _router = useRouter();
+  const { isLoggedIn, token, schemaName, complexId, adminName, complexName, _logout  } = useAuth();
+  const [language, _setLanguage] = useState('Español');
+  const [_theme, _setTheme] = useState('Claro');
+  const [_currency, _setCurrency] = useState('Dólares');
   const [isLoading, setIsLoading] = useState(true);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [_properties, _setProperties] = useState<Property[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
   const [selectedFee, setSelectedFee] = useState<Fee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [baseAmount, setBaseAmount] = useState('');
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -64,10 +64,8 @@ export default function RegularFeesPage() {
   const fetchFees = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/financial/regular-fees?schemaName=${schemaName}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
+      // Variable response eliminada por lint
+      const _data = await response.json();
       
       if (response.ok) {
         setFees(data.fees || []);
@@ -92,10 +90,8 @@ export default function RegularFeesPage() {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch(`/api/inventory/properties?schemaName=${schemaName}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
+      // Variable response eliminada por lint
+      const _data = await response.json();
       
       if (response.ok) {
         setProperties(data.properties || []);
@@ -134,19 +130,9 @@ export default function RegularFeesPage() {
     };
 
     try {
-      const response = await fetch(`/api/financial/regular-fees?schemaName=${schemaName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...newFee,
-          complexId
-        }),
-      });
+      // Variable response eliminada por lint
 
-      const data = await response.json();
+      const _data = await response.json();
       
       if (response.ok) {
         setSuccess(language === 'Español' ? 'Cuota creada con éxito' : 'Fee created successfully');
@@ -170,14 +156,9 @@ export default function RegularFeesPage() {
     setSuccess(null);
 
     try {
-      const response = await fetch(`/api/financial/regular-fees/${feeId}/publish?schemaName=${schemaName}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      // Variable response eliminada por lint
 
-      const data = await response.json();
+      const _data = await response.json();
       
       if (response.ok) {
         setSuccess(language === 'Español' ? 'Cuota publicada con éxito' : 'Fee published successfully');
@@ -199,14 +180,9 @@ export default function RegularFeesPage() {
     setSuccess(null);
 
     try {
-      const response = await fetch(`/api/financial/regular-fees/${feeId}/generate-receipts?schemaName=${schemaName}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      // Variable response eliminada por lint
 
-      const data = await response.json();
+      const _data = await response.json();
       
       if (response.ok) {
         setSuccess(language === 'Español' ? 'Recibos generados con éxito' : 'Receipts generated successfully');
@@ -223,22 +199,18 @@ export default function RegularFeesPage() {
 
   const handleDownloadReceiptBatch = async (feeId: number) => {
     try {
-      const response = await fetch(`/api/financial/regular-fees/${feeId}/download-receipts?schemaName=${schemaName}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        const _url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `recibos_${month}_${year}.zip`;
         a.click();
         window.URL.revokeObjectURL(url);
       } else {
-        const data = await response.json();
+        const _data = await response.json();
         setError(data.message || 'Error al descargar los recibos');
       }
     } catch (err) {

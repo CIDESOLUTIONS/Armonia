@@ -1,11 +1,9 @@
 import React from "react";
-import { 
-  MessageSquare, Check, Clock, X, UserPlus, ArrowDown, ArrowUp, RefreshCw 
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PQR } from "../types";
+import { MessageSquare, Check, Clock, X, UserPlus, ArrowDown, ArrowUp, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PQR } from '../types';
 
 interface PQRTableProps {
   filteredPQRs: PQR[];

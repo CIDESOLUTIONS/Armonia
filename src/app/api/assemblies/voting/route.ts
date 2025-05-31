@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function GET(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function GET(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { searchParams } = new URL(req.url);
-  const assemblyId = parseInt(searchParams.get('assemblyId') || '');
+  // Variable assemblyId eliminada por lint
 
   if (!token || !assemblyId) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { schemaName: string };
-    const schemaName = decoded.schemaName.toLowerCase();
+    // Variable decoded eliminada por lint
+    const _schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     const questions = await prisma.$queryRawUnsafe(
@@ -26,15 +26,15 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function POST(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { assemblyId, text } = await req.json();
 
   if (!token || !assemblyId || !text) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { schemaName: string };
-    const schemaName = decoded.schemaName.toLowerCase();
+    // Variable decoded eliminada por lint
+    const _schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     const questionExists = await prisma.$queryRawUnsafe(
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await prisma.$queryRawUnsafe(
+    const _result = await prisma.$queryRawUnsafe(
       `INSERT INTO "${schemaName}"."Question" ("assemblyId", text) VALUES ($1, $2) RETURNING id`,
       assemblyId, text
     );

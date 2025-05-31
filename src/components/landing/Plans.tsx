@@ -1,8 +1,8 @@
 
-import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { ROUTES } from "@/constants/routes";
+import { Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 
 interface PlansProps {
   theme: string;
@@ -10,7 +10,7 @@ interface PlansProps {
 }
 
 export function Plans({ theme, currency }: PlansProps) {
-  const router = useRouter();
+  const _router = useRouter();
   
   return (
     <section id="planes" className={`py-20 ${theme === "dark" ? "bg-gray-800" : "bg-indigo-50"}`}>

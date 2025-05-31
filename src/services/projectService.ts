@@ -26,10 +26,10 @@ export interface ProjectFormData {
  */
 export async function getAllProjects(): Promise<Project[]> {
   try {
-    const response = await fetcher.get('/api/projects');
+    const _response = await fetcher.get('/api/projects');
     
     // Convertir las fechas a objetos Date
-    return response.map((project: any) => ({
+    return response.map((project: unknown) => ({
       ...project,
       startDate: new Date(project.startDate),
       endDate: project.endDate ? new Date(project.endDate) : null,

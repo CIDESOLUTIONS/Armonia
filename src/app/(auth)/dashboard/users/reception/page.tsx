@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/context/TranslationContext';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,10 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Search, UserPlus, Trash2Icon, PencilIcon, 
-  UserIcon, MailIcon, CalendarIcon, PhoneIcon, ClockIcon 
-} from 'lucide-react';
+import { Search, UserPlus, Trash2Icon, PencilIcon, UserIcon, MailIcon, CalendarIcon, PhoneIcon, ClockIcon } from 'lucide-react';
 import { Loading } from '@/components/Loading';
 import { format } from 'date-fns';
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
@@ -85,15 +82,15 @@ const mockReceptionStaff: ReceptionStaff[] = [
 export default function ReceptionStaffPage() {
   const { language } = useTranslation();
   const { toast } = useToast();
-  const { token } = useAuth();
+  const { _token  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [receptionStaff, setReceptionStaff] = useState<ReceptionStaff[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [shiftFilter, setShiftFilter] = useState<string>('all');
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     name: '',
     email: '',
     phone: '',
@@ -153,7 +150,7 @@ export default function ReceptionStaffPage() {
     if (formErrors[name]) setFormErrors({ ...formErrors, [name]: '' });
   };
 
-  const handleSelectChange = (name: string, value: any) => {
+  const handleSelectChange = (name: string, value: unknown) => {
     setFormData({ ...formData, [name]: value });
     if (formErrors[name]) setFormErrors({ ...formErrors, [name]: '' });
   };

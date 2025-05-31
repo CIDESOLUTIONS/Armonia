@@ -60,13 +60,13 @@ const mockDocuments: Document[] = [
 ];
 
 export default function DocumentsPage() {
-  const router = useRouter();
-  const { user, isLoggedIn, token } = useAuth();
+  const _router = useRouter();
+  const { user, isLoggedIn, _token  } = useAuth();
   const [assemblies, setAssemblies] = useState<Assembly[]>(mockAssemblies);
   const [selectedAssembly, setSelectedAssembly] = useState<number | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

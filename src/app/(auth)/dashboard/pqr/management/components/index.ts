@@ -1,5 +1,5 @@
 import PQRTable from "./table";
-import { AssignDialog, DetailsDialog, BulkActionDialog } from "./dialogs";
+import { AssignDialog, DetailsDialog, BulkActionDialog } from './dialogs';
 
 export {
   PQRTable,

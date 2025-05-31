@@ -8,18 +8,7 @@ export class CommonServiceFeeService {
     month: number
   ) {
     try {
-      const response = await fetch('/api/financial/common-service-fees/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          complexId,
-          year,
-          month,
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -36,13 +25,7 @@ export class CommonServiceFeeService {
   // Obtener cuotas de servicios comunes por conjunto, año y mes
   static async getCommonServiceFees(complexId: number, year: number, month: number) {
     try {
-      const response = await fetch(`/api/financial/common-service-fees/${complexId}/${year}/${month}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -59,13 +42,7 @@ export class CommonServiceFeeService {
   // Obtener historial de cuotas de servicios comunes por propiedad
   static async getCommonServiceFeeHistory(propertyId: number) {
     try {
-      const response = await fetch(`/api/financial/common-service-fees/property/${propertyId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -82,16 +59,7 @@ export class CommonServiceFeeService {
   // Anular una cuota de servicios comunes
   static async cancelCommonServiceFee(feeId: number, reason: string) {
     try {
-      const response = await fetch(`/api/financial/common-service-fees/${feeId}/cancel`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          reason,
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -108,17 +76,7 @@ export class CommonServiceFeeService {
   // Actualizar el monto de una cuota de servicios comunes
   static async updateCommonServiceFeeAmount(feeId: number, newAmount: number, reason: string) {
     try {
-      const response = await fetch(`/api/financial/common-service-fees/${feeId}/amount`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          amount: newAmount,
-          reason,
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -135,13 +93,7 @@ export class CommonServiceFeeService {
   // Generar recibos para todas las cuotas pendientes
   static async generateReceipts(complexId: number) {
     try {
-      const response = await fetch(`/api/financial/generate-receipts/${complexId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 import { Header } from '@/components/layout/header';
 
 export default function PublicLayout({
@@ -8,7 +8,7 @@ export default function PublicLayout({
 }: {
   children: ReactNode;
 }) {
-  const handleLanguageChange = (lang: string) => {};
+  const handleLanguageChange = (: string) => {};
   const handleThemeChange = (theme: string) => {};
   const handleCurrencyChange = (currency: string) => {};
 

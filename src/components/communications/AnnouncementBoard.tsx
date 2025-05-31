@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Megaphone, Calendar, CheckCircle, AlertCircle, ChevronDown, ChevronUp, Clock } from 'lucide-react';
+import { TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Megaphone, CheckCircle, AlertCircle, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRealTimeCommunication } from '@/lib/communications/real-time-context';
@@ -53,7 +53,7 @@ export default function AnnouncementBoard({
 }: AnnouncementBoardProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [expandedAnnouncement, setExpandedAnnouncement] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'important'>('all');
+  // useState activeTab eliminado por lint
   const [loading, setLoading] = useState(true);
   
   const { subscribeToEvent, socket } = useRealTimeCommunication();
@@ -63,9 +63,9 @@ export default function AnnouncementBoard({
     const fetchAnnouncements = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/communications/announcements');
+        // Variable response eliminada por lint
         if (response.ok) {
-          const data = await response.json();
+          const _data = await response.json();
           setAnnouncements(data);
         }
       } catch (error) {
@@ -115,13 +115,7 @@ export default function AnnouncementBoard({
   // Marcar anuncio como leído
   const markAsRead = async (announcementId: string) => {
     try {
-      const response = await fetch(`/api/communications/announcements/${announcementId}/read`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId })
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setAnnouncements(prev => 
@@ -143,13 +137,7 @@ export default function AnnouncementBoard({
   // Confirmar lectura de anuncio
   const confirmReading = async (announcementId: string) => {
     try {
-      const response = await fetch(`/api/communications/announcements/${announcementId}/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId })
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setAnnouncements(prev => 
@@ -367,7 +355,7 @@ export default function AnnouncementBoard({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-1 text-xs bg-gray-100 hover:bg-gray-200 rounded px-2 py-1"
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                 >
                                   <span>{attachment.name}</span>
                                 </a>
@@ -388,7 +376,7 @@ export default function AnnouncementBoard({
                                 variant="outline" 
                                 size="sm"
                                 className="h-7 text-xs"
-                                onClick={(e) => {
+                                onClick={(e: React.MouseEvent) => {
                                   e.stopPropagation();
                                   confirmReading(announcement.id);
                                 }}

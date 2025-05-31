@@ -1,7 +1,7 @@
 // src/lib/services/assembly-service.ts
 'use client';
 
-import { fetcher, get, post, put, del } from '@/lib/api/fetcher';
+import { get, post, put, del } from '@/lib/api/fetcher';
 import { ServerLogger } from '../logging/server-logger';
 
 // Tipos para el módulo de Asambleas
@@ -187,7 +187,7 @@ class AssemblyService {
       });
       
       const query = queryParams.toString();
-      const url = `/api/assemblies${query ? `?${query}` : ''}`;
+      const _url = `/api/assemblies${query ? `?${query}` : ''}`;
       
       return await get<AssemblyListResponse>(url, { schema: this.schema });
     } catch (error) {

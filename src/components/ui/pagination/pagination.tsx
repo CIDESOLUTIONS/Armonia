@@ -1,13 +1,8 @@
 // src/components/ui/pagination/pagination.tsx
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  ChevronsLeft, 
-  ChevronsRight 
-} from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 interface PaginationProps {
   currentPage: number;
@@ -29,7 +24,7 @@ export function Pagination({
 
   // Calcular el rango de páginas a mostrar
   let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
-  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  const endPage = Math.min(totalPages, startPage + maxButtons - 1);
   
   // Ajustar si estamos muy cerca del final
   if (endPage - startPage + 1 < maxButtons && startPage > 1) {

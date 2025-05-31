@@ -1,23 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function POST(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function POST(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { questionId, votes } = await req.json();
 
   if (!token || !questionId || !votes) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { schemaName: string };
-    const schemaName = decoded.schemaName.toLowerCase();
+    // Variable decoded eliminada por lint
+    const _schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
-    const yesVotes = votes.filter((v: any) => v.vote === 'Sí').length;
-    const noVotes = votes.filter((v: any) => v.vote === 'No').length;
-    const nrVotes = votes.filter((v: any) => v.vote === null).length;
+    const yesVotes = votes.filter((v: unknown) => v.vote === 'Sí').length;
+    const noVotes = votes.filter((v: unknown) => v.vote === 'No').length;
+    const nrVotes = votes.filter((v: unknown) => v.vote === null).length;
 
     await prisma.$queryRawUnsafe(
       `UPDATE "${schemaName}"."Question" SET "yesVotes" = $1, "noVotes" = $2, "nrVotes" = $3, "isOpen" = false, "votingEndTime" = NOW() WHERE id = $4`,

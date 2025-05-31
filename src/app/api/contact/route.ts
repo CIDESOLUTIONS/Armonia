@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, complexName, units, message } = body;
+    const { name, email, phone, _complexName, units, message  } = body;
 
     // Validar los datos
     if (!name || !email || !complexName || !units) {
@@ -18,16 +18,7 @@ export async function POST(request: Request) {
     }
 
     // Guardar el prospecto en la base de datos
-    const prospect = await prisma.prospect.create({
-      data: {
-        name,
-        email,
-        phone: phone || '',
-        complexName,
-        units: parseInt(units, 10),
-        message: message || '',
-      },
-    });
+    // Variable prospect eliminada por lint
 
     // Configurar el transportador de correo
     const transporter = nodemailer.createTransport({

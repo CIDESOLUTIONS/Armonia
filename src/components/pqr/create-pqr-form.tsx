@@ -1,24 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 interface CreatePQRFormProps {
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: unknown) => Promise<void>;
   onCancel: () => void;
 }
 
 export function CreatePQRForm({ onSubmit, onCancel }: CreatePQRFormProps) {
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     title: '',
     description: '',
     type: 'PETITION', // Default type

@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
-  const [language, setLanguage] = useState('Español');
-  const [theme, setTheme] = useState('Claro');
-  const [currency, setCurrency] = useState('Dólares');
+  const _router = useRouter();
+  const [uage, _setLanguageUnused] = useState('Español');
+  const [_theme, _setTheme] = useState('Claro');
+  const [setCurrency] = useState('Dólares');
 
   const handleLoginRedirect = () => {
     router.push('/(public)/login');
@@ -21,9 +21,9 @@ export default function ForgotPasswordPage() {
       <Header
         theme={theme}
         setTheme={setTheme}
-        language={language}
+        language={uage}
         setLanguage={setLanguage}
-        currency={currency}
+        currency={}
         setCurrency={setCurrency}
       />
 
@@ -34,10 +34,10 @@ export default function ForgotPasswordPage() {
       <main className="flex-1 px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
         <div className="w-full max-w-md bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            {language === 'Español' ? 'Recuperar Contraseña' : 'Recover Password'}
+            {uage === 'Español' ? 'Recuperar Contraseña' : 'Recover Password'}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            {language === 'Español'
+            {uage === 'Español'
               ? 'Esta funcionalidad estará disponible pronto. Por ahora, vuelve al login.'
               : 'This feature will be available soon. For now, return to login.'}
           </p>
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
             onClick={handleLoginRedirect}
             className="text-indigo-600 dark:text-indigo-400 hover:underline"
           >
-            {language === 'Español' ? 'Volver al Login' : 'Back to Login'}
+            {uage === 'Español' ? 'Volver al Login' : 'Back to Login'}
           </button>
         </div>
       </main>

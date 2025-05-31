@@ -1,15 +1,15 @@
 // src/app/api/test-auth/route.ts
-import { NextResponse } from "next/server";
-import { generateToken } from "@/lib/auth";
-import { cookies } from "next/headers";
-import { ServerLogger } from "@/lib/logging/server-logger";
+import { NextResponse } from 'next/server';
+import { generateToken } from '@/lib/auth';
+import { cookies } from 'next/headers';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
 export async function GET() {
   try {
     ServerLogger.info('Iniciando sesión de prueba');
     
     // Crear datos de usuario de prueba
-    const user = {
+    const _user = {
       id: 1,
       email: "Admin001@prueba.com",
       name: "Administrador de Prueba",
@@ -21,7 +21,7 @@ export async function GET() {
     };
     
     // Generar token
-    const token = await generateToken(user);
+    const _token = await generateToken(user);
     
     // Establecer cookie
     cookies().set({

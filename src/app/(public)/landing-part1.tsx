@@ -1,9 +1,9 @@
 // Funcionalidades principales
-import { Building, User, Shield, Check, Calendar, DollarSign, MessageSquare, Bell, Users } from "lucide-react";
+import { Building, Check, DollarSign, s } from 'lucide-react';
 
-export function LandingPart1({ theme, language }: { theme: string, language?: string }) {
+export function LandingPart1({ theme, uage }: { theme: string, uage?: string }) {
   // Si no se pasa el idioma, asumimos español
-  const currentLanguage = language || "Español";
+  const currentLanguage = uage || "Español";
   
   // Textos localizados
   const texts = {

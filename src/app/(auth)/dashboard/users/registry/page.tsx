@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/context/TranslationContext';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from "@/components/ui/use-toast";
+;
+import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,10 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Search, UserPlus, UserCog, Trash2Icon, PencilIcon, 
-  UserIcon, MailIcon, CalendarIcon 
-} from 'lucide-react';
+import { Search, UserPlus, UserCog, Trash2Icon, PencilIcon, UserIcon, MailIcon, CalendarIcon } from 'lucide-react';
 import { Loading } from '@/components/Loading';
 import { format } from 'date-fns';
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
@@ -102,13 +99,13 @@ export default function UsersRegistryPage() {
   const { language } = useTranslation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, _setUsers] = useState<User[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('');
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     name: '',
     email: '',
     role: 'STAFF' as 'ADMIN' | 'MANAGER' | 'STAFF' | 'RECEPTION',
@@ -169,7 +166,7 @@ export default function UsersRegistryPage() {
     if (formErrors[name]) setFormErrors({ ...formErrors, [name]: '' });
   };
 
-  const handleSelectChange = (name: string, value: any) => {
+  const handleSelectChange = (name: string, value: unknown) => {
     setFormData({ ...formData, [name]: value });
     
     // Set default permissions based on role

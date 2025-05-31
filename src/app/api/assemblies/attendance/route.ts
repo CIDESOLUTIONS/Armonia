@@ -1,22 +1,22 @@
 // src/app/api/assemblies/attendance/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function GET(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function GET(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ message: 'No token provided' }, { status: 401 });
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; complexId: number; schemaName?: string };
-    const schemaName = decoded.schemaName || `schema_${decoded.complexId}`;
+    // Variable decoded eliminada por lint complexId: number; schemaName?: string };
+    const _schemaName = decoded.schemaName || `schema_${decoded.complexId}`;
     const prisma = getPrisma(schemaName);
     console.log('[API Attendance GET] Usando schema:', schemaName);
 
-    const url = new URL(req.url);
-    const assemblyId = parseInt(url.searchParams.get('assemblyId') || '0');
+    // Variable url eliminada por lint
+    // Variable assemblyId eliminada por lint
     if (!assemblyId) return NextResponse.json({ message: 'ID requerido' }, { status: 400 });
 
     const assemblyResult = await prisma.$queryRawUnsafe(

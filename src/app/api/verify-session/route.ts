@@ -1,9 +1,9 @@
 // src/app/api/verify-session/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth } from "@/lib/auth";
-import { ServerLogger } from "@/lib/logging/server-logger";
+import { NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
     ServerLogger.info(`Verificando sesión`);
 

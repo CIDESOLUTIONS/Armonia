@@ -1,24 +1,10 @@
 // src/components/layout/Sidebar.tsx
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { usePassiveEvent } from '@/hooks/use-passive-event';
-import {
-  BarChart2,
-  Calendar,
-  DollarSign,
-  Building,
-  Users,
-  AlertCircle,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-  Shield,
-  ChevronLeft,
-  ChevronRight,
-  Coffee
-} from "lucide-react";
+import { BarChart2, Calendar, DollarSign, Building, Users, AlertCircle, Settings, ChevronDown, Shield, ChevronLeft, ChevronRight, Coffee } from 'lucide-react';
 
 interface SidebarProps {
   language: string;
@@ -43,7 +29,7 @@ export default function Sidebar({
   setIsCollapsed,
   addToast
 }: SidebarProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
   const toggleSidebar = () => {

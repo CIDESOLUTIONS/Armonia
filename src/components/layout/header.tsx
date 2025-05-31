@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Sun, Moon, DollarSign, User, LogIn, LogOut, Menu } from 'lucide-react';
+import { Globe, Sun, Moon, DollarSign, User, LogOut, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
 
@@ -52,7 +52,7 @@ export function Header({
   adminName = null,
   hideNavLinks = false,
 }: HeaderProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, PlusIcon, Trash2Icon, PencilIcon, AlertTriangle } from 'lucide-react';
+import { PlusIcon, Trash2Icon, PencilIcon, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 // Tipo para proyecto
@@ -38,16 +38,16 @@ const Loading = () => (
 export default function ProjectsPage() {
   const { language } = useTranslation();
   const { toast } = useToast();
-  const { token, complexId, schemaName } = useAuth();
+  const { _token, complexId, schemaName  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   // Estado del formulario
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     name: '',
     description: '',
     budget: 0,

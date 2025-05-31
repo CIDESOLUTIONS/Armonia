@@ -82,7 +82,7 @@ export class CommonServiceService implements ICommonServiceService {
   }
 
   async deleteService(id: string, complexId: string): Promise<void> {
-    const result = await CommonServiceModel.deleteOne({
+    const _result = await CommonServiceModel.deleteOne({
       _id: id,
       residentialComplex: complexId
     });

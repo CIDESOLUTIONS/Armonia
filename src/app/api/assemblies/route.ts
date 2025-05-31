@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) { // Agregué ': Request' para tipado
   try {
-    const data = await request.json();
+    const _data = await request.json();
     const tenantId = request.headers.get('x-tenant-id');
     const tenant = await prismaGlobal.tenant.findUnique({ where: { id: parseInt(tenantId) } });
     if (!tenant) return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 });
@@ -46,7 +46,7 @@ export async function POST(request: Request) { // Agregué ': Request' para tipa
 
 export async function PUT(request: Request) { // Agregué ': Request' para tipado
   try {
-    const data = await request.json();
+    const _data = await request.json();
     const tenantId = request.headers.get('x-tenant-id');
     const tenant = await prismaGlobal.tenant.findUnique({ where: { id: parseInt(tenantId) } });
     if (!tenant) return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 });

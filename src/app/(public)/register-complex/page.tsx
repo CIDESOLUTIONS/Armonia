@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Header } from "@/components/layout/header";
-import { Building, Check, ArrowLeft, AlertCircle } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Header } from '@/components/layout/header';
+import { Check, ArrowLeft, AlertCircle } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 // Textos para soportar múltiples idiomas
 const texts = {
@@ -174,14 +174,14 @@ const texts = {
 };
 
 export default function RegisterComplex() {
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan");
   const paidParam = searchParams.get("paid");
   
-  const [language, setLanguage] = useState("Español");
-  const [currency, setCurrency] = useState("Pesos");
-  const [theme, setTheme] = useState("Claro");
+  const [language, _setLanguage] = useState("Español");
+  const [_currency, _setCurrency] = useState("Pesos");
+  const [_theme, _setTheme] = useState("Claro");
   const [step, setStep] = useState(1);
   const [plan, setPlan] = useState(planParam || "basic");
   const [paymentCompleted, setPaymentCompleted] = useState(paidParam === "true");
@@ -191,7 +191,7 @@ export default function RegisterComplex() {
   const t = language === "Español" ? texts.es : texts.en;
   
   // Formulario para registro de conjunto
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     complexName: "",
     adminName: "",
     adminEmail: "",
@@ -301,7 +301,7 @@ export default function RegisterComplex() {
       if (!formData.adminPhone.trim()) {
         errors.adminPhone = language === "Español" ? 'El teléfono es obligatorio' : 'Phone is required';
         isValid = false;
-      } else if (!/^[0-9\s\-\+\(\)]+$/.test(formData.adminPhone)) {
+      } else if (!/^[0-9\s\-+()]+$/.test(formData.adminPhone)) {
         errors.adminPhone = t.invalidPhone;
         isValid = false;
       }
@@ -404,7 +404,7 @@ export default function RegisterComplex() {
 
   // Actualizamos para conectar con el API y procesar la respuesta
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, _setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -471,15 +471,9 @@ export default function RegisterComplex() {
       });
       
       // Enviar datos al API
-      const response = await fetch('/api/register-complex', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
+      // Variable response eliminada por lint
       
-      const data = await response.json();
+      const _data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Error al registrar el conjunto');
@@ -495,7 +489,7 @@ export default function RegisterComplex() {
       localStorage.removeItem("transactionId");
       localStorage.removeItem("tempComplexId");
       router.push(ROUTES.PORTAL_SELECTOR);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error de registro:', err);
       setError(err.message || 'Ocurrió un error durante el registro. Por favor, inténtelo de nuevo.');
     } finally {

@@ -1,4 +1,4 @@
-import { PQR } from "./types";
+import { PQR } from './types';
 
 // Datos mock para pruebas
 export const mockPQRs: PQR[] = [

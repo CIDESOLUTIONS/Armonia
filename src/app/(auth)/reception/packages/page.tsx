@@ -3,38 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Package,
-  Mail,
-  Search,
-  Filter,
-  Camera,
-  Clock,
-  Building,
-  User,
-  Phone,
-  AlertCircle,
-  CheckCircle,
-  Info,
-  PlusCircle,
-  X,
-  FileText,
-  Truck,
-  Home,
-  Calendar
-} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+;
+import { Textarea } from '@/components/ui/textarea';
+import { Package, Mail, Search, Camera, Clock, AlertCircle, CheckCircle, PlusCircle, X, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -54,12 +35,12 @@ interface PackageItem {
 }
 
 export default function ReceptionPackagesPage() {
-  const { isLoggedIn, token, schemaName } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState<PackageItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, _setError] = useState<string | null>(null);
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'pending' | 'delivered' | 'returned' | 'all'>('pending');
   const [typeFilter, setTypeFilter] = useState<'package' | 'mail' | 'document' | 'all'>('all');
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
@@ -151,10 +132,8 @@ export default function ReceptionPackagesPage() {
         setError(null);
         
         // En un entorno real, esto sería una llamada a la API
-        // const response = await fetch(`/api/reception/packages?schemaName=${schemaName}`, {
-        //   headers: { 'Authorization': `Bearer ${token}` },
-        // });
-        // const result = await response.json();
+        // // Variable response eliminada por lint
+        // const _result = await response.json();
         // if (!response.ok) throw new Error(result.message || 'Error al cargar datos');
         // setPackages(result.packages);
         
@@ -241,7 +220,7 @@ export default function ReceptionPackagesPage() {
   };
 
   // Función para manejar cambios en el formulario de registro
-  const handleNewPackageFormChange = (field: string, value: any) => {
+  const handleNewPackageFormChange = (field: string, value: unknown) => {
     setNewPackageForm(prev => ({
       ...prev,
       [field]: value
@@ -249,7 +228,7 @@ export default function ReceptionPackagesPage() {
   };
 
   // Función para manejar cambios en el formulario de entrega
-  const handleDeliveryFormChange = (field: string, value: any) => {
+  const handleDeliveryFormChange = (field: string, value: unknown) => {
     setDeliveryForm(prev => ({
       ...prev,
       [field]: value
@@ -289,13 +268,7 @@ export default function ReceptionPackagesPage() {
       // if (newPackageForm.notes) formData.append('notes', newPackageForm.notes);
       // if (newPackageForm.photo) formData.append('photo', newPackageForm.photo);
       
-      // const response = await fetch(`/api/reception/packages?schemaName=${schemaName}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: formData
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al registrar paquete');
@@ -362,17 +335,7 @@ export default function ReceptionPackagesPage() {
     
     try {
       // En un entorno real, esto sería una llamada a la API
-      // const response = await fetch(`/api/reception/packages/${selectedPackage.id}/deliver?schemaName=${schemaName}`, {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({
-      //     receivedBy: deliveryForm.receivedBy,
-      //     notes: deliveryForm.notes
-      //   })
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al registrar entrega');
@@ -415,12 +378,7 @@ export default function ReceptionPackagesPage() {
     
     try {
       // En un entorno real, esto sería una llamada a la API
-      // const response = await fetch(`/api/reception/packages/${packageId}/return?schemaName=${schemaName}`, {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al marcar como devuelto');
@@ -573,7 +531,7 @@ export default function ReceptionPackagesPage() {
                 placeholder="Buscar por residente, destino, número de seguimiento..."
                 className="pl-10"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               />
             </div>
             
@@ -743,7 +701,7 @@ export default function ReceptionPackagesPage() {
                   id="destination" 
                   placeholder="Ej: Apto 101, Oficina 203"
                   value={newPackageForm.destination}
-                  onChange={(e) => handleNewPackageFormChange('destination', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewPackageFormChange('destination', e.target.value)}
                 />
               </div>
               
@@ -753,7 +711,7 @@ export default function ReceptionPackagesPage() {
                   id="residentName" 
                   placeholder="Nombre del residente"
                   value={newPackageForm.residentName}
-                  onChange={(e) => handleNewPackageFormChange('residentName', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewPackageFormChange('residentName', e.target.value)}
                 />
               </div>
             </div>
@@ -766,7 +724,7 @@ export default function ReceptionPackagesPage() {
                     id="trackingNumber" 
                     placeholder="Número de seguimiento"
                     value={newPackageForm.trackingNumber}
-                    onChange={(e) => handleNewPackageFormChange('trackingNumber', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewPackageFormChange('trackingNumber', e.target.value)}
                   />
                 </div>
                 
@@ -776,7 +734,7 @@ export default function ReceptionPackagesPage() {
                     id="courier" 
                     placeholder="Nombre de la empresa"
                     value={newPackageForm.courier}
-                    onChange={(e) => handleNewPackageFormChange('courier', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewPackageFormChange('courier', e.target.value)}
                   />
                 </div>
               </div>
@@ -788,7 +746,7 @@ export default function ReceptionPackagesPage() {
                 id="notes" 
                 placeholder="Información adicional sobre el paquete"
                 value={newPackageForm.notes}
-                onChange={(e) => handleNewPackageFormChange('notes', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewPackageFormChange('notes', e.target.value)}
               />
             </div>
             
@@ -899,7 +857,7 @@ export default function ReceptionPackagesPage() {
                   id="receivedBy" 
                   placeholder="Nombre de quien recibe"
                   value={deliveryForm.receivedBy}
-                  onChange={(e) => handleDeliveryFormChange('receivedBy', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleDeliveryFormChange('receivedBy', e.target.value)}
                 />
               </div>
               
@@ -909,7 +867,7 @@ export default function ReceptionPackagesPage() {
                   id="deliveryNotes" 
                   placeholder="Información adicional sobre la entrega"
                   value={deliveryForm.notes}
-                  onChange={(e) => handleDeliveryFormChange('notes', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleDeliveryFormChange('notes', e.target.value)}
                 />
               </div>
             </div>

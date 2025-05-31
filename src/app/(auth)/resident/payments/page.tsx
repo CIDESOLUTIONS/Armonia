@@ -3,27 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  DollarSign,
-  Calendar,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  Info,
-  ArrowRight,
-  Download,
-  CreditCard,
-  FileText,
-  Filter,
-  Search
-} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Clock, AlertCircle, CheckCircle, Info, Download, CreditCard, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -45,13 +32,13 @@ interface PaymentHistory {
 }
 
 export default function ResidentPaymentsPage() {
-  const { isLoggedIn, token, schemaName, residentName } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName,  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PaymentHistory | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, _setError] = useState<string | null>(null);
+  // useState activeTab eliminado por lint
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
 
   // Datos de ejemplo para desarrollo y pruebas
@@ -123,10 +110,8 @@ export default function ResidentPaymentsPage() {
         setError(null);
         
         // En un entorno real, esto sería una llamada a la API
-        // const response = await fetch(`/api/resident/payments?schemaName=${schemaName}`, {
-        //   headers: { 'Authorization': `Bearer ${token}` },
-        // });
-        // const result = await response.json();
+        // // Variable response eliminada por lint
+        // const _result = await response.json();
         // if (!response.ok) throw new Error(result.message || 'Error al cargar datos');
         // setData(result);
         
@@ -393,7 +378,7 @@ export default function ResidentPaymentsPage() {
               placeholder="Buscar por descripción o referencia..."
               className="pl-10"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             />
           </div>
           

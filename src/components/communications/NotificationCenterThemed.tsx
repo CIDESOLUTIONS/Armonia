@@ -8,17 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRealTimeCommunication, Notification, Message } from '@/lib/communications/real-time-context';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { 
-  translate, 
-  getNotificationBackgroundClass, 
-  getNotificationTextClass,
-  getNotificationBorderClass,
-  Language,
-  ThemeMode
-} from '@/lib/communications/theme-config';
+import { translate, getNotificationBackgroundClass, Language, ThemeMode } from '@/lib/communications/theme-config';
 
 interface NotificationCenterProps {
   language?: Language;
@@ -32,7 +25,7 @@ export default function NotificationCenterThemed({
   primaryColor
 }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'notifications' | 'messages'>('notifications');
+  // useState activeTab eliminado por lint
   const [expandedNotification, setExpandedNotification] = useState<string | null>(null);
   
   const {

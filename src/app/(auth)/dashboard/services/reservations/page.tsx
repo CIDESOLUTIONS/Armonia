@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useTranslation } from "@/context/TranslationContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, FilterIcon, PlusCircle, SearchIcon, Trash2Icon, PencilIcon, CheckIcon, XIcon, UserIcon, HomeIcon, CalendarIcon, ClockIcon } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/context/TranslationContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Calendar, FilterIcon, PlusCircle, SearchIcon, Trash2Icon, PencilIcon, CheckIcon, XIcon, UserIcon, HomeIcon, CalendarIcon, ClockIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Interfaces
 interface Reservation {
@@ -36,11 +36,11 @@ interface Service {
 export default function ReservationsPage() {
   const { language } = useTranslation();
   const { toast } = useToast();
-  const { token, complexId, schemaName } = useAuth();
+  const { _token, complexId, schemaName  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   
   // Filtros
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,12 +49,12 @@ export default function ReservationsPage() {
   const [dateFilter, setDateFilter] = useState("");
   
   // Estado del diálogo
-  const [showDialog, setShowDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [_showDialog, _setShowDialog] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   
   // Formulario
-  const [formData, setFormData] = useState<Partial<Reservation>>({
+  const [_formData, _setFormData] = useState<Partial<Reservation>>({
     serviceId: 0,
     date: new Date().toISOString().split('T')[0],
     startTime: "08:00",

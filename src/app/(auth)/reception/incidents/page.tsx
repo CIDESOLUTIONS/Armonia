@@ -3,38 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  AlertTriangle,
-  Search,
-  Filter,
-  Camera,
-  Clock,
-  Building,
-  User,
-  Phone,
-  AlertCircle,
-  CheckCircle,
-  Info,
-  PlusCircle,
-  X,
-  FileText,
-  MapPin,
-  Calendar,
-  Shield,
-  Eye
-} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+;
+import { Textarea } from '@/components/ui/textarea';
+import { AlertTriangle, Search, Camera, Clock, User, AlertCircle, CheckCircle, PlusCircle, X, FileText, MapPin, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -71,12 +52,12 @@ interface Attachment {
 }
 
 export default function ReceptionIncidentsPage() {
-  const { isLoggedIn, token, schemaName } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, _setError] = useState<string | null>(null);
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'reported' | 'in_progress' | 'resolved' | 'closed' | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<'security' | 'maintenance' | 'emergency' | 'other' | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<'low' | 'medium' | 'high' | 'critical' | 'all'>('all');
@@ -288,10 +269,8 @@ export default function ReceptionIncidentsPage() {
         setError(null);
         
         // En un entorno real, esto sería una llamada a la API
-        // const response = await fetch(`/api/reception/incidents?schemaName=${schemaName}`, {
-        //   headers: { 'Authorization': `Bearer ${token}` },
-        // });
-        // const result = await response.json();
+        // // Variable response eliminada por lint
+        // const _result = await response.json();
         // if (!response.ok) throw new Error(result.message || 'Error al cargar datos');
         // setIncidents(result.incidents);
         
@@ -419,7 +398,7 @@ export default function ReceptionIncidentsPage() {
   };
 
   // Función para manejar cambios en el formulario de registro
-  const handleNewIncidentFormChange = (field: string, value: any) => {
+  const handleNewIncidentFormChange = (field: string, value: unknown) => {
     setNewIncidentForm(prev => ({
       ...prev,
       [field]: value
@@ -427,7 +406,7 @@ export default function ReceptionIncidentsPage() {
   };
 
   // Función para manejar cambios en el formulario de actualización
-  const handleUpdateFormChange = (field: string, value: any) => {
+  const handleUpdateFormChange = (field: string, value: unknown) => {
     setUpdateForm(prev => ({
       ...prev,
       [field]: value
@@ -496,13 +475,7 @@ export default function ReceptionIncidentsPage() {
       //   formData.append('attachments', file);
       // });
       
-      // const response = await fetch(`/api/reception/incidents?schemaName=${schemaName}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: formData
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al registrar incidente');
@@ -584,13 +557,7 @@ export default function ReceptionIncidentsPage() {
       //   formData.append('attachments', file);
       // });
       
-      // const response = await fetch(`/api/reception/incidents/${selectedIncident.id}/update?schemaName=${schemaName}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: formData
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al actualizar incidente');
@@ -792,7 +759,7 @@ export default function ReceptionIncidentsPage() {
                 placeholder="Buscar por título, descripción, ubicación..."
                 className="pl-10"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               />
             </div>
             
@@ -1105,7 +1072,7 @@ export default function ReceptionIncidentsPage() {
                 id="title" 
                 placeholder="Título breve y descriptivo"
                 value={newIncidentForm.title}
-                onChange={(e) => handleNewIncidentFormChange('title', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewIncidentFormChange('title', e.target.value)}
               />
             </div>
             
@@ -1153,7 +1120,7 @@ export default function ReceptionIncidentsPage() {
                 id="location" 
                 placeholder="Ubicación específica del incidente"
                 value={newIncidentForm.location}
-                onChange={(e) => handleNewIncidentFormChange('location', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewIncidentFormChange('location', e.target.value)}
               />
             </div>
             
@@ -1163,7 +1130,7 @@ export default function ReceptionIncidentsPage() {
                 id="reportedBy" 
                 placeholder="Nombre de quien reporta"
                 value={newIncidentForm.reportedBy}
-                onChange={(e) => handleNewIncidentFormChange('reportedBy', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewIncidentFormChange('reportedBy', e.target.value)}
               />
             </div>
             
@@ -1174,7 +1141,7 @@ export default function ReceptionIncidentsPage() {
                 placeholder="Descripción detallada del incidente"
                 rows={4}
                 value={newIncidentForm.description}
-                onChange={(e) => handleNewIncidentFormChange('description', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewIncidentFormChange('description', e.target.value)}
               />
             </div>
             
@@ -1191,7 +1158,7 @@ export default function ReceptionIncidentsPage() {
                   multiple
                   className="hidden"
                   id="file-upload"
-                  onChange={(e) => handleFileUpload(e, 'new')}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileUpload(e, 'new')}
                 />
                 <label htmlFor="file-upload">
                   <Button variant="outline" type="button" className="cursor-pointer">
@@ -1283,7 +1250,7 @@ export default function ReceptionIncidentsPage() {
                   placeholder="Describa la actualización o seguimiento del incidente"
                   rows={4}
                   value={updateForm.content}
-                  onChange={(e) => handleUpdateFormChange('content', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleUpdateFormChange('content', e.target.value)}
                 />
               </div>
               
@@ -1318,7 +1285,7 @@ export default function ReceptionIncidentsPage() {
                     multiple
                     className="hidden"
                     id="update-file-upload"
-                    onChange={(e) => handleFileUpload(e, 'update')}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileUpload(e, 'update')}
                   />
                   <label htmlFor="update-file-upload">
                     <Button variant="outline" type="button" className="cursor-pointer">

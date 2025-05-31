@@ -5,13 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Save, X } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
 export type PQRType = 'PETITION' | 'COMPLAINT' | 'CLAIM';
@@ -51,7 +45,7 @@ export default function PQRForm({
   isEditing,
   language
 }: PQRFormProps) {
-  const [formData, setFormData] = useState<PQRFormData>({
+  const [_formData, _setFormData] = useState<PQRFormData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
     type: initialData?.type || 'PETITION',

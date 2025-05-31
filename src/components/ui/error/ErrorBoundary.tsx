@@ -37,7 +37,7 @@ interface ErrorBoundaryProps {
 
 export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
   const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, _setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const errorHandler = (error: ErrorEvent) => {

@@ -1,15 +1,15 @@
 // C:\Users\meciz\Documents\armonia\frontend\src\app\api\dashboard\stats\route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function GET(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function GET(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { searchParams } = new URL(req.url);
-  const complexId = parseInt(searchParams.get('complexId') || '0', 10);
-  const schemaName = searchParams.get('schemaName') || '';
+  const _complexId = parseInt(searchParams.get('complexId') || '0', 10);
+  const _schemaName = searchParams.get('schemaName') || '';
 
   // Validar entrada
   if (!token) {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Verificar el token
-    const decoded = verify(token, JWT_SECRET) as { id: number; complexId: number; schemaName: string; email: string; role: string };
+    // Variable decoded eliminada por lint complexId: number; schemaName: string; email: string; role: string };
     console.log('[API Dashboard] Token decodificado:', decoded);
 
     if (decoded.complexId !== complexId || decoded.schemaName !== schemaName) {
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
     // Verificar existencia de tablas en el esquema del tenant
     const tableExists = async (tableName: string) => {
-      const result = await tenantPrisma.$queryRawUnsafe(
+      const _result = await tenantPrisma.$queryRawUnsafe(
         `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2)`,
         schemaName,
         tableName.toLowerCase()

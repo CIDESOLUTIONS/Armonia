@@ -1,32 +1,14 @@
 // src/components/pqr/PQRDetailDialog.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  CheckCircle, 
-  Clock, 
-  UserCheck, 
-  AlertCircle, 
-  Calendar
-} from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
+import { CheckCircle, Clock, UserCheck, AlertCircle } from 'lucide-react';
 
 // Enums para los estados de PQR
 enum PQRStatus {
@@ -95,7 +77,7 @@ export function PQRDetailDialog({
   // Estados
   const [pqr, setPqr] = useState<PQR | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [newStatus, setNewStatus] = useState<PQRStatus | "">("");
@@ -623,7 +605,7 @@ export function PQRDetailDialog({
                   id="new-comment"
                   placeholder="Escribe un comentario..."
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewComment(e.target.value)}
                   className="mt-1"
                   rows={3}
                 />

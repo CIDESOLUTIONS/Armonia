@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function PUT(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function PUT(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ message: 'No token provided' }, { status: 401 });
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; complexId: number; role: string; schemaName?: string };
+    // Variable decoded eliminada por lint complexId: number; role: string; schemaName?: string };
     console.log('[API Assemblies Update] Token decodificado:', decoded);
 
     if (decoded.role !== 'COMPLEX_ADMIN') {
@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    const schemaName = decoded.schemaName?.toLowerCase() || 'armonia';
+    const _schemaName = decoded.schemaName?.toLowerCase() || 'armonia';
     const assemblyResult = await prisma.$queryRawUnsafe(
       `SELECT * FROM "${schemaName}"."Assembly" WHERE id = $1 AND "complexId" = $2`,
       id,

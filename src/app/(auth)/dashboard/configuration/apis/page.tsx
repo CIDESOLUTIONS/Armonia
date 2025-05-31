@@ -5,32 +5,18 @@ import { useTranslation } from '@/context/TranslationContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Plus, Save, Trash2, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Plus, Save, Trash2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loading } from '@/components/Loading';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
 
 interface ApiConnection {
   id: number;
@@ -46,14 +32,14 @@ interface ApiConnection {
 export default function ApiIntegrationPage() {
   const { language } = useTranslation();
   const { toast } = useToast();
-  const { token, complexId } = useAuth();
+  const { _token, complexId  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [apis, setApis] = useState<ApiConnection[]>([]);
   const [activeTab, setActiveTab] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
   const [currentApi, setCurrentApi] = useState<ApiConnection | null>(null);
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     name: '',
     type: 'rest',
     url: '',

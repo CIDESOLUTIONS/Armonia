@@ -1,23 +1,9 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { usePassiveEvent } from '@/hooks/use-passive-event';
-import {
-  BarChart2,
-  UserPlus,
-  Package,
-  ClipboardList,
-  ShieldAlert,
-  User,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  BellRing,
-  Camera,
-  Users
-} from "lucide-react";
+import { BarChart2, UserPlus, Package, ClipboardList, ShieldAlert, User, ChevronDown, ChevronLeft, ChevronRight, BellRing, Camera, Users } from 'lucide-react';
 
 interface ReceptionSidebarProps {
   language: string;
@@ -42,7 +28,7 @@ export default function ReceptionSidebar({
   setIsCollapsed,
   addToast
 }: ReceptionSidebarProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
   const toggleSidebar = () => {

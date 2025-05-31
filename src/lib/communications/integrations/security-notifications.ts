@@ -5,13 +5,7 @@
  * relacionadas con eventos del módulo de seguridad y auditoría.
  */
 
-import { 
-  notifyUser, 
-  notifyByRole, 
-  notifyAll,
-  NotificationType,
-  NotificationPriority
-} from '@/lib/communications/notification-service';
+import { notifyUser, notifyByRole, notifyAll, NotificationType, NotificationPriority } from '@/lib/communications/notification-service';
 import { PrismaClient } from '@prisma/client';
 import { AuditActionType, AuditStatus } from '@/lib/security/audit-trail';
 

@@ -1,5 +1,5 @@
 // src/app/api/payment/process/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 
 // Función para generar un ID de transacción único
@@ -7,7 +7,7 @@ const generateTransactionId = () => {
   return `TR-${Date.now()}-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
 };
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
     const body = await req.json();
     const { 
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     
     // Si se envían datos del conjunto, lo creamos temporalmente para asociar el pago
     if (complexData) {
-      const { complexName, totalUnits, adminEmail, adminName } = complexData;
+      const { complexName, totalUnits, adminEmail, _adminName  } = complexData;
       
       if (complexName && totalUnits && adminEmail && adminName) {
         try {

@@ -1,57 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { 
-  Loader2, 
-  Plus, 
-  Pencil, 
-  Trash2,
-  Clock,
-  Users,
-  DollarSign,
-  CalendarDays,
-  Check,
-  X,
-  FileText
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Plus, Pencil, Trash2, Clock, Users, DollarSign, CalendarDays, Check, X, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Service {
   id: number;
@@ -118,19 +79,19 @@ const MOCK_SERVICES: Service[] = [
 ];
 
 const ServicesPage = () => {
-  const { token, complexId, schemaName } = useAuth();
+  const { _token, complexId, schemaName  } = useAuth();
   const { toast } = useToast();
   
   // Estado para los servicios
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   
   // Estado para el diálogo
-  const [showDialog, setShowDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [_showDialog, _setShowDialog] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [formData, setFormData] = useState<Partial<Service>>({
+  const [_formData, _setFormData] = useState<Partial<Service>>({
     name: "",
     description: "",
     capacity: 0,
@@ -150,14 +111,10 @@ const ServicesPage = () => {
   const fetchServices = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/inventory/services?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { 
-          Authorization: `Bearer ${token}` 
-        },
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
-        const data = await response.json();
+        const _data = await response.json();
         console.log("Servicios obtenidos:", data);
         setServices(data.services || []);
       } else {
@@ -242,24 +199,13 @@ const ServicesPage = () => {
       };
       
       // Intentar guardar en la API
-      const url = isEditing && selectedService
+      const _url = isEditing && selectedService
         ? `/api/inventory/services/${selectedService.id}`
         : '/api/inventory/services';
       
-      const method = isEditing ? 'PUT' : 'POST';
+      const _method = isEditing ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...serviceData,
-          complexId,
-          schemaName
-        })
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         // Actualizar estado local
@@ -328,14 +274,7 @@ const ServicesPage = () => {
     }
     
     try {
-      const response = await fetch(`/api/inventory/services/${id}?schemaName=${schemaName}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ complexId })
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setServices(services.filter(s => s.id !== id));

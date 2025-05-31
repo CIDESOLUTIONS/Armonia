@@ -33,7 +33,7 @@ export const usePayments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [summary, setSummary] = useState<PaymentSummary | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   const fetchPayments = useCallback(async (filters?: PaymentFilters) => {
     setLoading(true);
@@ -47,10 +47,10 @@ export const usePayments = () => {
       if (filters?.sortField) queryParams.append('sortField', filters.sortField);
       if (filters?.sortDirection) queryParams.append('sortDirection', filters.sortDirection);
 
-      const response = await fetch(`/api/financial/payments?${queryParams}`);
+      const _response = await fetch(`/api/financial/payments?${queryParams}`);
       if (!response.ok) throw new Error('Error al obtener pagos');
 
-      const data = await response.json();
+      const _data = await response.json();
       setPayments(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
@@ -64,10 +64,10 @@ export const usePayments = () => {
   const fetchPaymentSummary = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/financial/payments/summary');
+      const _response = await fetch('/api/financial/payments/summary');
       if (!response.ok) throw new Error('Error al obtener resumen de pagos');
 
-      const data = await response.json();
+      const _data = await response.json();
       setSummary(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
@@ -81,7 +81,7 @@ export const usePayments = () => {
   const getPaymentById = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/payments/${id}`);
+      const _response = await fetch(`/api/financial/payments/${id}`);
       if (!response.ok) throw new Error('Error al obtener pago');
 
       const payment = await response.json();
@@ -99,7 +99,7 @@ export const usePayments = () => {
   const updatePayment = useCallback(async (id: string, updates: { status: string; reference?: string }) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/payments/${id}`, {
+      const _response = await fetch(`/api/financial/payments/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -131,10 +131,10 @@ export const usePayments = () => {
       if (filters?.startDate) queryParams.append('startDate', filters.startDate);
       if (filters?.endDate) queryParams.append('endDate', filters.endDate);
 
-      const response = await fetch(`/api/financial/payments/export?${queryParams}`);
+      const _response = await fetch(`/api/financial/payments/export?${queryParams}`);
       if (!response.ok) throw new Error('Error al exportar pagos');
 
-      const data = await response.json();
+      const _data = await response.json();
       
       // Convertir a CSV
       const csvContent = convertToCSV(data);
@@ -158,7 +158,7 @@ export const usePayments = () => {
   }, []);
 
   // Función auxiliar para convertir a CSV
-  const convertToCSV = (data: any[]) => {
+  const convertToCSV = (data: unknown[]) => {
     if (data.length === 0) return '';
     
     const headers = Object.keys(data[0]).join(',');

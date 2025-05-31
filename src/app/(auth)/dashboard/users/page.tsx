@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function UsersPage() {
-  const router = useRouter();
+  const _router = useRouter();
   
   useEffect(() => {
     // Redirigir a la página principal de usuarios

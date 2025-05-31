@@ -9,7 +9,7 @@ import { Calendar as CalendarIcon, Clock, MapPin, Users, ChevronLeft, ChevronRig
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRealTimeCommunication } from '@/lib/communications/real-time-context';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Tipos para los eventos
 export interface CommunityEvent {
@@ -62,9 +62,9 @@ export default function CommunityCalendar({
         const startDate = format(startOfMonth(currentDate), 'yyyy-MM-dd');
         const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
         
-        const response = await fetch(`/api/communications/events?startDate=${startDate}&endDate=${endDate}`);
+        // Variable response eliminada por lint
         if (response.ok) {
-          const data = await response.json();
+          const _data = await response.json();
           setEvents(data);
         }
       } catch (error) {
@@ -146,13 +146,7 @@ export default function CommunityCalendar({
   // Confirmar asistencia a un evento
   const confirmAttendance = async (eventId: string, status: 'attending' | 'not_attending' | 'maybe') => {
     try {
-      const response = await fetch(`/api/communications/events/${eventId}/attendance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId, status })
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         // Actualizar estado local
@@ -160,7 +154,7 @@ export default function CommunityCalendar({
           prev.map(event => {
             if (event.id === eventId) {
               const existingAttendeeIndex = event.attendees?.findIndex(a => a.userId === userId);
-              let updatedAttendees = [...(event.attendees || [])];
+              const updatedAttendees = [...(event.attendees || [])];
               
               if (existingAttendeeIndex !== undefined && existingAttendeeIndex >= 0) {
                 updatedAttendees[existingAttendeeIndex] = {
@@ -315,7 +309,7 @@ export default function CommunityCalendar({
                         <div 
                           key={event.id}
                           className="text-xs truncate flex items-center"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             setSelectedEvent(event);
                           }}

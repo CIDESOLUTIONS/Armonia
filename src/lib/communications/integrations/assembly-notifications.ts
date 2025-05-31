@@ -5,13 +5,7 @@
  * relacionadas con eventos del módulo de asambleas.
  */
 
-import { 
-  notifyUser, 
-  notifyByRole, 
-  notifyAll,
-  NotificationType,
-  NotificationPriority
-} from '@/lib/communications/notification-service';
+import { notifyUser, notifyByRole, NotificationType, NotificationPriority } from '@/lib/communications/notification-service';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -227,7 +221,7 @@ async function notifyUsers(userIds: number[], notification: {
   
   for (const userId of userIds) {
     try {
-      const result = await notifyUser(userId, notification);
+      const _result = await notifyUser(userId, notification);
       results.push(result);
     } catch (error) {
       console.error(`Error al enviar notificación al usuario ${userId}:`, error);

@@ -1,7 +1,7 @@
 // src/lib/services.ts
 // Servicio centralizado para las llamadas a la API
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 
 // Tipos y enumeraciones
 export enum PQRStatus {

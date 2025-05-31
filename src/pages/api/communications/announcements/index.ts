@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
  * GET: Obtiene todos los anuncios disponibles para el usuario
  * POST: Crea un nuevo anuncio (solo administradores)
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req:unknown, res: NextApiResponse) {
   // Verificar autenticación
   const session = await getServerSession(req, res, authOptions);
   
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
  * Obtiene todos los anuncios disponibles para el usuario
  */
 async function getAnnouncements(
-  req: NextApiRequest,
+  _req:unknown,
   res: NextApiResponse,
   userId: number,
   userRole: string
@@ -47,7 +47,7 @@ async function getAnnouncements(
     const { type, status, limit } = req.query;
     
     // Construir consulta base
-    const queryOptions: any = {
+    const queryOptions: unknown = {
       where: {},
       orderBy: {
         createdAt: 'desc'
@@ -144,7 +144,7 @@ async function getAnnouncements(
  * Crea un nuevo anuncio (solo administradores)
  */
 async function createAnnouncement(
-  req: NextApiRequest,
+  _req:unknown,
   res: NextApiResponse,
   userId: number,
   userRole: string
@@ -187,7 +187,7 @@ async function createAnnouncement(
     
     // Procesar archivos adjuntos si existen
     if (attachments.length > 0) {
-      const attachmentRecords = attachments.map((attachment: any) => ({
+      const attachmentRecords = attachments.map((attachment: unknown) => ({
         announcementId: announcement.id,
         name: attachment.name,
         url: attachment.url,

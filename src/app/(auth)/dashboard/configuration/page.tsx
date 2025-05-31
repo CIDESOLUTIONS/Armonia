@@ -1,23 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+;
 import { useTranslation } from '@/context/TranslationContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { 
-  Settings, 
-  CreditCard, 
-  Wifi, 
-  MessageSquare, 
-  Video, 
-  Globe,
-  User,
-  FileText,
-  Building,
-  LayoutDashboard
-} from 'lucide-react';
+import { Settings, CreditCard, MessageSquare, Video, Globe, User, FileText, Building, LayoutDashboard } from 'lucide-react';
 
 export default function ConfigurationPage() {
   const { language } = useTranslation();

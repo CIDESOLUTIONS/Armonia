@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, CheckCircle, X, ChevronRight, Check } from 'lucide-react';
+import { CheckCircle, X, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 
@@ -86,15 +86,15 @@ const mockResidents: ResidentVote[] = [
 ];
 
 export default function VotingPage() {
-  const router = useRouter();
-  const { user, isLoggedIn, token } = useAuth();
-  const [language, setLanguage] = useState('Español');
+  const _router = useRouter();
+  const { user, isLoggedIn, _token  } = useAuth();
+  const [language, _setLanguage] = useState('Español');
   const [assemblies, setAssemblies] = useState<Assembly[]>(mockAssemblies);
   const [selectedAssembly, setSelectedAssembly] = useState<number | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

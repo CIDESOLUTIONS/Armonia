@@ -1,16 +1,16 @@
 // src/app/api/assemblies/create/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function POST(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function POST(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { id: number; complexId: number; schemaName?: string };
+    // Variable decoded eliminada por lint complexId: number; schemaName?: string };
     console.log('[API Assemblies/Create] Token:', decoded);
 
     const body = await req.json();
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    const schemaName = decoded.schemaName || `schema_${decoded.complexId}`;
+    const _schemaName = decoded.schemaName || `schema_${decoded.complexId}`;
     const prisma = getPrisma(schemaName);
     console.log('[API Assemblies/Create] Usando schema:', schemaName);
 

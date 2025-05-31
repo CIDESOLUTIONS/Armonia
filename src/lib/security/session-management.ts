@@ -85,7 +85,7 @@ export async function updateSessionActivity(): Promise<void> {
  * Middleware para gestión de sesiones
  */
 export function sessionManagement(handler: Function) {
-  return async (request: NextRequest, ...args: any[]) => {
+  return async (request: NextRequest, ...args: unknown[]) => {
     // Verificar si la gestión de sesiones está habilitada
     const config = await import('@/config/security').then(mod => mod.default);
     if (!config.sessionManagement) {
@@ -168,7 +168,7 @@ export async function getLoginHistory({
 }) {
   try {
     // Construir filtros
-    const where: any = {};
+    const where: unknown = {};
     
     if (userId) where.userId = userId;
     if (status) where.status = status;

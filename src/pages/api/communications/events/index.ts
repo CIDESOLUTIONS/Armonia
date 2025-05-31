@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
  * GET: Obtiene eventos del calendario filtrados por fecha
  * POST: Crea un nuevo evento (solo administradores)
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req:unknown, res: NextApiResponse) {
   // Verificar autenticación
   const session = await getServerSession(req, res, authOptions);
   
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
  * Obtiene eventos del calendario filtrados por fecha
  */
 async function getEvents(
-  req: NextApiRequest,
+  _req:unknown,
   res: NextApiResponse,
   userId: number,
   userRole: string
@@ -47,7 +47,7 @@ async function getEvents(
     const { startDate, endDate, type } = req.query;
     
     // Construir consulta base
-    const queryOptions: any = {
+    const queryOptions: unknown = {
       where: {},
       orderBy: {
         startDate: 'asc'
@@ -152,7 +152,7 @@ async function getEvents(
  * Crea un nuevo evento (solo administradores)
  */
 async function createEvent(
-  req: NextApiRequest,
+  _req:unknown,
   res: NextApiResponse,
   userId: number,
   userRole: string

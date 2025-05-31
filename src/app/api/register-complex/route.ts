@@ -1,15 +1,14 @@
 // src/app/api/register-complex/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
     const body = await req.json();
-    const { 
-      complexName, 
+    const { complexName, 
       totalUnits, 
-      adminName, 
+      _adminName, 
       adminEmail, 
       adminPassword, 
       adminPhone, 
@@ -21,7 +20,7 @@ export async function POST(req: NextRequest) {
       planCode: originalPlanCode = 'basic', // Valor por defecto: plan básico
       transactionId = null, // ID de transacción para planes pagados
       username
-    } = body;
+     } = body;
 
     // Usar una variable que podamos modificar
     let planCode = originalPlanCode;
@@ -285,7 +284,7 @@ export async function POST(req: NextRequest) {
       // Si no podemos contar, asumimos que es el primero
     }
     
-    const schemaName = `tenant_cj${String(complexCount + 1).padStart(4, '0')}`;
+    const _schemaName = `tenant_cj${String(complexCount + 1).padStart(4, '0')}`;
     console.log('[API Register-Complex] SchemaName generado:', schemaName);
 
     // Prepare propertyTypes as proper JSONB
@@ -351,7 +350,7 @@ export async function POST(req: NextRequest) {
       // Crear el usuario administrador en el esquema 'armonia'
       console.log('[API Register-Complex] Creando usuario administrador...');
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      const user = await prisma.$queryRawUnsafe(
+      const _user = await prisma.$queryRawUnsafe(
         `INSERT INTO "armonia"."User" (
           email, name, password, "complexId", role, "createdAt", "updatedAt"
         ) VALUES ($1, $2, $3, $4, 'COMPLEX_ADMIN', NOW(), NOW()) RETURNING *`,

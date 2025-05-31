@@ -1,30 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { ROUTES } from "@/constants/routes";
-import {
-  BarChart2,
-  Building,
-  Calendar,
-  DollarSign,
-  Users,
-  AlertCircle,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { ROUTES } from '@/constants/routes';
+import { Building, Calendar, DollarSign, Users, AlertCircle,  } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,  } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -37,8 +22,8 @@ ChartJS.register(
 );
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { user, isLoggedIn, loading, logout, adminName, complexName } = useAuth();
+  const _router = useRouter();
+  const { user, isLoggedIn, loading, logout, adminName, _complexName  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProperties: 0,

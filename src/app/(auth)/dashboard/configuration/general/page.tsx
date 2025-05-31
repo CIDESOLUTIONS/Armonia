@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Settings, Globe, DollarSign, Moon } from "lucide-react";
+import { useState } from 'react';
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Settings } from 'lucide-react';
 import toast from "react-hot-toast";
 
 export default function GeneralSettingsPage() {
-  const [language, setLanguage] = useState("es");
-  const [currency, setCurrency] = useState("cop");
-  const [theme, setTheme] = useState("light");
+  const [language, _setLanguage] = useState("es");
+  const [_currency, _setCurrency] = useState("cop");
+  const [_theme, _setTheme] = useState("light");
   const [notifications, setNotifications] = useState(true);
   
   // Datos simulados

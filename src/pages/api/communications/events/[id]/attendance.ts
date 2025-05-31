@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
  * 
  * POST: Registra o actualiza la asistencia de un usuario a un evento
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req:unknown, res: NextApiResponse) {
   // Verificar autenticación
   const session = await getServerSession(req, res, authOptions);
   
@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     // Obtener nombre del usuario
-    const user = await prisma.user.findUnique({
+    const _user = await prisma.user.findUnique({
       where: { id: userId },
       select: { name: true }
     });

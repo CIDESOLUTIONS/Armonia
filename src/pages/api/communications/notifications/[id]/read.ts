@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
  * 
  * PUT: Marca una notificación específica como leída por el usuario actual
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req:unknown, res: NextApiResponse) {
   // Verificar autenticación
   const session = await getServerSession(req, res, authOptions);
   

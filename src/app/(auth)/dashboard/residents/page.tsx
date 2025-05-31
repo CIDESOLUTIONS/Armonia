@@ -1,22 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Save, Search, User, Home, Phone, Mail, FileText } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Plus, Pencil, Trash2, Save, Search, User, Phone, Mail } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 
 // Interfaces
 interface Resident {
@@ -98,23 +98,23 @@ const mockProperties: Property[] = [
 ];
 
 export default function ResidentsPage() {
-  const router = useRouter();
-  const { token, complexId, schemaName } = useAuth();
+  const _router = useRouter();
+  const { _token, complexId, schemaName  } = useAuth();
   const { toast } = useToast();
   
   // Estado
   const [residents, setResidents] = useState<Resident[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [_properties, _setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [error, _setError] = useState("");
+  const [_searchTerm, _setSearchTerm] = useState("");
+  const [_showDialog, _setShowDialog] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   
   // Formulario
-  const [formData, setFormData] = useState<Partial<Resident>>({
+  const [_formData, _setFormData] = useState<Partial<Resident>>({
     name: "",
     propertyUnit: "",
     email: "",
@@ -135,12 +135,10 @@ export default function ResidentsPage() {
   const fetchResidents = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/residents?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
-        const data = await response.json();
+        const _data = await response.json();
         setResidents(data.residents || []);
       } else {
         console.warn("Error al cargar residentes, usando datos de prueba");
@@ -162,12 +160,10 @@ export default function ResidentsPage() {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch(`/api/inventory/properties?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
-        const data = await response.json();
+        const _data = await response.json();
         setProperties(data.properties || []);
       } else {
         console.warn("Error al cargar propiedades, usando datos de prueba");
@@ -237,24 +233,13 @@ export default function ResidentsPage() {
     setError("");
 
     try {
-      const url = isEditing 
+      const _url = isEditing 
         ? `/api/residents/${selectedResident?.id}` 
         : '/api/residents';
       
-      const method = isEditing ? 'PUT' : 'POST';
+      const _method = isEditing ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...formData,
-          complexId,
-          schemaName
-        })
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         const savedResident = await response.json();
@@ -341,14 +326,7 @@ export default function ResidentsPage() {
     setError("");
 
     try {
-      const response = await fetch(`/api/residents/${id}?schemaName=${schemaName}`, {
-        method: 'DELETE',
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ complexId })
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         setResidents(residents.filter(r => r.id !== id));

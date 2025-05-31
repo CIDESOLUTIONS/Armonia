@@ -1,39 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  MessageSquare, Filter, AlertCircle, Loader2, Search
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { useState, useEffect } from 'react';
+import { MessageSquare, Filter, AlertCircle, Loader2, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
 import toast from "react-hot-toast";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/context/AuthContext';
 
 // Importar componentes y tipos
 import PQRTable from "./components/table";
-import { AssignDialog, DetailsDialog, BulkActionDialog } from "./components/dialogs";
-import { PQR, Comment } from "./types";
-import { mockPQRs, mockUsers } from "./mock-data";
+import { AssignDialog, DetailsDialog, BulkActionDialog } from './components/dialogs';
+import { PQR, Comment } from './types';
+import { mockPQRs, mockUsers } from './mock-data';
 
 export default function PQRManagementPage() {
   const { user } = useAuth();
   const [pqrs, setPQRs] = useState<PQR[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [_searchTerm, _setSearchTerm] = useState("");
   const [selectedPQR, setSelectedPQR] = useState<PQR | null>(null);
   const [selectedTab, setSelectedTab] = useState("all");
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedPriority, setSelectedPriority] = useState<string>("all");
-  const [users, setUsers] = useState(mockUsers);
+  const [users, _setUsers] = useState(mockUsers);
   
   // Gestión de diálogos
   const [showAssignDialog, setShowAssignDialog] = useState(false);
@@ -89,8 +85,8 @@ export default function PQRManagementPage() {
     .sort((a, b) => {
       if (!sortField) return 0;
       
-      let valueA: any = a[sortField as keyof PQR];
-      let valueB: any = b[sortField as keyof PQR];
+      let valueA: unknown = a[sortField as keyof PQR];
+      let valueB: unknown = b[sortField as keyof PQR];
       
       // Manejar valores nulos
       if (valueA === null) valueA = "";

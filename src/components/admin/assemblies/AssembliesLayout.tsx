@@ -1,13 +1,10 @@
 "use client";
 
 import React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname } from 'next/navigation';
 import Link from "next/link";
-import { 
-  Calendar, Users, Vote, FileText, 
-  ChevronRight
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Calendar, Users, Vote, FileText, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AssembliesLayoutProps {
   children: React.ReactNode;

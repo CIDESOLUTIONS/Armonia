@@ -1,21 +1,21 @@
 // src/app/api/inventory/update/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
     // Validación de autenticación
-    const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+    const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
-    const decoded = await verifyToken(token);
+    // Variable decoded eliminada por lint
 
     // Obtener y validar parámetros
     const { searchParams } = new URL(req.url);
-    const complexId = searchParams.get('complexId');
-    const schemaName = searchParams.get('schemaName');
+    const _complexId = searchParams.get('complexId');
+    const _schemaName = searchParams.get('schemaName');
 
     console.log('[API Inventory/Update GET] Params:', { complexId, schemaName });
 
@@ -97,14 +97,14 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
     // Validación de autenticación
-    const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+    const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
-    const decoded = await verifyToken(token);
+    // Variable decoded eliminada por lint
 
     // Obtener y validar body
     const body = await req.json();

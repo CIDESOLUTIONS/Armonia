@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search, MessageSquare, Check, X, Pencil, Eye, Clock, Filter, RefreshCw } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Plus, Search, MessageSquare, Check, X, Eye, Clock, RefreshCw } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 // Datos mock para pruebas
 const mockPQRs = [
@@ -123,24 +123,24 @@ interface PQR {
 }
 
 export default function PQRPage() {
-  const router = useRouter();
-  const { token, user, complexId, schemaName } = useAuth();
+  const _router = useRouter();
+  const { _token, user, complexId, schemaName  } = useAuth();
   const { toast } = useToast();
   
   // Estado
   const [pqrs, setPQRs] = useState<PQR[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [_searchTerm, _setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [showDialog, setShowDialog] = useState(false);
+  const [_showDialog, _setShowDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
-  const [properties, setProperties] = useState(mockProperties);
-  const [users, setUsers] = useState(mockUsers);
+  const [_properties, _setProperties] = useState(mockProperties);
+  const [users, _setUsers] = useState(mockUsers);
   const [selectedPQR, setSelectedPQR] = useState<PQR | null>(null);
   const [newComment, setNewComment] = useState("");
   
   // Estado del formulario
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     title: "",
     category: "maintenance",
     priority: "medium",

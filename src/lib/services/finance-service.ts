@@ -1,7 +1,7 @@
 // src/lib/services/finance-service.ts
 'use client';
 
-import { fetcher, get, post, put, del } from '@/lib/api/fetcher';
+import { get, post, put, del } from '@/lib/api/fetcher';
 import { ServerLogger } from '../logging/server-logger';
 
 // Tipos para el módulo Financiero
@@ -161,7 +161,7 @@ class FinanceService {
       });
       
       const query = queryParams.toString();
-      const url = `/api/finances/fees${query ? `?${query}` : ''}`;
+      const _url = `/api/finances/fees${query ? `?${query}` : ''}`;
       
       return await get<FeeListResponse>(url, { schema: this.schema });
     } catch (error) {

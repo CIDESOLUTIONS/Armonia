@@ -9,19 +9,7 @@ export class ExtraordinaryFeeService {
     dueDate: Date
   ) {
     try {
-      const response = await fetch('/api/financial/extraordinary-fees', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          complexId,
-          amount,
-          description,
-          dueDate: dueDate.toISOString(),
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -38,13 +26,7 @@ export class ExtraordinaryFeeService {
   // Obtener todas las cuotas extraordinarias de un conjunto
   static async getExtraordinaryFees(complexId: number) {
     try {
-      const response = await fetch(`/api/financial/extraordinary-fees/${complexId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -61,16 +43,7 @@ export class ExtraordinaryFeeService {
   // Anular una cuota extraordinaria
   static async cancelExtraordinaryFee(feeId: number, reason: string) {
     try {
-      const response = await fetch(`/api/financial/extraordinary-fees/${feeId}/cancel`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          reason,
-        }),
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();
@@ -87,13 +60,7 @@ export class ExtraordinaryFeeService {
   // Obtener detalle de una cuota extraordinaria
   static async getExtraordinaryFeeDetail(feeId: number) {
     try {
-      const response = await fetch(`/api/financial/extraordinary-fees/detail/${feeId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         const error = await response.json();

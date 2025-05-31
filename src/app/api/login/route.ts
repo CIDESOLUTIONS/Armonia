@@ -1,12 +1,12 @@
 // src/app/api/login/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
-import { generateToken } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { getPrisma } from '@/lib/prisma';
+import { generateToken } from '@/lib/auth';
 import bcrypt from "bcrypt";
-import { ServerLogger } from "@/lib/logging/server-logger";
-import { cookies } from "next/headers";
+import { ServerLogger } from '@/lib/logging/server-logger';
+import { cookies } from 'next/headers';
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
     const { email, password } = await req.json();
     ServerLogger.info(`Intento de login para: ${email}`);
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = users[0];
+    const _user = users[0];
 
     // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Preparar la respuesta
-    const response = NextResponse.next();
+    // Variable response eliminada por lint
     
     // Si el usuario no está asociado a un conjunto, es un administrador global
     if (!user.complexId) {
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         isGlobalAdmin: true
       };
 
-      const token = await generateToken(payload);
+      const _token = await generateToken(payload);
       
       // Establecer cookie segura con el token (7 días de expiración)
       cookies().set({
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       }
 
       const complexData = complex[0];
-      const schemaName = complexData.schemaName;
+      const _schemaName = complexData.schemaName;
 
       ServerLogger.info(`Login exitoso para ${email}, conjunto: ${complexData.name}, schema: ${schemaName}`);
 
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
         complexName: complexData.name
       };
 
-      const token = await generateToken(payload);
+      const _token = await generateToken(payload);
       
       // Establecer cookie segura con el token (7 días de expiración)
       cookies().set({

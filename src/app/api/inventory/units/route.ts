@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const data = await request.json();
+    const _data = await request.json();
     const complex = await prisma.residentialComplex.findUnique({ where: { id: data.complexId } });
     if (!complex) throw new Error('Conjunto residencial no encontrado');
     const unit = await prisma.property.create({
@@ -39,7 +39,7 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const data = await request.json();
+    const _data = await request.json();
     const { id } = data;
     const complex = await prisma.residentialComplex.findUnique({ where: { id: data.complexId } });
     if (!complex) throw new Error('Conjunto residencial no encontrado');

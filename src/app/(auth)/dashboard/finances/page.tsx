@@ -1,45 +1,15 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+;
 import { Button } from '@/components/ui/button';
-import {
-  DollarSign,
-  FileText,
-  CreditCard,
-  BarChart,
-  BarChart2,
-  Search,
-  Plus,
-  Filter,
-  Download
-} from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, CreditCard, BarChart, BarChart2, Search, Plus, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
 import { useAuth } from '@/context/AuthContext';
 import ReceiptGenerator from '@/components/finances/ReceiptGenerator';
 import CustomReportGenerator from '@/components/finances/CustomReportGenerator';
@@ -80,15 +50,15 @@ interface Payment {
 }
 
 export default function FinancesPage() {
-  const { user, token } = useAuth();
+  const { user, _token  } = useAuth();
   const [activeTab, setActiveTab] = useState('budget');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, _setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMonth, setFilterMonth] = useState('all');
   const [filterYear, setFilterYear] = useState<string>('2024');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [language, setLanguage] = useState('Español');
+  const [language, _setLanguage] = useState('Español');
   const [generatedFiles, setGeneratedFiles] = useState<{url: string, type: string}[]>([]);
   
   // Estados para las diferentes entidades

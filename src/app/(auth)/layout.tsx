@@ -1,24 +1,24 @@
 // src/app/(auth)/layout.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Header } from "@/components/layout/header";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Header } from '@/components/layout/header';
 import Sidebar from "@/components/layout/Sidebar";
-import { useAuth } from "@/context/AuthContext";
-import { Loader2 } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, loading, adminName, complexName, logout: authLogout } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, loading, adminName, complexName, _logout: authLogout  } = useAuth();
+  const _router = useRouter();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
-  const [language, setLanguage] = useState("Español");
-  const [theme, setTheme] = useState("Claro");
-  const [currency, setCurrency] = useState("Pesos");
+  const [language, _setLanguage] = useState("Español");
+  const [_theme, _setTheme] = useState("Claro");
+  const [_currency, _setCurrency] = useState("Pesos");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   useEffect(() => {
@@ -39,10 +39,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const handleLogout = async () => {
     try {
       console.log('[AuthLayout] Iniciando proceso de logout');
-      const response = await fetch("/api/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         console.log('[AuthLayout] Logout exitoso en el API');

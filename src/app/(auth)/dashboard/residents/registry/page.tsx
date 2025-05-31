@@ -60,16 +60,16 @@ const defaultFormState = {
 export default function ResidentsRegistryPage() {
   const { language } = useTranslation();
   const { toast } = useToast();
-  const { token, complexId } = useAuth();
+  const { _token, complexId  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [_properties, _setProperties] = useState<Property[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingResidentId, setEditingResidentId] = useState<string | null>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState(defaultFormState);
+  const [_searchTerm, _setSearchTerm] = useState('');
+  const [_formData, _setFormData] = useState(defaultFormState);
 
   // Translations
   const t = {
@@ -142,7 +142,7 @@ export default function ResidentsRegistryPage() {
     setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
   };
 
-  const handleSelectChange = (name: string, value: any) => {
+  const handleSelectChange = (name: string, value: unknown) => {
     setFormData({ ...formData, [name]: value });
   };
 

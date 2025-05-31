@@ -19,9 +19,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const data = await request.json();
+    const _data = await request.json();
     const complex = await prisma.residentialComplex.findUnique({ where: { id: data.complexId } });
-    const user = await prisma.user.findUnique({ where: { id: data.userId } });
+    const _user = await prisma.user.findUnique({ where: { id: data.userId } });
     if (!complex || !user) throw new Error('Conjunto residencial o usuario no encontrado');
     const pqr = await prisma.pQR.create({
       data: {

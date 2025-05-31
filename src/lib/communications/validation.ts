@@ -6,14 +6,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { 
-  notifyUser, 
-  notifyByRole, 
-  notifyAll, 
-  markNotificationAsRead,
-  confirmNotificationReading
-} from '@/lib/communications/notification-service';
-import { sendNotificationToUser } from '@/lib/communications/websocket-server';
+import { notifyUser, notifyByRole, markNotificationAsRead, confirmNotificationReading } from '@/lib/communications/notification-service';
+;
 
 const prisma = new PrismaClient();
 

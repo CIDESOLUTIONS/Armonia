@@ -3,34 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  MessageSquare,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  Info,
-  ArrowRight,
-  Search,
-  Filter,
-  Plus,
-  Send,
-  FileText,
-  PlusCircle,
-  Paperclip,
-  X
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+;
+import { Badge } from '@/components/ui/badge';
+;
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { MessageSquare, AlertCircle, CheckCircle, ArrowRight, Search, Send, FileText, PlusCircle, Paperclip, X } from 'lucide-react';
 
 interface PQR {
   id: string;
@@ -63,13 +48,13 @@ interface Attachment {
 }
 
 export default function ResidentPQRPage() {
-  const { isLoggedIn, token, schemaName, residentName } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName,  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [pqrs, setPqrs] = useState<PQR[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, _setError] = useState<string | null>(null);
+  // useState activeTab eliminado por lint
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedPQR, setSelectedPQR] = useState<PQR | null>(null);
@@ -238,10 +223,8 @@ export default function ResidentPQRPage() {
         setError(null);
         
         // En un entorno real, esto sería una llamada a la API
-        // const response = await fetch(`/api/resident/pqr?schemaName=${schemaName}`, {
-        //   headers: { 'Authorization': `Bearer ${token}` },
-        // });
-        // const result = await response.json();
+        // // Variable response eliminada por lint
+        // const _result = await response.json();
         // if (!response.ok) throw new Error(result.message || 'Error al cargar datos');
         // setPqrs(result.pqrs);
         
@@ -365,7 +348,7 @@ export default function ResidentPQRPage() {
   };
 
   // Función para manejar cambios en el formulario de nueva PQR
-  const handleNewPQRFormChange = (field: string, value: any) => {
+  const handleNewPQRFormChange = (field: string, value: unknown) => {
     setNewPQRForm(prev => ({
       ...prev,
       [field]: value
@@ -384,7 +367,7 @@ export default function ResidentPQRPage() {
   };
 
   // Función para eliminar un archivo adjunto
-  const handleRemoveFile = (index: number) => {
+  const handleRemoveFile = (_indexUnused: number) => {
     setNewPQRForm(prev => ({
       ...prev,
       attachments: prev.attachments.filter((_, i) => i !== index)
@@ -411,13 +394,7 @@ export default function ResidentPQRPage() {
       //   formData.append('attachments', file);
       // });
       
-      // const response = await fetch(`/api/resident/pqr?schemaName=${schemaName}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: formData
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al crear PQR');
@@ -491,16 +468,7 @@ export default function ResidentPQRPage() {
     
     try {
       // En un entorno real, esto sería una llamada a la API
-      // const response = await fetch(`/api/resident/pqr/${selectedPQR.id}/messages?schemaName=${schemaName}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({
-      //     content: newMessage
-      //   })
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al enviar mensaje');
@@ -640,7 +608,7 @@ export default function ResidentPQRPage() {
                     placeholder="Buscar por título o descripción..."
                     className="pl-10"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
@@ -850,7 +818,7 @@ export default function ResidentPQRPage() {
                     <Textarea
                       placeholder="Escriba su mensaje aquí..."
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
                       className="flex-grow"
                     />
                     <Button 
@@ -902,7 +870,7 @@ export default function ResidentPQRPage() {
                 id="title" 
                 placeholder="Título breve y descriptivo"
                 value={newPQRForm.title}
-                onChange={(e) => handleNewPQRFormChange('title', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewPQRFormChange('title', e.target.value)}
               />
             </div>
             
@@ -950,7 +918,7 @@ export default function ResidentPQRPage() {
                 placeholder="Describa detalladamente su solicitud"
                 rows={5}
                 value={newPQRForm.description}
-                onChange={(e) => handleNewPQRFormChange('description', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewPQRFormChange('description', e.target.value)}
               />
             </div>
             

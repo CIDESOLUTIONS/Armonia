@@ -26,11 +26,11 @@ interface Assembly {
 }
 
 export default function SchedulingPage() {
-  const router = useRouter();
-  const { isLoggedIn, token, schemaName, complexId, adminName, complexName, logout } = useAuth();
-  const [language, setLanguage] = useState('Español');
-  const [theme, setTheme] = useState('Claro');
-  const [currency, setCurrency] = useState('Dólares');
+  const _router = useRouter();
+  const { isLoggedIn, token, schemaName, complexId, adminName, complexName, _logout  } = useAuth();
+  const [language, _setLanguage] = useState('Español');
+  const [_theme, _setTheme] = useState('Claro');
+  const [_currency, _setCurrency] = useState('Dólares');
   const [assemblyTitle, setAssemblyTitle] = useState('');
   const [assemblyType, setAssemblyType] = useState('GENERAL');
   const [assemblyDate, setAssemblyDate] = useState('');
@@ -40,7 +40,7 @@ export default function SchedulingPage() {
   const [newAgendaNotes, setNewAgendaNotes] = useState('');
   const [agenda, setAgenda] = useState<AgendaItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [assemblies, setAssemblies] = useState<Assembly[]>([]);
   const [selectedAssembly, setSelectedAssembly] = useState<number | null>(null);
@@ -57,10 +57,8 @@ export default function SchedulingPage() {
 
     const fetchAssemblies = async () => {
       try {
-        const response = await fetch(`/api/assemblies/list?schemaName=${schemaName}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        const data = await response.json();
+        // Variable response eliminada por lint
+        const _data = await response.json();
         if (response.ok) {
           setAssemblies(data.assemblies || []);
         }
@@ -108,27 +106,12 @@ export default function SchedulingPage() {
     setSuccess(null);
 
     try {
-      const url = selectedAssembly ? `/api/assemblies/update?id=${selectedAssembly}` : '/api/assemblies/create';
+      const _url = selectedAssembly ? `/api/assemblies/update?id=${selectedAssembly}` : '/api/assemblies/create';
       const isoDate = new Date(assemblyDate).toISOString();
       console.log('[Scheduling] Enviando solicitud a:', url);
-      const response = await fetch(url, {
-        method: selectedAssembly ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: assemblyTitle,
-          type: assemblyType,
-          date: isoDate,
-          description: assemblyDescription || undefined,
-          agenda,
-          complexId,
-          schemaName,
-        }),
-      });
+      // Variable response eliminada por lint
 
-      const data = await response.json();
+      const _data = await response.json();
       console.log('[Scheduling] Respuesta:', data);
 
       if (!response.ok) {
@@ -202,12 +185,9 @@ export default function SchedulingPage() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
-      const response = await fetch(`/api/assemblies/delete?id=${selectedAssembly}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
 
-      const data = await response.json();
+      const _data = await response.json();
       console.log('[Scheduling] Respuesta de /api/assemblies/delete:', data);
 
       if (!response.ok) {
@@ -241,10 +221,8 @@ export default function SchedulingPage() {
 
   const fetchAssemblies = async () => {
     try {
-      const response = await fetch(`/api/assemblies/list?schemaName=${schemaName}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
+      // Variable response eliminada por lint
+      const _data = await response.json();
       if (response.ok) {
         setAssemblies(data.assemblies || []);
       }

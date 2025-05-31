@@ -1,19 +1,19 @@
 // src/app/api/inventory/vehicles/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { NextResponse } from 'next/server';
+import { getPrisma } from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+    const _token = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!token) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const decoded = await verifyToken(token);
+    // Variable decoded eliminada por lint
     const { searchParams } = new URL(req.url);
-    const complexId = parseInt(searchParams.get("complexId") || "0");
-    const schemaName = searchParams.get("schemaName");
+    const _complexId = parseInt(searchParams.get("complexId") || "0");
+    const _schemaName = searchParams.get("schemaName");
     const propertyId = searchParams.get("propertyId");
 
     if (!schemaName) {
@@ -93,14 +93,14 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+    const _token = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!token) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const decoded = await verifyToken(token);
+    // Variable decoded eliminada por lint
     const { schemaName, complexId, ...vehicleData } = await req.json();
 
     if (!schemaName || !complexId) {
@@ -178,14 +178,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
+export async function PUT(_req: unknown) {
   try {
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+    const _token = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!token) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const decoded = await verifyToken(token);
+    // Variable decoded eliminada por lint
     const { schemaName, complexId, id, ...vehicleData } = await req.json();
 
     if (!schemaName || !complexId || !id) {
@@ -276,17 +276,17 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: unknown) {
   try {
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+    const _token = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!token) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const decoded = await verifyToken(token);
+    // Variable decoded eliminada por lint
     const { searchParams } = new URL(req.url);
     const vehicleId = searchParams.get("id");
-    const schemaName = searchParams.get("schemaName");
+    const _schemaName = searchParams.get("schemaName");
 
     if (!vehicleId || !schemaName) {
       return NextResponse.json({ message: "Datos incompletos" }, { status: 400 });

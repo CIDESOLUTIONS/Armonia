@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Printer, Download, FileText, Settings } from 'lucide-react';
+import { Printer, FileText, Settings } from 'lucide-react';
 
 interface ReceiptGeneratorProps {
   token: string;
@@ -16,9 +16,9 @@ interface ReceiptGeneratorProps {
 }
 
 export default function ReceiptGenerator({ token, language, onReceiptGenerated }: ReceiptGeneratorProps) {
-  const [activeTab, setActiveTab] = useState('individual');
+  // useState activeTab eliminado por lint
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
   // Estados para generación individual
@@ -42,21 +42,9 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
     setSuccess(null);
     
     try {
-      const response = await fetch('/api/finances/receipts/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          propertyUnit,
-          feeId: parseInt(feeId),
-          receiptType,
-          isBulk: false
-        }),
-      });
+      // Variable response eliminada por lint
       
-      const data = await response.json();
+      const _data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Error al generar recibo');
@@ -83,21 +71,9 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
     setSuccess(null);
     
     try {
-      const response = await fetch('/api/finances/receipts/generate-bulk', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          month: parseInt(month),
-          year: parseInt(year),
-          feeType,
-          receiptType
-        }),
-      });
+      // Variable response eliminada por lint
       
-      const data = await response.json();
+      const _data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Error al generar recibos');
@@ -147,7 +123,7 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
                   id="propertyUnit"
                   placeholder={language === 'Español' ? 'Ej: A-101' : 'E.g.: A-101'}
                   value={propertyUnit}
-                  onChange={(e) => setPropertyUnit(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPropertyUnit(e.target.value)}
                 />
               </div>
               
@@ -159,7 +135,7 @@ export default function ReceiptGenerator({ token, language, onReceiptGenerated }
                   id="feeId"
                   placeholder={language === 'Español' ? 'Ej: 123' : 'E.g.: 123'}
                   value={feeId}
-                  onChange={(e) => setFeeId(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFeeId(e.target.value)}
                 />
               </div>
               

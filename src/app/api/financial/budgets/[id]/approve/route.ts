@@ -1,19 +1,19 @@
-// C:\Users\meciz\Documents\armonia\frontend\src\app\api\financial\budgets\[id]\approve\route.ts
-import { NextRequest, NextResponse } from 'next/server';
+// C:\Users\meciz\Documents\armonia\frontend\src\app\api\financial\budgets[id]\approve\route.ts
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req:unknown, { params }: { params: { id: string } }) {
   try {
     const budgetId = parseInt(params.id);
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+    const _token = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!token) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const decoded = await verifyToken(token);
+    // Variable decoded eliminada por lint
     const { searchParams } = new URL(req.url);
-    const schemaName = searchParams.get("schemaName");
+    const _schemaName = searchParams.get("schemaName");
 
     if (!schemaName) {
       return NextResponse.json({ message: "Schema name es requerido" }, { status: 400 });

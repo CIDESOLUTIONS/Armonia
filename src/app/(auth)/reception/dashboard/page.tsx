@@ -3,32 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  BarChart4,
-  UserPlus,
-  Package,
-  ShieldAlert,
-  Calendar,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  Search,
-  Info,
-  ArrowRight,
-  Camera,
-  LogOut,
-  Clipboard,
-  Bell,
-  Phone
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+;
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { UserPlus, Package, ShieldAlert, Calendar, Clock, AlertCircle, CheckCircle, Search, Info, ArrowRight, LogOut } from 'lucide-react';
 import NotificationCenterThemed from '@/components/communications/NotificationCenterThemed';
 import { useRealTimeCommunication } from '@/lib/communications/real-time-context';
 import { translate, Language, ThemeMode } from '@/lib/communications/theme-config';
@@ -87,12 +70,12 @@ interface DashboardData {
 }
 
 export default function ReceptionDashboard() {
-  const { isLoggedIn, token, schemaName, userName, language = 'Español', themeMode = 'light' } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName, userName, language = 'Español', themeMode = 'light'  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, _setError] = useState<string | null>(null);
+  const [_searchTerm, _setSearchTerm] = useState('');
   const { notifications, unreadNotificationsCount } = useRealTimeCommunication();
 
   // Datos de ejemplo para desarrollo y pruebas
@@ -215,10 +198,8 @@ export default function ReceptionDashboard() {
         setError(null);
         
         // En un entorno real, esto sería una llamada a la API
-        // const response = await fetch(`/api/reception/dashboard?schemaName=${schemaName}`, {
-        //   headers: { 'Authorization': `Bearer ${token}` },
-        // });
-        // const result = await response.json();
+        // // Variable response eliminada por lint
+        // const _result = await response.json();
         // if (!response.ok) throw new Error(result.message || 'Error al cargar datos');
         // setData(result);
         
@@ -485,7 +466,7 @@ export default function ReceptionDashboard() {
                     placeholder={language === 'Español' ? "Buscar por nombre o destino..." : "Search by name or destination..."}
                     className="pl-10 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>

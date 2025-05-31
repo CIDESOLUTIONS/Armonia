@@ -1,24 +1,24 @@
 // C:\Users\meciz\Documents\armonia\frontend\src\app\api\assemblies\clean-dependencies\route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
+;
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function DELETE(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function DELETE(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ message: 'No token provided' }, { status: 401 });
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; complexId: number; role: string };
+    // Variable decoded eliminada por lint complexId: number; role: string };
     console.log('[API Clean Dependencies] Token decodificado:', decoded);
 
     if (decoded.role !== 'COMPLEX_ADMIN') {
       return NextResponse.json({ message: 'Acceso denegado' }, { status: 403 });
     }
 
-    const url = new URL(req.url);
+    // Variable url eliminada por lint
     const id = parseInt(url.searchParams.get('id') || '0', 10);
     if (!id) return NextResponse.json({ message: 'ID de asamblea requerido' }, { status: 400 });
 

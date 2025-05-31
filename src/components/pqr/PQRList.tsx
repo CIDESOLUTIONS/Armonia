@@ -1,55 +1,23 @@
 // src/components/pqr/PQRList.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  Card, 
-  CardContent,
-  CardDescription,
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  AlertCircle, 
-  PlusCircle, 
-  Search, 
-  SlidersHorizontal,
-  X,
-  RefreshCw
-} from "lucide-react";
-import { Pagination } from "@/components/ui/pagination/pagination";
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
-import { 
-  useServices, 
-  PQRStatus, 
-  PQRPriority, 
-  PQRType, 
-  PQR 
-} from "@/lib/services";
-import { PQRDetailDialog } from "./PQRDetailDialog";
-import { CreatePQRForm } from "./CreatePQRForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ErrorMessage } from "@/components/ui/error/ErrorBoundary";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PlusCircle, Search, SlidersHorizontal, X, RefreshCw } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination/pagination';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow,  } from '@/components/ui/table';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useServices, PQRStatus, PQRPriority, PQRType, PQR } from '@/lib/services';
+import { PQRDetailDialog } from './PQRDetailDialog';
+import { CreatePQRForm } from './CreatePQRForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ErrorMessage } from '@/components/ui/error/ErrorBoundary';
 
 interface PQRListProps {
   initialLimit?: number;
@@ -76,7 +44,7 @@ export function PQRList({
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(initialLimit);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   
   // Estados para filtros
   const [filters, setFilters] = useState({
@@ -99,7 +67,7 @@ export function PQRList({
       setError(null);
       
       // Preparar filtros para la API
-      const apiFilters: any = {
+      const apiFilters: unknown = {
         page,
         limit,
       };
@@ -111,7 +79,7 @@ export function PQRList({
       if (filters.search) apiFilters.search = filters.search;
       
       // Obtener datos
-      const response = await pqr.getPQRs(apiFilters);
+      // Variable response eliminada por lint
       
       setPqrs(response.pqrs);
       setTotalPages(Math.ceil(response.total / limit));
@@ -355,7 +323,7 @@ export function PQRList({
                   placeholder="Buscar por título o descripción..."
                   className="pl-8"
                   value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 />
                 {filters.search && (
                   <button

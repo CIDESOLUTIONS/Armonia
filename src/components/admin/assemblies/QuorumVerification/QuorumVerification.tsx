@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, CheckCircle, XCircle } from 'lucide-react';
+import { Users, CheckCircle } from 'lucide-react';
 import Button from '@/components/common/Button';
 
 interface Participant {

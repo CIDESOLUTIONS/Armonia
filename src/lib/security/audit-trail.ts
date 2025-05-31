@@ -121,11 +121,11 @@ export async function logAuditAction(data: AuditData, request?: NextRequest): Pr
 /**
  * Middleware para auditar acciones automáticamente
  */
-export function auditMiddleware(actionType: AuditActionType, detailsGenerator: (req: NextRequest) => string) {
+export function auditMiddleware(actionType: AuditActionType, detailsGenerator: (_req:unknown) => string) {
   return async (handler: Function) => {
-    return async (request: NextRequest, ...args: any[]) => {
+    return async (request: NextRequest, ...args: unknown[]) => {
       // Procesar la solicitud primero
-      const response = await handler(request, ...args);
+      // Variable response eliminada por lint
       
       // Determinar el estado basado en la respuesta
       const status = response.status >= 400 
@@ -171,7 +171,7 @@ export async function getAuditLogs({
 }) {
   try {
     // Construir filtros
-    const where: any = {};
+    const where: unknown = {};
     
     if (userId) where.userId = userId;
     if (action) where.action = action;
@@ -234,7 +234,7 @@ export async function cleanupAuditLogs() {
     retentionDate.setDate(retentionDate.getDate() - retentionDays);
     
     // Eliminar registros antiguos
-    const result = await prisma.auditLog.deleteMany({
+    const _result = await prisma.auditLog.deleteMany({
       where: {
         timestamp: {
           lt: retentionDate

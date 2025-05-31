@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function POST(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function POST(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { assemblyId } = await req.json();
 
   if (!token || !assemblyId) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { schemaName: string };
-    const schemaName = decoded.schemaName.toLowerCase();
+    // Variable decoded eliminada por lint
+    const _schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     const assembly = await prisma.$queryRawUnsafe(
@@ -46,26 +46,26 @@ export async function POST(req: NextRequest) {
 
     page.drawText('Agenda:', { x: 50, y, size: 12, font });
     y -= 20;
-    agenda.forEach((item: any) => {
+    agenda.forEach((item: unknown) => {
       page.drawText(`${item.numeral}. ${item.topic} (${item.time}) - ${item.notes || 'Sin observaciones'}`, { x: 50, y, size: 10, font });
       y -= 15;
     });
 
     page.drawText('Asistencia:', { x: 50, y, size: 12, font });
     y -= 20;
-    attendance.forEach((a: any) => {
+    attendance.forEach((a: unknown) => {
       page.drawText(`${a.number} - ${a.name} - ${a.attendance}${a.delegateName ? ` (Delegado: ${a.delegateName})` : ''}`, { x: 50, y, size: 10, font });
       y -= 15;
     });
 
     page.drawText('Preguntas y Votaciones:', { x: 50, y, size: 12, font });
     y -= 20;
-    questions.forEach((q: any) => {
+    questions.forEach((q: unknown) => {
       page.drawText(`${q.text} (Sí: ${q.yesVotes}, No: ${q.noVotes}, NR: ${q.nrVotes})`, { x: 50, y, size: 10, font });
       y -= 15;
     });
 
-    const pdfBytes = await pdfDoc.save();
+    // Variable pdfBytes eliminada por lint
     const fileName = `acta_${assemblyId}_${Date.now()}.pdf`;
 
     const docExists = await prisma.$queryRawUnsafe(
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await prisma.$queryRawUnsafe(
+    const _result = await prisma.$queryRawUnsafe(
       `INSERT INTO "${schemaName}"."Document" ("assemblyId", fileName) VALUES ($1, $2) RETURNING id`,
       assemblyId, fileName
     );

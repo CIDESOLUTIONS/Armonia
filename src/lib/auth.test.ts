@@ -27,7 +27,7 @@ describe('Funciones de autenticación', () => {
       
       (jwt.sign as jest.Mock).mockReturnValue('mock-token');
       
-      const token = generateToken(mockPayload);
+      const _token = generateToken(mockPayload);
       
       expect(jwt.sign).toHaveBeenCalledWith(mockPayload, mockJwtSecret, { expiresIn: '24h' });
       expect(token).toBe('mock-token');
@@ -75,7 +75,7 @@ describe('Funciones de autenticación', () => {
   
   describe('extractTokenFromHeader', () => {
     it('debe extraer correctamente el token del header', () => {
-      const token = extractTokenFromHeader('Bearer valid-token');
+      const _token = extractTokenFromHeader('Bearer valid-token');
       expect(token).toBe('valid-token');
     });
     

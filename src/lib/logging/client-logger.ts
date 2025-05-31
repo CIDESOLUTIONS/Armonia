@@ -7,29 +7,29 @@ export class ClientLogger {
     return typeof window !== 'undefined' && localStorage.getItem('debug') === 'true';
   }
 
-  static debug(message: string, ...args: any[]) {
+  static debug(message: string, ...args: unknown[]) {
     if (this.isEnabled()) {
       console.log(`[DEBUG] ${message}`, ...args);
     }
   }
 
-  static info(message: string, ...args: any[]) {
+  static info(message: string, ...args: unknown[]) {
     console.log(`[INFO] ${message}`, ...args);
   }
 
-  static warn(message: string, ...args: any[]) {
+  static warn(message: string, ...args: unknown[]) {
     console.warn(`[WARN] ${message}`, ...args);
   }
 
-  static error(message: string, ...args: any[]) {
+  static error(message: string, ...args: unknown[]) {
     console.error(`[ERROR] ${message}`, ...args);
   }
 
-  static apiRequest(method: string, url: string, options?: any) {
+  static apiRequest(method: string, url: string, options?: unknown) {
     this.debug(`API Request: ${method} ${url}`, options ? { options } : '');
   }
 
-  static apiResponse(method: string, url: string, status: number, data?: any) {
+  static apiResponse(method: string, url: string, status: number, data?: unknown) {
     if (status >= 400) {
       this.error(`API Response: ${method} ${url} [${status}]`, data ? { data } : '');
     } else {
@@ -41,11 +41,11 @@ export class ClientLogger {
     this.debug(`Navigation: ${path}`);
   }
 
-  static userAction(action: string, details?: any) {
+  static userAction(action: string, details?: unknown) {
     this.debug(`User Action: ${action}`, details ? { details } : '');
   }
 
-  static componentRender(component: string, props?: any) {
+  static componentRender(component: string, props?: unknown) {
     if (this.isEnabled()) {
       this.debug(`Component Render: ${component}`, props ? { props } : '');
     }

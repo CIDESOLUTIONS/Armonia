@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { pool } from '@/lib/db';
 
 // GET /api/financial/fees
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN payments p ON f.id = p.fee_id
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (type) {
       params.push(type);
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY f.due_date DESC`;
 
-    const result = await pool.query(query, params);
+    const _result = await pool.query(query, params);
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching fees:', error);
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/financial/fees/bulk
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
     const body = await req.json();
     const { feeType, baseAmount, startDate, endDate, unitIds } = body;

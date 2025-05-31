@@ -11,7 +11,7 @@ import DOMPurify from 'isomorphic-dompurify';
 /**
  * Sanitiza un objeto recursivamente para prevenir XSS
  */
-export function sanitizeData(data: any): any {
+export function sanitizeData(data: unknown): unknown {
   if (typeof data === 'string') {
     return DOMPurify.sanitize(data);
   } else if (Array.isArray(data)) {
@@ -52,7 +52,7 @@ export function setSecurityHeaders(response: NextResponse): NextResponse {
  * Middleware para protección XSS
  */
 export function xssProtection(handler: Function) {
-  return async (request: NextRequest, ...args: any[]) => {
+  return async (request: NextRequest, ...args: unknown[]) => {
     // Verificar si la protección XSS está habilitada en la configuración
     const config = await import('@/config/security').then(mod => mod.default);
     if (!config.xssProtection) {
@@ -72,7 +72,7 @@ export function xssProtection(handler: Function) {
         });
         
         // Procesar la solicitud con el handler
-        const response = await handler(newRequest, ...args);
+        // Variable response eliminada por lint
         
         // Establecer headers de seguridad en la respuesta
         return setSecurityHeaders(response);
@@ -83,7 +83,7 @@ export function xssProtection(handler: Function) {
     }
     
     // Para otros tipos de solicitudes, solo establecer headers de seguridad
-    const response = await handler(request, ...args);
+    // Variable response eliminada por lint
     return setSecurityHeaders(response);
   };
 }

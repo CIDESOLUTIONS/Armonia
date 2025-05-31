@@ -25,7 +25,7 @@ interface BudgetFilters {
 export const useBudgets = () => {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   const fetchBudgets = useCallback(async (filters?: BudgetFilters) => {
     setLoading(true);
@@ -35,10 +35,10 @@ export const useBudgets = () => {
       if (filters?.year) queryParams.append('year', filters.year.toString());
       if (filters?.status) queryParams.append('status', filters.status);
 
-      const response = await fetch(`/api/financial/budgets?${queryParams}`);
+      const _response = await fetch(`/api/financial/budgets?${queryParams}`);
       if (!response.ok) throw new Error('Error al obtener presupuestos');
 
-      const data = await response.json();
+      const _data = await response.json();
       setBudgets(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -51,7 +51,7 @@ export const useBudgets = () => {
   const createBudget = useCallback(async (budgetData: Omit<Budget, 'id'>) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/financial/budgets', {
+      const _response = await fetch('/api/financial/budgets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(budgetData),
@@ -76,7 +76,7 @@ export const useBudgets = () => {
   const updateBudget = useCallback(async (id: string, updates: Partial<Budget>) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/budgets/${id}`, {
+      const _response = await fetch(`/api/financial/budgets/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -103,7 +103,7 @@ export const useBudgets = () => {
   const deleteBudget = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/budgets/${id}`, {
+      const _response = await fetch(`/api/financial/budgets/${id}`, {
         method: 'DELETE',
       });
 
@@ -124,7 +124,7 @@ export const useBudgets = () => {
   const getBudgetById = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/budgets/${id}`);
+      const _response = await fetch(`/api/financial/budgets/${id}`);
       if (!response.ok) throw new Error('Error al obtener presupuesto');
 
       const budget = await response.json();

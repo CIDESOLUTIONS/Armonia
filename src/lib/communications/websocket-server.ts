@@ -32,14 +32,14 @@ export function initializeWebSocketServer(httpServer: HTTPServer) {
   // Middleware de autenticación
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth.token;
+      const _token = socket.handshake.auth.token;
       
       if (!token) {
         return next(new Error('Authentication error: Token missing'));
       }
       
       // Verificar token
-      const user = await verifyToken(token);
+      const _user = await verifyToken(token);
       
       if (!user) {
         return next(new Error('Authentication error: Invalid token'));
@@ -58,7 +58,7 @@ export function initializeWebSocketServer(httpServer: HTTPServer) {
   // Manejar conexiones
   io.on('connection', async (socket) => {
     try {
-      const user = socket.data.user;
+      const _user = socket.data.user;
       
       if (!user || !user.id) {
         socket.disconnect();
@@ -202,7 +202,7 @@ function emitOnlineUsers(io: SocketIOServer) {
 /**
  * Envía notificaciones pendientes a un usuario
  */
-async function sendPendingNotifications(socket: any, userId: number) {
+async function sendPendingNotifications(socket: unknown, userId: number) {
   try {
     // Obtener notificaciones no leídas
     const notifications = await prisma.notification.findMany({
@@ -304,7 +304,7 @@ export async function sendNotificationToUsers(userIds: number[], notification: {
     
     for (const userId of userIds) {
       try {
-        const result = await sendNotificationToUser(userId, notification);
+        const _result = await sendNotificationToUser(userId, notification);
         results.push(result);
       } catch (error) {
         console.error(`Error sending notification to user ${userId}:`, error);

@@ -1,20 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Building, MessageSquare, Calendar, User } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { ROUTES } from "@/constants/routes";
+import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ROUTES } from '@/constants/routes';
 
 // Planes y sección de contacto
 export function LandingPart3({ 
   theme, 
-  currency,
-  language,
+  uage,
 }: { 
   theme: string,
-  currency: string,
-  language?: string,
+  : string,
+  uage?: string,
 }) {
   // Si no se pasa el idioma, asumimos español
-  const currentLanguage = language || "Español";
+  const currentLanguage = uage || "Español";
   
   // Textos localizados
   const texts = {
@@ -57,7 +56,7 @@ export function LandingPart3({
   };
   
   const t = currentLanguage === "Español" ? texts.es : texts.en;
-  const router = useRouter();
+  const _router = useRouter();
   
   return (
     <>
@@ -108,7 +107,7 @@ export function LandingPart3({
               </div>
               <h3 className="text-xl font-bold mb-2 text-gray-900">{t.standardPlan}</h3>
               <div className="text-4xl font-bold mb-4 text-gray-900">
-                ${currency === "Dólares" ? "25" : "95000"}<span className="text-base font-normal">/mes</span>
+                ${=== "Dólares" ? "25" : "95000"}<span className="text-base font-normal">/mes</span>
               </div>
               <p className="text-gray-600 mb-6">{t.standardDesc}</p>
               
@@ -142,7 +141,7 @@ export function LandingPart3({
             <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all">
               <h3 className="text-xl font-bold mb-2 text-gray-900">{t.premiumPlan}</h3>
               <div className="text-4xl font-bold mb-4 text-gray-900">
-                ${currency === "Dólares" ? "50" : "190000"}<span className="text-base font-normal">/mes</span>
+                ${=== "Dólares" ? "50" : "190000"}<span className="text-base font-normal">/mes</span>
               </div>
               <p className="text-gray-600 mb-6">{t.premiumDesc}</p>
               

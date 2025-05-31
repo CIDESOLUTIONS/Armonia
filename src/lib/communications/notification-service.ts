@@ -6,7 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { sendNotificationToUser, sendNotificationToUsers, sendNotificationByRole } from './websocket-server';
+import { sendNotificationToUser } from './websocket-server';
 
 const prisma = new PrismaClient();
 
@@ -34,7 +34,7 @@ export interface NotificationData {
 export async function notifyUser(userId: number, notification: NotificationData) {
   try {
     // Verificar si el usuario existe
-    const user = await prisma.user.findUnique({
+    const _user = await prisma.user.findUnique({
       where: { id: userId }
     });
     
@@ -90,7 +90,7 @@ export async function notifyUsers(userIds: number[], notification: NotificationD
     
     for (const userId of userIds) {
       try {
-        const result = await notifyUser(userId, notification);
+        const _result = await notifyUser(userId, notification);
         results.push(result);
       } catch (error) {
         console.error(`Error al enviar notificación al usuario ${userId}:`, error);
@@ -264,7 +264,7 @@ export async function getNotificationConfirmationStats(notificationId: string) {
     let totalRecipients = 1; // Por defecto, asumimos un solo destinatario
     
     if (notification.data) {
-      const data = JSON.parse(notification.data);
+      const _data = JSON.parse(notification.data);
       if (data.recipientRole) {
         totalRecipients = await prisma.user.count({
           where: { role: data.recipientRole }

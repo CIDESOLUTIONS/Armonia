@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { pool } from '@/lib/db';
 
 // GET /api/financial/payments/export
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
     const { searchParams } = new URL(req.url);
     const startDate = searchParams.get('startDate');
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       JOIN units u ON f.unit_id = u.id
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (startDate) {
       params.push(startDate);
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY p.payment_date DESC`;
 
-    const result = await pool.query(query, params);
+    const _result = await pool.query(query, params);
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error exporting payments:', error);

@@ -1,7 +1,7 @@
 // src/lib/api/fetcher.ts
 'use client';
 
-import { ServerLogger } from "../logging/server-logger";
+import { ServerLogger } from '../logging/server-logger';
 
 export interface FetcherOptions extends RequestInit {
   schema?: string;
@@ -32,7 +32,7 @@ export async function fetcher<T = any>(url: string, options: FetcherOptions = {}
     
     // Agregar token de autenticación si está disponible y no se debe omitir
     if (!skipAuth) {
-      const token = localStorage.getItem('token');
+      const _token = localStorage.getItem('token');
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
@@ -50,7 +50,7 @@ export async function fetcher<T = any>(url: string, options: FetcherOptions = {}
     };
     
     // Realizar la solicitud
-    const response = await fetch(fullUrl, finalOptions);
+    // Variable response eliminada por lint
     
     // Verificar si hay respuesta
     if (!response.ok) {
@@ -76,7 +76,7 @@ export async function fetcher<T = any>(url: string, options: FetcherOptions = {}
     }
     
     // Procesar respuesta como JSON
-    const data = await response.json();
+    const _data = await response.json();
     return data as T;
   } catch (error) {
     ServerLogger.error(`Error en fetcher para ${url}:`, error);
@@ -94,7 +94,7 @@ export function get<T = any>(url: string, options: FetcherOptions = {}): Promise
 /**
  * Cliente HTTP para solicitudes POST
  */
-export function post<T = any>(url: string, data: any, options: FetcherOptions = {}): Promise<T> {
+export function post<T = any>(url: string, data: unknown, options: FetcherOptions = {}): Promise<T> {
   return fetcher<T>(url, {
     ...options,
     method: 'POST',
@@ -105,7 +105,7 @@ export function post<T = any>(url: string, data: any, options: FetcherOptions = 
 /**
  * Cliente HTTP para solicitudes PUT
  */
-export function put<T = any>(url: string, data: any, options: FetcherOptions = {}): Promise<T> {
+export function put<T = any>(url: string, data: unknown, options: FetcherOptions = {}): Promise<T> {
   return fetcher<T>(url, {
     ...options,
     method: 'PUT',
@@ -116,7 +116,7 @@ export function put<T = any>(url: string, data: any, options: FetcherOptions = {
 /**
  * Cliente HTTP para solicitudes PATCH
  */
-export function patch<T = any>(url: string, data: any, options: FetcherOptions = {}): Promise<T> {
+export function patch<T = any>(url: string, data: unknown, options: FetcherOptions = {}): Promise<T> {
   return fetcher<T>(url, {
     ...options,
     method: 'PATCH',

@@ -1,6 +1,6 @@
 // Archivo temporal para diagnosticar y corregir el error de renderizado
 
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export default function ErrorFix() {
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function ErrorFix() {
       componentTypes.forEach(component => {
         try {
           // Esto es solo para diagnóstico y no se ejecutará realmente en tiempo de compilación
-          const dynamicImport = `import * as ${component}Component from '@/components/ui/${component}';`;
+          const _dynamicImport = `import * as ${component}Component from '@/components/ui/${component}';`;
           console.log(`Importación de ${component} parece correcta`);
         } catch (err) {
           console.error(`Error al importar ${component}:`, err);

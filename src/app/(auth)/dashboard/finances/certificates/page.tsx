@@ -5,54 +5,22 @@ import { useTranslation } from '@/context/TranslationContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow,  } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,  } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Textarea } from '@/components/ui/textarea';
+;
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { 
-  CalendarIcon, 
-  FileText, 
-  Download, 
-  Printer, 
-  Search,
-  Filter,
-  CheckCircle 
-} from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger,  } from '@/components/ui/popover';
+import { CalendarIcon, FileText, Download, Printer, Search, Filter, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
 import { Loading } from '@/components/Loading';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+;
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 
 // Define interfaces
@@ -78,13 +46,13 @@ interface Certificate {
 export default function CertificatesPage() {
   const { language } = useTranslation();
   const { toast } = useToast();
-  const { token, complexId, schemaName } = useAuth();
+  const { _token, complexId, schemaName  } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [_properties, _setProperties] = useState<Property[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('ALL');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [yearFilter, setYearFilter] = useState<number>(new Date().getFullYear());
   
   // Certificate form
@@ -184,7 +152,7 @@ export default function CertificatesPage() {
   };
 
   // Handle form input changes
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: unknown) => {
     setCertForm({
       ...certForm,
       [field]: value,

@@ -1,13 +1,6 @@
 // src/components/inventory/PropertiesTable.tsx
 import { useState } from 'react';
-import { 
-  Table, 
-  TableHead, 
-  TableRow, 
-  TableHeader, 
-  TableBody, 
-  TableCell 
-} from '@/components/ui/table';
+import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash } from 'lucide-react';
 

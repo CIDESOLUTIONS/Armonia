@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { createContext, useContext, useState, useCallback } from 'react';
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 // Tipos
 interface Toast {
@@ -170,7 +170,7 @@ function ToastContainer() {
 }
 
 // Helpers para uso directo
-export const toast = {
+export const _toast = {
   success: (message: string, title?: string) => {
     const context = useContext(ToastContext);
     if (context) {

@@ -2,14 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -54,11 +47,11 @@ export function VehiclesTable() {
     }
   ]);
   
-  const [searchTerm, setSearchTerm] = useState('');
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
   
-  const [formData, setFormData] = useState<Partial<Vehicle>>({
+  const [_formData, _setFormData] = useState<Partial<Vehicle>>({
     plate: '',
     type: 'Automóvil',
     brand: '',
@@ -140,7 +133,7 @@ export function VehiclesTable() {
         <Input
           placeholder="Buscar por placa, propietario, unidad..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
         <Button 

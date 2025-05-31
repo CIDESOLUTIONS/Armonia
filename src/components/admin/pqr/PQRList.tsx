@@ -1,8 +1,8 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/ui/badge';
 import { Pencil, Eye, Trash2, Clock, MessagesSquare } from 'lucide-react';
 
 export type PQRType = 'PETITION' | 'COMPLAINT' | 'CLAIM';

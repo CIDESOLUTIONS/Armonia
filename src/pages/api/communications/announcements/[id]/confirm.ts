@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
  * 
  * POST: Confirma la lectura de un anuncio específico por el usuario actual
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req:unknown, res: NextApiResponse) {
   // Verificar autenticación
   const session = await getServerSession(req, res, authOptions);
   

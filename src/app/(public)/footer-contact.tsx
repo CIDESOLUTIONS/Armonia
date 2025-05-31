@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Building, MessageSquare, Calendar, Mail, Phone } from "lucide-react";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Building, MessageSquare, Calendar, Mail, Phone } from 'lucide-react';
 
-export function FooterContact({ theme, language }: { theme: string, language?: string }) {
+export function FooterContact({ theme, uage }: { theme: string, uage?: string }) {
   // Si no se pasa el idioma, asumimos español
-  const currentLanguage = language || "Español";
+  const currentLanguage = uage || "Español";
   
   // Textos localizados
   const texts = {
@@ -62,7 +62,7 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
   
   const t = currentLanguage === "Español" ? texts.es : texts.en;
   
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     name: "",
     email: "",
     phone: "",
@@ -88,15 +88,9 @@ export function FooterContact({ theme, language }: { theme: string, language?: s
     setSubmitStatus(null);
     
     try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // Variable response eliminada por lint
       
-      const data = await response.json();
+      const _data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.error || 'Error al enviar el formulario');

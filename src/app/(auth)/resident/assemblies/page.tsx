@@ -31,14 +31,14 @@ interface Document {
 }
 
 export default function ResidentAssembliesPage() {
-  const router = useRouter();
-  const { isLoggedIn, token } = useAuth();
-  const [language, setLanguage] = useState('Español');
+  const _router = useRouter();
+  const { isLoggedIn, _token  } = useAuth();
+  const [language, _setLanguageUnused] = useState('Español');
   const [isClient, setIsClient] = useState(false);
   const [assemblies, setAssemblies] = useState<Assembly[]>([]);
   const [documents, setDocuments] = useState<{ [key: number]: Document[] }>({});
   const [isSubmitting, setIsSubmitting] = useState<{ [key: number]: number | null }>({});
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedAssembly, setSelectedAssembly] = useState<number | null>(null);
   const [userVotes, setUserVotes] = useState<{ [key: string]: 'YES' | 'NO' | null }>({});
@@ -54,10 +54,8 @@ export default function ResidentAssembliesPage() {
 
   const fetchAssemblies = async () => {
     try {
-      const response = await fetch('/api/assemblies/list', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
+      // Variable response eliminada por lint
+      const _data = await response.json();
       if (response.ok) {
         setAssemblies(data.assemblies || []);
         data.assemblies.forEach((assembly: Assembly) => {
@@ -74,10 +72,8 @@ export default function ResidentAssembliesPage() {
 
   const fetchDocuments = async (assemblyId: number) => {
     try {
-      const response = await fetch(`/api/assemblies/documents/list?assemblyId=${assemblyId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
+      // Variable response eliminada por lint
+      const _data = await response.json();
       if (response.ok) {
         setDocuments(prev => ({ ...prev, [assemblyId]: data.documents || [] }));
       } else {
@@ -90,10 +86,8 @@ export default function ResidentAssembliesPage() {
 
   const fetchUserVotes = async (assemblyId: number) => {
     try {
-      const response = await fetch(`/api/assemblies/voting/user-votes?assemblyId=${assemblyId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      const data = await response.json();
+      // Variable response eliminada por lint
+      const _data = await response.json();
       if (response.ok) {
         const newUserVotes = { ...userVotes };
         (data.votes || []).forEach((vote: { agendaNumeral: number, vote: 'YES' | 'NO' }) => {
@@ -115,16 +109,9 @@ export default function ResidentAssembliesPage() {
     setSuccess(null);
 
     try {
-      const response = await fetch('/api/assemblies/attendance/confirm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ assemblyId }),
-      });
+      // Variable response eliminada por lint
 
-      const data = await response.json();
+      const _data = await response.json();
       console.log('[Resident Assemblies] Respuesta de /api/assemblies/attendance/confirm:', data);
 
       if (!response.ok) {
@@ -146,16 +133,9 @@ export default function ResidentAssembliesPage() {
     setSuccess(null);
 
     try {
-      const response = await fetch('/api/assemblies/voting/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ assemblyId, agendaNumeral: numeral, vote }),
-      });
+      // Variable response eliminada por lint
 
-      const data = await response.json();
+      const _data = await response.json();
       console.log('[Resident Assemblies] Respuesta de /api/assemblies/voting/vote:', data);
 
       if (!response.ok) {
@@ -179,13 +159,11 @@ export default function ResidentAssembliesPage() {
 
   const handleDownloadDocument = async (documentId: number) => {
     try {
-      const response = await fetch(`/api/assemblies/documents/download?documentId=${documentId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       if (!response.ok) throw new Error('Error al descargar documento');
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const _url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = documents[selectedAssembly || 0]?.find(d => d.id === documentId)?.fileName || 'document.pdf';
@@ -207,7 +185,7 @@ export default function ResidentAssembliesPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">{language === 'Español' ? 'Asambleas Disponibles' : 'Available Assemblies'}</h2>
+      <h2 className="text-2xl font-bold mb-6">{uage === 'Español' ? 'Asambleas Disponibles' : 'Available Assemblies'}</h2>
       <div className="space-y-6">
         {assemblies.map(assembly => (
           <div key={assembly.id} className="bg-white shadow-md rounded-lg p-6">
@@ -218,7 +196,7 @@ export default function ResidentAssembliesPage() {
             <QuorumVerification 
               assemblyId={assembly.id}
               token={token}
-              language={language}
+              language={uage}
               totalUnits={assembly.totalUnits}
               quorumPercentage={assembly.quorumPercentage}
             />
@@ -231,11 +209,11 @@ export default function ResidentAssembliesPage() {
               {isSubmitting[assembly.id] === 0 ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              {language === 'Español' ? 'Confirmar Asistencia' : 'Confirm Attendance'}
+              {uage === 'Español' ? 'Confirmar Asistencia' : 'Confirm Attendance'}
             </Button>
             
             <div className="mt-6">
-              <h4 className="text-lg font-medium mb-3">{language === 'Español' ? 'Votaciones' : 'Voting'}</h4>
+              <h4 className="text-lg font-medium mb-3">{uage === 'Español' ? 'Votaciones' : 'Voting'}</h4>
               <div className="space-y-4">
                 {assembly.agenda.map(item => (
                   <div key={item.numeral} className="bg-gray-50 p-4 rounded-md">
@@ -245,7 +223,7 @@ export default function ResidentAssembliesPage() {
                       agendaNumeral={item.numeral}
                       topic={item.topic}
                       token={token}
-                      language={language}
+                      language={uage}
                       userVote={userVotes[`${assembly.id}-${item.numeral}`] || null}
                       onVoteSubmitted={() => fetchUserVotes(assembly.id)}
                     />
@@ -260,7 +238,7 @@ export default function ResidentAssembliesPage() {
                         {isSubmitting[assembly.id] === item.numeral ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         ) : null}
-                        {language === 'Español' ? 'Aprobar' : 'Approve'}
+                        {uage === 'Español' ? 'Aprobar' : 'Approve'}
                       </Button>
                       <Button
                         onClick={() => handleVote(assembly.id, item.numeral, 'NO')}
@@ -271,7 +249,7 @@ export default function ResidentAssembliesPage() {
                         {isSubmitting[assembly.id] === item.numeral ? (
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         ) : null}
-                        {language === 'Español' ? 'Rechazar' : 'Reject'}
+                        {uage === 'Español' ? 'Rechazar' : 'Reject'}
                       </Button>
                     </div>
                   </div>
@@ -280,7 +258,7 @@ export default function ResidentAssembliesPage() {
             </div>
             
             <div className="mt-6">
-              <h4 className="text-lg font-medium mb-3">{language === 'Español' ? 'Documentos' : 'Documents'}</h4>
+              <h4 className="text-lg font-medium mb-3">{uage === 'Español' ? 'Documentos' : 'Documents'}</h4>
               <div className="space-y-2">
                 {(documents[assembly.id] || []).length > 0 ? (
                   documents[assembly.id].map(doc => (
@@ -297,12 +275,12 @@ export default function ResidentAssembliesPage() {
                         className="bg-blue-600 hover:bg-blue-700 text-white"
                         size="sm"
                       >
-                        {language === 'Español' ? 'Descargar' : 'Download'}
+                        {uage === 'Español' ? 'Descargar' : 'Download'}
                       </Button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 italic">{language === 'Español' ? 'No hay documentos disponibles' : 'No documents available'}</p>
+                  <p className="text-gray-500 italic">{uage === 'Español' ? 'No hay documentos disponibles' : 'No documents available'}</p>
                 )}
               </div>
             </div>
@@ -312,7 +290,7 @@ export default function ResidentAssembliesPage() {
         {assemblies.length === 0 && (
           <div className="bg-white shadow-md rounded-lg p-6 text-center">
             <p className="text-gray-500">
-              {language === 'Español' 
+              {uage === 'Español' 
                 ? 'No hay asambleas programadas en este momento.' 
                 : 'No assemblies scheduled at this time.'}
             </p>

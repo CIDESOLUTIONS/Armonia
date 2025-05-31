@@ -5,11 +5,11 @@ import { pool } from '@/lib/db';
 
 // GET /api/financial/payments/[id]
 export async function GET(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {
-    const result = await pool.query(`
+    const _result = await pool.query(`
       SELECT 
         p.*,
         f.type as fee_type,
@@ -43,7 +43,7 @@ export async function GET(
 
 // PUT /api/financial/payments/[id]
 export async function PUT(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {

@@ -51,12 +51,12 @@ export async function closePool(): Promise<void> {
 /**
  * Ejecuta una consulta dentro de una transacción
  */
-export async function executeTransaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
+export async function executeTransaction<T>(callback: (client: unknown) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
-    const result = await callback(client);
+    const _result = await callback(client);
     await client.query('COMMIT');
     return result;
   } catch (error) {

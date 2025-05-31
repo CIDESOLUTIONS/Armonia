@@ -39,7 +39,7 @@ interface ResidentFormProps {
 }
 
 export function ResidentForm({ resident, onSave, onCancel, properties }: ResidentFormProps) {
-  const [formData, setFormData] = useState<Resident>(
+  const [_formData, _setFormData] = useState<Resident>(
     resident || {
       name: '',
       email: '',
@@ -53,7 +53,7 @@ export function ResidentForm({ resident, onSave, onCancel, properties }: Residen
     }
   );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, _setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

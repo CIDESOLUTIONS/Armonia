@@ -74,7 +74,7 @@ export class NotificationService {
    * Notificar creación de PQR
    * @param pqr Datos de la PQR
    */
-  static async notifyPQRCreation(pqr: any) {
+  static async notifyPQRCreation(pqr: unknown) {
     // Obtener administradores del conjunto
     const admins = await prisma.user.findMany({
       where: {
@@ -110,7 +110,7 @@ export class NotificationService {
    * @param pqr Datos de la PQR
    * @param oldStatus Estado anterior
    */
-  static async notifyPQRStatusChange(pqr: any, oldStatus: string) {
+  static async notifyPQRStatusChange(pqr: unknown, oldStatus: string) {
     // Obtener usuario que creó la PQR
     const creator = await prisma.user.findUnique({
       where: { id: pqr.userId }

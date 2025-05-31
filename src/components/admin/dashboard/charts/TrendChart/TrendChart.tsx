@@ -1,20 +1,12 @@
 import React from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface TrendChartProps {
   data: Array<{
     name: string;
     value: number;
     target?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   title: string;
   yAxisLabel?: string;

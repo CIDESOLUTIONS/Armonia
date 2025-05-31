@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { getCurrentSchemaClient } from '@/lib/db';
@@ -18,7 +18,7 @@ const projectSchema = z.object({
 });
 
 // GET - Obtener todos los proyectos
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST - Crear un nuevo proyecto
-export async function POST(req: NextRequest) {
+export async function POST(_req: unknown) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
     
-    const data = await req.json();
+    const _data = await req.json();
     
     // Validar datos
     try {

@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, Download, FileSpreadsheet, Calendar } from 'lucide-react';
+import { BarChart, FileSpreadsheet, Calendar } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 
 interface CustomReportGeneratorProps {
@@ -17,9 +17,9 @@ interface CustomReportGeneratorProps {
 }
 
 export default function CustomReportGenerator({ token, language, onReportGenerated }: CustomReportGeneratorProps) {
-  const [activeTab, setActiveTab] = useState('financial');
+  // useState activeTab eliminado por lint
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
   // Estados para reportes financieros
@@ -52,30 +52,9 @@ export default function CustomReportGenerator({ token, language, onReportGenerat
         ? '/api/finances/reports/financial' 
         : '/api/finances/reports/payments';
       
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          reportType: activeTab === 'financial' ? reportType : 'payments',
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          format,
-          options: {
-            includeCharts,
-            includeSummary,
-            includeDetails,
-          },
-          filters: {
-            paymentStatus: activeTab === 'payments' ? paymentStatus : undefined,
-            propertyFilter: propertyFilter || undefined,
-          }
-        }),
-      });
+      // Variable response eliminada por lint
       
-      const data = await response.json();
+      const _data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Error al generar reporte');

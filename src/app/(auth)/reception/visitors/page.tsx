@@ -3,34 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  UserPlus,
-  LogOut,
-  Search,
-  Filter,
-  Camera,
-  IdCard,
-  Clock,
-  Building,
-  User,
-  Phone,
-  Car,
-  AlertCircle,
-  CheckCircle,
-  Info,
-  PlusCircle,
-  X
-} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { UserPlus, LogOut, Search, Camera, IdCard, User, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -49,12 +32,12 @@ interface Visitor {
 }
 
 export default function ReceptionVisitorsPage() {
-  const { isLoggedIn, token, schemaName } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [visitors, setVisitors] = useState<Visitor[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, _setError] = useState<string | null>(null);
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'active' | 'departed' | 'all'>('active');
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
   const [newVisitorForm, setNewVisitorForm] = useState({
@@ -117,10 +100,8 @@ export default function ReceptionVisitorsPage() {
         setError(null);
         
         // En un entorno real, esto sería una llamada a la API
-        // const response = await fetch(`/api/reception/visitors?schemaName=${schemaName}`, {
-        //   headers: { 'Authorization': `Bearer ${token}` },
-        // });
-        // const result = await response.json();
+        // // Variable response eliminada por lint
+        // const _result = await response.json();
         // if (!response.ok) throw new Error(result.message || 'Error al cargar datos');
         // setVisitors(result.visitors);
         
@@ -183,7 +164,7 @@ export default function ReceptionVisitorsPage() {
   };
 
   // Función para manejar cambios en el formulario de registro
-  const handleNewVisitorFormChange = (field: string, value: any) => {
+  const handleNewVisitorFormChange = (field: string, value: unknown) => {
     setNewVisitorForm(prev => ({
       ...prev,
       [field]: value
@@ -223,13 +204,7 @@ export default function ReceptionVisitorsPage() {
       // if (newVisitorForm.plate) formData.append('plate', newVisitorForm.plate);
       // if (newVisitorForm.photo) formData.append('photo', newVisitorForm.photo);
       
-      // const response = await fetch(`/api/reception/visitors?schemaName=${schemaName}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: formData
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al registrar visitante');
@@ -283,12 +258,7 @@ export default function ReceptionVisitorsPage() {
     
     try {
       // En un entorno real, esto sería una llamada a la API
-      // const response = await fetch(`/api/reception/visitors/${visitorId}/exit?schemaName=${schemaName}`, {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // });
+      // // Variable response eliminada por lint
       
       // if (!response.ok) {
       //   throw new Error('Error al registrar salida');
@@ -398,7 +368,7 @@ export default function ReceptionVisitorsPage() {
               placeholder="Buscar por nombre, documento, destino, residente o placa..."
               className="pl-10"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             />
           </div>
           <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
@@ -509,7 +479,7 @@ export default function ReceptionVisitorsPage() {
                 id="name" 
                 placeholder="Nombre completo del visitante"
                 value={newVisitorForm.name}
-                onChange={(e) => handleNewVisitorFormChange('name', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewVisitorFormChange('name', e.target.value)}
               />
             </div>
             
@@ -538,7 +508,7 @@ export default function ReceptionVisitorsPage() {
                   id="documentNumber" 
                   placeholder="Número de identificación"
                   value={newVisitorForm.documentNumber}
-                  onChange={(e) => handleNewVisitorFormChange('documentNumber', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewVisitorFormChange('documentNumber', e.target.value)}
                 />
               </div>
             </div>
@@ -550,7 +520,7 @@ export default function ReceptionVisitorsPage() {
                   id="destination" 
                   placeholder="Ej: Apto 101, Oficina 203"
                   value={newVisitorForm.destination}
-                  onChange={(e) => handleNewVisitorFormChange('destination', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewVisitorFormChange('destination', e.target.value)}
                 />
               </div>
               
@@ -560,7 +530,7 @@ export default function ReceptionVisitorsPage() {
                   id="residentName" 
                   placeholder="Nombre del residente"
                   value={newVisitorForm.residentName}
-                  onChange={(e) => handleNewVisitorFormChange('residentName', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewVisitorFormChange('residentName', e.target.value)}
                 />
               </div>
             </div>
@@ -571,7 +541,7 @@ export default function ReceptionVisitorsPage() {
                 id="plate" 
                 placeholder="Placa del vehículo si aplica"
                 value={newVisitorForm.plate}
-                onChange={(e) => handleNewVisitorFormChange('plate', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNewVisitorFormChange('plate', e.target.value)}
               />
             </div>
             

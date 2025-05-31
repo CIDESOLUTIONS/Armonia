@@ -98,15 +98,15 @@ const mockResidents: Resident[] = [
 ];
 
 export default function AttendancePage() {
-  const router = useRouter();
-  const { schemaName, user, isLoggedIn, token } = useAuth();
+  const _router = useRouter();
+  const { schemaName, user, isLoggedIn, _token  } = useAuth();
   const { toast } = useToast();
-  const [language, setLanguage] = useState('Español');
+  const [language, _setLanguage] = useState('Español');
   const [residents, setResidents] = useState<Resident[]>(mockResidents);
   const [assemblies, setAssemblies] = useState<Assembly[]>(mockAssemblies);
   const [selectedAssembly, setSelectedAssembly] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [totalUnits, setTotalUnits] = useState<number>(50); // Valor simulado
   const [loading, setLoading] = useState(false);

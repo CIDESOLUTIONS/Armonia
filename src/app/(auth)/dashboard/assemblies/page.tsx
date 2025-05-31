@@ -3,15 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import {
-  Calendar,
-  Users,
-  CheckSquare,
-  FileText,
-  Plus,
-  Search
-} from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Users, CheckSquare, FileText, Plus, Search } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,7 +25,7 @@ export default function AssembliesPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("scheduled");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, _setError] = useState('');
   const [assemblies, setAssemblies] = useState<Assembly[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 

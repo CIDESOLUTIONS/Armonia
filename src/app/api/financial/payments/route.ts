@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { pool } from '@/lib/db';
 
 // GET /api/financial/payments
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       JOIN units u ON f.unit_id = u.id
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (status) {
       params.push(status);
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY ${finalSortField} ${finalSortDirection}`;
 
-    const result = await pool.query(query, params);
+    const _result = await pool.query(query, params);
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching payments:', error);

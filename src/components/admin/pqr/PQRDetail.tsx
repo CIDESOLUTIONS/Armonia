@@ -1,23 +1,14 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { 
-  Clock, User, Home, CheckCircle, XCircle, 
-  SendHorizontal, ArrowLeft, AlertTriangle
-} from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Clock, User, Home, CheckCircle, XCircle, SendHorizontal, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 import type { PQR, PQRStatus } from './PQRList';
 
@@ -371,7 +362,7 @@ export default function PQRDetail({
               <Textarea
                 id="newComment"
                 value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewComment(e.target.value)}
                 placeholder={language === 'Español' 
                   ? 'Escribe tu comentario aquí...' 
                   : 'Write your comment here...'}

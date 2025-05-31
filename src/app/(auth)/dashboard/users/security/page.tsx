@@ -1,37 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { PlusCircle, Search, Edit, Trash2, Shield, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { useState, useEffect } from 'react';
+import { PlusCircle, Search, Edit, Trash2, Shield, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow,  } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,  } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardPageHeader } from '@/components/dashboard/DashboardPageHeader';
 import toast from "react-hot-toast";
 
 // Tipos para los datos de personal de seguridad
@@ -49,7 +29,7 @@ interface SecurityStaff {
 }
 
 export default function SecurityStaffPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [_searchTerm, _setSearchTerm] = useState("");
   const [selectedZone, setSelectedZone] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -57,7 +37,7 @@ export default function SecurityStaffPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [securityStaff, setSecurityStaff] = useState<SecurityStaff[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<SecurityStaff | null>(null);
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     name: "",
     email: "",
     phone: "",

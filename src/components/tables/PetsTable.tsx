@@ -2,14 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash, Plus, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -54,11 +47,11 @@ export function PetsTable() {
     }
   ]);
   
-  const [searchTerm, setSearchTerm] = useState('');
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPet, setCurrentPet] = useState<Pet | null>(null);
   
-  const [formData, setFormData] = useState<Partial<Pet>>({
+  const [_formData, _setFormData] = useState<Partial<Pet>>({
     name: '',
     type: 'Perro',
     breed: '',
@@ -149,7 +142,7 @@ export function PetsTable() {
         <Input
           placeholder="Buscar por nombre, propietario, tipo..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
         <Button 

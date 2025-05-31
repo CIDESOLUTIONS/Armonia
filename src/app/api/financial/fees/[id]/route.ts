@@ -5,11 +5,11 @@ import { pool } from '@/lib/db';
 
 // GET /api/financial/fees/[id]
 export async function GET(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {
-    const result = await pool.query(`
+    const _result = await pool.query(`
       SELECT 
         f.*,
         u.unit_number,
@@ -45,14 +45,14 @@ export async function GET(
 
 // PUT /api/financial/fees/[id]
 export async function PUT(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {
     const body = await req.json();
     const { amount, dueDate, status } = body;
 
-    const result = await pool.query(`
+    const _result = await pool.query(`
       UPDATE fees 
       SET amount = $1,
           due_date = $2,
@@ -81,7 +81,7 @@ export async function PUT(
 
 // POST /api/financial/fees/[id]/payment
 export async function POST(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {

@@ -3,33 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import {
-  BarChart4,
-  DollarSign,
-  CalendarClock,
-  AlertCircle,
-  Home,
-  Car,
-  Paw,
-  MessageSquare,
-  Users,
-  ArrowRight,
-  ThumbsUp,
-  Info,
-  Bell,
-  Calendar,
-  CreditCard,
-  FileText,
-  CheckCircle,
-  Clock
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+;
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { DollarSign, CalendarClock, AlertCircle, Home, Users, ArrowRight, Info, Bell, Calendar, CreditCard, FileText, CheckCircle, Clock } from 'lucide-react';
 
 interface Notification {
   id: string;
@@ -86,11 +67,11 @@ interface ResidentData {
 }
 
 export default function ResidentDashboard() {
-  const { isLoggedIn, token, schemaName, residentName } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, _token, schemaName,  } = useAuth();
+  const _router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ResidentData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   // Datos de ejemplo para desarrollo y pruebas
   const mockData: ResidentData = {
@@ -181,10 +162,8 @@ export default function ResidentDashboard() {
         setError(null);
         
         // En un entorno real, esto sería una llamada a la API
-        // const response = await fetch(`/api/resident/dashboard?schemaName=${schemaName}`, {
-        //   headers: { 'Authorization': `Bearer ${token}` },
-        // });
-        // const result = await response.json();
+        // // Variable response eliminada por lint
+        // const _result = await response.json();
         // if (!response.ok) throw new Error(result.message || 'Error al cargar datos');
         // setData(result);
         

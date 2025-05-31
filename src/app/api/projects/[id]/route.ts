@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { getCurrentSchemaClient } from '@/lib/db';
@@ -19,7 +19,7 @@ const projectUpdateSchema = z.object({
 
 // GET - Obtener un proyecto específico
 export async function GET(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -63,7 +63,7 @@ export async function GET(
 
 // PUT - Actualizar un proyecto
 export async function PUT(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -82,7 +82,7 @@ export async function PUT(
       );
     }
     
-    const data = await req.json();
+    const _data = await req.json();
     
     // Validar datos
     try {
@@ -109,7 +109,7 @@ export async function PUT(
     }
     
     // Convertir fechas si están presentes
-    const updateData: any = { ...data };
+    const updateData: unknown = { ...data };
     if (data.startDate) {
       updateData.startDate = new Date(data.startDate);
     }
@@ -134,7 +134,7 @@ export async function PUT(
 
 // DELETE - Eliminar un proyecto
 export async function DELETE(
-  req: NextRequest,
+  _req:unknown,
   { params }: { params: { id: string } }
 ) {
   try {

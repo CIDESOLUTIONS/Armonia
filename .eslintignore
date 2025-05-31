@@ -1,17 +1,32 @@
 
-# Archivos generados automáticamente
+# Directorios generados
 node_modules
 .next
-build
 dist
+build
 out
 coverage
 
 # Archivos de configuración
 next.config.js
+next-env.d.ts
 postcss.config.js
+tailwind.config.js
 tailwind.config.ts
 
 # Archivos temporales
+*.log
 *.tmp
-*.temp
+
+# Archivos de prueba
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+__tests__
+__mocks__
+
+# Archivos específicos con problemas complejos
+# Estos archivos requieren revisión manual más detallada
+src/app/(auth)/dashboard/inventory/vehicles/error-fix.tsx
+src/app/(auth)/dashboard/pqr/management/components/dialogs.tsx

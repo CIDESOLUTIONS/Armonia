@@ -1,19 +1,11 @@
 import React from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface StatisticsChartProps {
   data: Array<{
     name: string;
     value: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   lines: Array<{
     key: string;

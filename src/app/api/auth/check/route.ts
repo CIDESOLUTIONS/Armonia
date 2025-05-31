@@ -1,7 +1,7 @@
 // src/app/api/auth/check/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth } from "@/lib/auth";
-import { ServerLogger } from "@/lib/logging/server-logger";
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
 /**
  * Endpoint para verificar si un token de autenticación es válido

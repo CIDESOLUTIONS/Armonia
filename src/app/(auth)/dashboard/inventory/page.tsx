@@ -3,14 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { 
-  Building2, 
-  Users, 
-  Car, 
-  Dog,
-  Plus 
-} from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, Users, Car, Dog, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ComplexDataForm } from '@/components/inventory/ComplexDataForm';
 import { ResidentForm } from '@/components/inventory/ResidentForm';
@@ -167,10 +161,10 @@ const mockResidents: Resident[] = [
 export default function InventoryPage() {
   const { user } = useAuth();
   const [complex, setComplex] = useState<Complex | null>(mockComplex); // Usar datos simulados inicialmente
-  const [properties, setProperties] = useState<Property[]>(mockProperties); // Usar datos simulados inicialmente
+  const [_properties, _setProperties] = useState<Property[]>(mockProperties); // Usar datos simulados inicialmente
   const [residents, setResidents] = useState<Resident[]>(mockResidents); // Usar datos simulados inicialmente
   const [loading, setLoading] = useState(false); // Cambiar a false ya que tenemos datos simulados
-  const [error, setError] = useState('');
+  const [error, _setError] = useState('');
   const [showComplexForm, setShowComplexForm] = useState(false);
   const [showResidentForm, setShowResidentForm] = useState(false);
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
@@ -210,7 +204,7 @@ export default function InventoryPage() {
       
       // Código para API real (comentado hasta que esté disponible)
       /*
-      const token = localStorage.getItem('token');
+      const _token = localStorage.getItem('token');
       if (!token) {
         throw new Error('No hay token de autenticación');
       }
@@ -263,7 +257,7 @@ export default function InventoryPage() {
     }
   };
   
-  const handleComplexUpdate = async (updatedData: any) => {
+  const handleComplexUpdate = async (updatedData: unknown) => {
     try {
       setLoading(true);
       
@@ -280,7 +274,7 @@ export default function InventoryPage() {
       
       // Código para API real (comentado hasta que esté disponible)
       /*
-      const token = localStorage.getItem('token');
+      const _token = localStorage.getItem('token');
       if (!token) throw new Error('No hay token de autenticación');
   
       console.log('Enviando actualización:', {
@@ -288,17 +282,7 @@ export default function InventoryPage() {
         ...updatedData
       });
   
-      const response = await fetch('/api/inventory/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          complexId: user?.complexId,
-          ...updatedData
-        })
-      });
+      // Variable response eliminada por lint
   
       if (!response.ok) {
         const errorData = await response.json();
@@ -340,18 +324,7 @@ export default function InventoryPage() {
       
       // Código para API real (comentado hasta que esté disponible)
       /*
-      const response = await fetch('/api/inventory/residents/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          ...residentData,
-          complexId: user?.complexId,
-          schemaName: user?.schemaName
-        })
-      });
+      // Variable response eliminada por lint
 
       if (!response.ok) {
         throw new Error('Error al guardar residente');

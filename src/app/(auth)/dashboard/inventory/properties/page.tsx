@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building, Plus, Pencil, Trash2, Save, X, Home, Car, Package } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Building, Plus, Pencil, Trash2, Save, Home } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface Property {
   id: number;
@@ -33,14 +33,14 @@ const PROPERTY_TYPES = ["Apartamento", "Casa", "Local comercial", "Parqueadero",
 const PROPERTY_STATUS = ["Ocupado", "Desocupado", "En arriendo", "En venta"];
 
 const PropertiesPage = () => {
-  const { token, complexId, schemaName } = useAuth();
-  const [properties, setProperties] = useState<Property[]>([]);
+  const { _token, complexId, schemaName  } = useAuth();
+  const [_properties, _setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [error, _setError] = useState("");
+  const [_showDialog, _setShowDialog] = useState(false);
+  const [_isEditing, _setIsEditing] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [formData, setFormData] = useState<Partial<Property>>({
+  const [_formData, _setFormData] = useState<Partial<Property>>({
     unitNumber: "",
     type: "Apartamento",
     area: 0,
@@ -55,7 +55,7 @@ const PropertiesPage = () => {
     ownerPhone: ""
   });
   const [activeTab, setActiveTab] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [_searchTerm, _setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchProperties();
@@ -152,15 +152,13 @@ const PropertiesPage = () => {
       
       // En una implementación real, descomentar este código
       /*
-      const response = await fetch(`/api/inventory/properties?complexId=${complexId}&schemaName=${schemaName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error("Error al cargar las propiedades");
       }
       
-      const data = await response.json();
+      const _data = await response.json();
       setProperties(data.properties);
       setIsLoading(false);
       */
@@ -249,23 +247,13 @@ const PropertiesPage = () => {
       
       // En una implementación real, enviar datos al backend
       /*
-      const url = isEditing 
+      const _url = isEditing 
         ? `/api/inventory/properties/${selectedProperty.id}` 
         : '/api/inventory/properties';
       
-      const method = isEditing ? 'PUT' : 'POST';
+      const _method = isEditing ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
-        method,
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...formData,
-          complexId
-        })
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error("Error al guardar la propiedad");
@@ -297,10 +285,7 @@ const PropertiesPage = () => {
       
       // En una implementación real, enviar solicitud al backend
       /*
-      const response = await fetch(`/api/inventory/properties/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error("Error al eliminar la propiedad");

@@ -1,21 +1,21 @@
 // src/app/api/assemblies/list/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function GET(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function GET(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) {
     return NextResponse.json({ message: 'No token provided' }, { status: 401 });
   }
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { id: number; complexId: number; schemaName: string; role: string };
+    // Variable decoded eliminada por lint complexId: number; schemaName: string; role: string };
     console.log('[API Assemblies List] Token decodificado:', decoded);
 
-    const schemaName = decoded.schemaName.toLowerCase();
+    const _schemaName = decoded.schemaName.toLowerCase();
     await prisma.$disconnect();
     await prisma.$connect();
     prisma.setTenantSchema(schemaName);

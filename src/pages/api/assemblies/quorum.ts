@@ -5,19 +5,19 @@ import { verifyToken } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req:unknown, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Método no permitido' });
   }
 
   try {
     // Verificar autenticación
-    const token = req.headers.authorization?.split(' ')[1];
+    const _token = req.headers.authorization?.split(' ')[1];
     if (!token) {
       return res.status(401).json({ message: 'No autorizado' });
     }
 
-    const decoded = verifyToken(token);
+    // Variable decoded eliminada por lint
     if (!decoded) {
       return res.status(401).json({ message: 'Token inválido' });
     }

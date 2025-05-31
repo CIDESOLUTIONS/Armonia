@@ -33,7 +33,7 @@ export async function decrypt(token: string): Promise<Session> {
 // Middleware de autenticación mejorado
 export async function authenticate(request: Request) {
   const cookieStore = cookies();
-  const token = cookieStore.get('token')?.value;
+  const _token = cookieStore.get('token')?.value;
 
   if (!token) {
     return NextResponse.json(

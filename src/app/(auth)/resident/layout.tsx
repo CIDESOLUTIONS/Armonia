@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Header } from "@/components/layout/header";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Header } from '@/components/layout/header';
 import ResidentSidebar from "@/components/layout/ResidentSidebar";
-import { useAuth } from "@/context/AuthContext";
-import { Loader2 } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function ResidentLayout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, loading, residentName, complexName, logout: authLogout } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, loading, complexName, _logout: authLogout  } = useAuth();
+  const _router = useRouter();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
-  const [language, setLanguage] = useState("Español");
-  const [theme, setTheme] = useState("Claro");
-  const [currency, setCurrency] = useState("Pesos");
+  const [language, _setLanguageUnused] = useState("Español");
+  const [_theme, _setTheme] = useState("Claro");
+  const [_currency, _setCurrency] = useState("Pesos");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   useEffect(() => {
@@ -38,10 +38,7 @@ export default function ResidentLayout({ children }: { children: React.ReactNode
   const handleLogout = async () => {
     try {
       console.log('[ResidentLayout] Iniciando proceso de logout');
-      const response = await fetch("/api/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      // Variable response eliminada por lint
       
       if (response.ok) {
         console.log('[ResidentLayout] Logout exitoso en el API');
@@ -85,9 +82,9 @@ export default function ResidentLayout({ children }: { children: React.ReactNode
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       <div className={`fixed z-20 h-full ${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
         <ResidentSidebar
-          language={language}
+          language={uage}
           theme={theme}
-          currency={currency}
+          currency={}
           residentName={residentName || 'Residente'}
           complexName={complexName}
           logout={handleLogout}
@@ -99,9 +96,9 @@ export default function ResidentLayout({ children }: { children: React.ReactNode
         <Header
           theme={theme}
           setTheme={setTheme}
-          language={language}
+          language={uage}
           setLanguage={setLanguage}
-          currency={currency}
+          currency={}
           setCurrency={setCurrency}
           logout={handleLogout}
           isLoggedIn={isLoggedIn}

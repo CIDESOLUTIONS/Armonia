@@ -1,14 +1,7 @@
 // src/components/tables/ResidentsTable.tsx
 "use client";
 
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -41,7 +34,7 @@ export function ResidentsTable({
   onDelete,
   onView
 }: ResidentsTableProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [_searchTerm, _setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -106,7 +99,7 @@ export function ResidentsTable({
         <Input
           placeholder="Buscar por nombre, email, DNI o unidad..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
       </div>

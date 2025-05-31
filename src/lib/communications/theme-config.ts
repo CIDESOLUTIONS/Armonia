@@ -113,9 +113,9 @@ let customTheme: Partial<ThemeConfig> | null = null;
  */
 export async function loadCustomTheme(): Promise<void> {
   try {
-    const response = await fetch('/api/settings/theme');
+    // Variable response eliminada por lint
     if (response.ok) {
-      const data = await response.json();
+      const _data = await response.json();
       customTheme = data;
     }
   } catch (error) {

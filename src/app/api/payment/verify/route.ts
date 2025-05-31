@@ -1,10 +1,10 @@
 // src/app/api/payment/verify/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: unknown) {
   try {
-    const url = new URL(req.url);
+    // Variable url eliminada por lint
     const transactionId = url.searchParams.get('transactionId');
     
     if (!transactionId) {

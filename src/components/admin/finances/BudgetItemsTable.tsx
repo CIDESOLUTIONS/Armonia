@@ -1,15 +1,8 @@
 "use client";
 
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/ui/badge';
 import { Trash2 } from 'lucide-react';
 
 interface BudgetItem {
@@ -22,7 +15,7 @@ interface BudgetItem {
 
 interface BudgetItemsTableProps {
   items: BudgetItem[];
-  onRemove: (index: number) => void;
+  onRemove: (_index: number) => void;
   currencySymbol: string;
   language: string;
   readOnly?: boolean;

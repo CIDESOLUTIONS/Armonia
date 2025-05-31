@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/';
+import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/';
 import { Button } from '@/components/ui/button';
 import { ExtraordinaryFeeService } from '@/lib/financial/extraordinary-fee-service';
 import { CommonServiceFeeService } from '@/lib/financial/common-service-fee-service';
@@ -23,9 +14,9 @@ export default function FinancialManagementPage() {
   const handleGenerateExtraordinaryFee = async () => {
     try {
       // TODO: Obtener complexId del contexto o sesión actual
-      const complexId = 1; 
+      const _complexId = 1; 
       
-      const result = await ExtraordinaryFeeService.createExtraordinaryFee(
+      const _result = await ExtraordinaryFeeService.createExtraordinaryFee(
         complexId,
         500.00, // Monto de ejemplo
         'Reparación de áreas comunes',
@@ -43,9 +34,9 @@ export default function FinancialManagementPage() {
   const handleGenerateCommonServiceFees = async () => {
     try {
       // TODO: Obtener complexId del contexto o sesión actual
-      const complexId = 1;
+      const _complexId = 1;
       
-      const result = await CommonServiceFeeService.generateCommonServiceFees(
+      const _result = await CommonServiceFeeService.generateCommonServiceFees(
         complexId,
         year,
         month

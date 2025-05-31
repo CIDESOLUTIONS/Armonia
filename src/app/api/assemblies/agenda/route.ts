@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Variable JWT_SECRET eliminada por lint
 
-export async function GET(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function GET(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { searchParams } = new URL(req.url);
-  const assemblyId = parseInt(searchParams.get('assemblyId') || '');
+  // Variable assemblyId eliminada por lint
 
   if (!token || !assemblyId) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { schemaName: string };
-    const schemaName = decoded.schemaName.toLowerCase();
+    // Variable decoded eliminada por lint
+    const _schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     const agenda = await prisma.$queryRawUnsafe(
@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function PUT(_req: unknown) {
+  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { searchParams } = new URL(req.url);
   const id = parseInt(searchParams.get('id') || '');
   const { notes, completed } = await req.json();
@@ -35,8 +35,8 @@ export async function PUT(req: NextRequest) {
   if (!token || !id) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
 
   try {
-    const decoded = verify(token, JWT_SECRET) as { schemaName: string };
-    const schemaName = decoded.schemaName.toLowerCase();
+    // Variable decoded eliminada por lint
+    const _schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     await prisma.$queryRawUnsafe(

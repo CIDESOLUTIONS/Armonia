@@ -1,7 +1,7 @@
 // src/lib/services/inventory-service.ts
 'use client';
 
-import { fetcher, get, post, put, del } from '@/lib/api/fetcher';
+import { get, post, put, del } from '@/lib/api/fetcher';
 import { ServerLogger } from '../logging/server-logger';
 
 // Tipos para el módulo de Inventario
@@ -216,7 +216,7 @@ class InventoryService {
       });
       
       const query = queryParams.toString();
-      const url = `/api/inventory/properties${query ? `?${query}` : ''}`;
+      const _url = `/api/inventory/properties${query ? `?${query}` : ''}`;
       
       return await get<PropertyListResponse>(url, { schema: this.schema });
     } catch (error) {

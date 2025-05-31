@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 export function VideoShowcase({ theme, language }: { theme: string, language?: string }) {
   // Si no se pasa el idioma, asumimos español

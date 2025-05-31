@@ -1,14 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import {
-  Home,
-  Users,
-  Calendar,
-  FileText,
-  Settings,
-  X
-} from 'lucide-react';
+import { Home, Users, Calendar, FileText, Settings, X } from 'lucide-react';
 
 interface DashboardSidebarProps {
   isOpen: boolean;
@@ -19,7 +12,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   isOpen, 
   onClose 
 }) => {
-  const router = useRouter();
+  const _router = useRouter();
 
   const menuItems = [
     {

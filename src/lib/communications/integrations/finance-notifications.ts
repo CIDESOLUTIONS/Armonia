@@ -5,13 +5,7 @@
  * relacionadas con eventos del módulo financiero.
  */
 
-import { 
-  notifyUser, 
-  notifyByRole, 
-  notifyAll,
-  NotificationType,
-  NotificationPriority
-} from '@/lib/communications/notification-service';
+import { notifyUser, notifyByRole } from '@/lib/communications/notification-service';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

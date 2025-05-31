@@ -37,7 +37,7 @@ interface BulkFeeCreation {
 export const useFees = () => {
   const [fees, setFees] = useState<Fee[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   const fetchFees = useCallback(async (filters?: FeeFilters) => {
     setLoading(true);
@@ -49,10 +49,10 @@ export const useFees = () => {
       if (filters?.startDate) queryParams.append('startDate', filters.startDate);
       if (filters?.endDate) queryParams.append('endDate', filters.endDate);
 
-      const response = await fetch(`/api/financial/fees?${queryParams}`);
+      const _response = await fetch(`/api/financial/fees?${queryParams}`);
       if (!response.ok) throw new Error('Error al obtener cuotas');
 
-      const data = await response.json();
+      const _data = await response.json();
       setFees(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
@@ -66,7 +66,7 @@ export const useFees = () => {
   const createBulkFees = useCallback(async (data: BulkFeeCreation) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/financial/fees/bulk', {
+      const _response = await fetch('/api/financial/fees/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -90,7 +90,7 @@ export const useFees = () => {
   const getFeeById = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/fees/${id}`);
+      const _response = await fetch(`/api/financial/fees/${id}`);
       if (!response.ok) throw new Error('Error al obtener cuota');
 
       const fee = await response.json();
@@ -108,7 +108,7 @@ export const useFees = () => {
   const updateFee = useCallback(async (id: string, updates: Partial<Fee>) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/fees/${id}`, {
+      const _response = await fetch(`/api/financial/fees/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -141,7 +141,7 @@ export const useFees = () => {
   const registerPayment = useCallback(async (feeId: string, paymentData: PaymentRegistration) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/financial/fees/${feeId}/payment`, {
+      const _response = await fetch(`/api/financial/fees/${feeId}/payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData),
@@ -149,7 +149,7 @@ export const useFees = () => {
 
       if (!response.ok) throw new Error('Error al registrar pago');
 
-      const result = await response.json();
+      const _result = await response.json();
       // Actualizar la lista de cuotas con el nuevo pago
       await fetchFees();
       

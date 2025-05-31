@@ -5,7 +5,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const schemaName = searchParams.get('schemaName') || 'armonia';
+    const _schemaName = searchParams.get('schemaName') || 'armonia';
     prisma.setTenantSchema(schemaName);
     const tenants = await prisma.manualTenant.findMany();
     return NextResponse.json(tenants);

@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle,  } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { PQRService } from '@/lib/pqr/pqr-service';
 import { toast } from '@/components/ui/use-toast';
@@ -135,7 +130,7 @@ export function PQRDetailDialog({ pqr, isOpen, onOpenChange, onUpdate, currentUs
             <p className="text-sm font-medium">Añadir Comentario:</p>
             <textarea
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComment(e.target.value)}
               className="w-full p-2 border rounded"
               rows={2}
               placeholder="Escriba su comentario aquí..."

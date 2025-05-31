@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
  * GET: Obtiene notificaciones del usuario actual
  * POST: Crea una nueva notificación (solo administradores)
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req:unknown, res: NextApiResponse) {
   // Verificar autenticación
   const session = await getServerSession(req, res, authOptions);
   
@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
  * Obtiene notificaciones del usuario actual
  */
 async function getNotifications(
-  req: NextApiRequest,
+  _req:unknown,
   res: NextApiResponse,
   userId: number
 ) {
@@ -47,7 +47,7 @@ async function getNotifications(
     const { type, read, limit } = req.query;
     
     // Construir consulta base
-    const queryOptions: any = {
+    const queryOptions: unknown = {
       where: {
         recipientId: userId
       },
@@ -99,7 +99,7 @@ async function getNotifications(
  * Crea una nueva notificación (solo administradores)
  */
 async function createNotification(
-  req: NextApiRequest,
+  _req:unknown,
   res: NextApiResponse,
   userId: number,
   userRole: string

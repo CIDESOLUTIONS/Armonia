@@ -31,20 +31,18 @@ export default function QuorumVerification({
 }: QuorumVerificationProps) {
   const [stats, setStats] = useState<AttendanceStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchQuorumStats = async () => {
     try {
-      const response = await fetch(`/api/assemblies/quorum?assemblyId=${assemblyId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      // Variable response eliminada por lint
       
       if (!response.ok) {
         throw new Error(language === 'Español' ? 'Error al cargar datos de quórum' : 'Error loading quorum data');
       }
       
-      const data = await response.json();
+      const _data = await response.json();
       setStats(data);
       setLastUpdate(new Date());
       setError(null);

@@ -4,13 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BudgetItemFormProps {
   onAdd: (category: string, description: string, amount: number, type: 'INCOME' | 'EXPENSE') => void;
@@ -44,7 +38,7 @@ export default function BudgetItemForm({ onAdd, error, language }: BudgetItemFor
         </label>
         <Input
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCategory(e.target.value)}
           placeholder={language === 'Español' ? 'Ej: Mantenimiento' : 'Ex: Maintenance'}
           className="w-full"
         />
@@ -55,7 +49,7 @@ export default function BudgetItemForm({ onAdd, error, language }: BudgetItemFor
         </label>
         <Input
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
           placeholder={language === 'Español' ? 'Ej: Pintura fachada' : 'Ex: Facade painting'}
           className="w-full"
         />
@@ -69,7 +63,7 @@ export default function BudgetItemForm({ onAdd, error, language }: BudgetItemFor
           min="0"
           step="0.01"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
           placeholder="0.00"
           className="w-full"
         />

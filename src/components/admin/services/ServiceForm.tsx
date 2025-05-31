@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { X, Save, Clock, Users, DollarSign } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { X, Save, Clock, Users, DollarSign } from 'lucide-react';
 
 interface ServiceFormProps {
-  initialData: any;
-  onSubmit: (data: any) => void;
+  initialData: unknown;
+  onSubmit: (data: unknown) => void;
   onCancel: () => void;
   isEditing: boolean;
 }
@@ -23,7 +23,7 @@ export default function ServiceForm({
   isEditing,
 }: ServiceFormProps) {
   const { complexId } = useAuth();
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     name: "",
     description: "",
     capacity: 10,

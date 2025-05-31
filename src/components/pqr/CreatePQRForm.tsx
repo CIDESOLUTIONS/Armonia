@@ -1,26 +1,13 @@
 // src/components/pqr/CreatePQRForm.tsx
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from "@/components/ui/card";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 enum PQRType {
   PETITION = 'PETITION',
@@ -47,7 +34,7 @@ export function CreatePQRForm({
   isInCard = false
 }: CreatePQRFormProps) {
   // Estados para el formulario
-  const [formData, setFormData] = useState({
+  const [_formData, _setFormData] = useState({
     title: "",
     description: "",
     type: PQRType.PETITION,
@@ -58,7 +45,7 @@ export function CreatePQRForm({
   
   // Estados para la carga y errores
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   
   // Categorías disponibles
   const categories = [
