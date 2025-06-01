@@ -6,7 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
@@ -121,11 +121,11 @@ export async function logAuditAction(data: AuditData, request?: NextRequest): Pr
 /**
  * Middleware para auditar acciones automáticamente
  */
-export function auditMiddleware(actionType: AuditActionType, detailsGenerator: (_req:unknown) => string) {
-  return async (handler: Function) => {
+export function auditMiddleware(actionType: AuditActionType, detailsGenerator: (req: NextRequest) => string) {
+  return (handler: Function) => {
     return async (request: NextRequest, ...args: unknown[]) => {
       // Procesar la solicitud primero
-      // Variable response eliminada por lint
+      const response = await handler(request, ...args);
       
       // Determinar el estado basado en la respuesta
       const status = response.status >= 400 
@@ -171,7 +171,7 @@ export async function getAuditLogs({
 }) {
   try {
     // Construir filtros
-    const where: unknown = {};
+    const where: Record<string, any> = {};
     
     if (userId) where.userId = userId;
     if (action) where.action = action;
@@ -234,7 +234,7 @@ export async function cleanupAuditLogs() {
     retentionDate.setDate(retentionDate.getDate() - retentionDays);
     
     // Eliminar registros antiguos
-    const _result = await prisma.auditLog.deleteMany({
+    const result = await prisma.auditLog.deleteMany({
       where: {
         timestamp: {
           lt: retentionDate

@@ -72,7 +72,7 @@ export function xssProtection(handler: Function) {
         });
         
         // Procesar la solicitud con el handler
-        // Variable response eliminada por lint
+        const response = await handler(newRequest, ...args);
         
         // Establecer headers de seguridad en la respuesta
         return setSecurityHeaders(response);
@@ -83,7 +83,7 @@ export function xssProtection(handler: Function) {
     }
     
     // Para otros tipos de solicitudes, solo establecer headers de seguridad
-    // Variable response eliminada por lint
+    const response = await handler(request, ...args);
     return setSecurityHeaders(response);
   };
 }

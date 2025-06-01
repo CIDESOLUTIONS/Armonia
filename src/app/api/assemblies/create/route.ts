@@ -1,16 +1,17 @@
 // src/app/api/assemblies/create/route.ts
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
-;
+import { csrfProtection } from '@/lib/security/csrf-protection';
+import { xssProtection } from '@/lib/security/xss-protection';
+import { auditMiddleware, AuditActionType } from '@/lib/security/audit-trail';
+import { verifyToken } from '@/lib/auth';
 
-// Variable JWT_SECRET eliminada por lint
-
-export async function POST(_req: unknown) {
-  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function POST(req: Request) {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    // Variable decoded eliminada por lint complexId: number; schemaName?: string };
+    const decoded = await verifyToken(token);
     console.log('[API Assemblies/Create] Token:', decoded);
 
     const body = await req.json();
@@ -19,7 +20,7 @@ export async function POST(_req: unknown) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    const _schemaName = decoded.schemaName || `schema_${decoded.complexId}`;
+    const schemaName = decoded.schemaName || `schema_${decoded.complexId}`;
     const prisma = getPrisma(schemaName);
     console.log('[API Assemblies/Create] Usando schema:', schemaName);
 
@@ -70,3 +71,13 @@ export async function POST(_req: unknown) {
     return NextResponse.json({ message: 'Error al crear la asamblea', error: String(error) }, { status: 500 });
   }
 }
+
+// Aplicar middlewares de seguridad
+export const POST_handler = csrfProtection(
+  xssProtection(
+    auditMiddleware(
+      AuditActionType.DATA_CREATE,
+      (req) => `Creación de asamblea: ${req.headers.get('x-request-id') || 'ID no disponible'}`
+    )(POST)
+  )
+);
