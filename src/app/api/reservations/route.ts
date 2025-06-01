@@ -1,76 +1,101 @@
-// src/app/api/reservations/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { ReservationService } from '@/services/reservationService';
-import { ServerLogger } from '@/lib/logging/server-logger';
+import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/auth-options';
+import { authOptions } from '@/lib/auth';
+import { serverLogger } from '@/lib/logging/server-logger';
+import { ReservationStatus } from '@prisma/client';
 
 /**
  * GET /api/reservations
- * Obtiene las reservas según los filtros especificados
+ * Obtiene la lista de reservas según filtros
  */
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
+
     // Obtener parámetros de consulta
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId') ? parseInt(searchParams.get('userId') || '0', 10) : undefined;
-    const propertyId = searchParams.get('propertyId') ? parseInt(searchParams.get('propertyId') || '0', 10) : undefined;
-    const commonAreaId = searchParams.get('commonAreaId') ? parseInt(searchParams.get('commonAreaId') || '0', 10) : undefined;
-    const status = searchParams.get('status') || undefined;
-    const startDateStr = searchParams.get('startDate');
-    const endDateStr = searchParams.get('endDate');
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    
-    // Convertir fechas si están presentes
-    const startDate = startDateStr ? new Date(startDateStr) : undefined;
-    const endDate = endDateStr ? new Date(endDateStr) : undefined;
-    
-    // Validar fechas
-    if ((startDate && isNaN(startDate.getTime())) || (endDate && isNaN(endDate.getTime()))) {
-      return NextResponse.json(
-        { error: 'Formato de fecha inválido' },
-        { status: 400 }
-      );
+    const searchParams = req.nextUrl.searchParams;
+    const userId = searchParams.get('userId') ? parseInt(searchParams.get('userId')!) : undefined;
+    const propertyId = searchParams.get('propertyId') ? parseInt(searchParams.get('propertyId')!) : undefined;
+    const commonAreaId = searchParams.get('commonAreaId') ? parseInt(searchParams.get('commonAreaId')!) : undefined;
+    const status = searchParams.get('status') as ReservationStatus | undefined;
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+
+    // Validar y convertir fechas
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
+    if (startDateParam) {
+      startDate = new Date(startDateParam);
+      if (isNaN(startDate.getTime())) {
+        return NextResponse.json(
+          { error: 'Fecha de inicio inválida' },
+          { status: 400 }
+        );
+      }
     }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
-    // Si no es administrador, solo puede ver sus propias reservas
-    const finalUserId = session.user.isAdmin ? userId : session.user.id;
-    
-    // Obtener reservas
-    const result = await reservationService.getReservations({
-      userId: finalUserId,
-      propertyId,
-      commonAreaId,
-      status: status as any,
-      startDate,
-      endDate,
-      page,
-      limit
-    });
-    
-    return NextResponse.json(result);
-  } catch (error: any) {
-    ServerLogger.error(`Error al obtener reservas: ${error.message}`);
-    
+
+    if (endDateParam) {
+      endDate = new Date(endDateParam);
+      if (isNaN(endDate.getTime())) {
+        return NextResponse.json(
+          { error: 'Fecha de fin inválida' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Si el usuario no es administrador, solo puede ver sus propias reservas
+    if (session.user.role !== 'ADMIN') {
+      // Forzar filtro por userId del usuario autenticado
+      const authenticatedUserId = session.user.id;
+      
+      // Si se especificó un userId diferente, verificar que sea el mismo
+      if (userId !== undefined && userId !== authenticatedUserId) {
+        return NextResponse.json(
+          { error: 'No tiene permiso para ver reservas de otros usuarios' },
+          { status: 403 }
+        );
+      }
+      
+      // Establecer userId al del usuario autenticado
+      const filters = {
+        userId: authenticatedUserId,
+        propertyId,
+        commonAreaId,
+        status,
+        startDate,
+        endDate,
+      };
+      
+      const reservations = await reservationService.getReservations(filters);
+      return NextResponse.json(reservations);
+    } else {
+      // Para administradores, permitir todos los filtros
+      const filters = {
+        userId,
+        propertyId,
+        commonAreaId,
+        status,
+        startDate,
+        endDate,
+      };
+      
+      const reservations = await reservationService.getReservations(filters);
+      return NextResponse.json(reservations);
+    }
+  } catch (error) {
+    serverLogger.error('Error al obtener reservas', { error });
     return NextResponse.json(
-      { error: 'Error al obtener reservas', details: error.message },
+      { error: 'Error al obtener reservas' },
       { status: 500 }
     );
   }
@@ -78,75 +103,72 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/reservations
- * Crea una nueva reserva
+ * Crea una nueva solicitud de reserva
  */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
+
     // Obtener datos del cuerpo de la solicitud
-    const body = await request.json();
-    
+    const data = await req.json();
+
     // Validar datos requeridos
-    if (!body.commonAreaId || !body.propertyId || !body.title || !body.startDateTime || !body.endDateTime) {
+    if (!data.commonAreaId || !data.propertyId || !data.title || !data.startDateTime || !data.endDateTime) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: commonAreaId, propertyId, title, startDateTime, endDateTime' },
+        { error: 'Faltan campos requeridos' },
         { status: 400 }
       );
     }
-    
+
     // Convertir fechas
-    const startDateTime = new Date(body.startDateTime);
-    const endDateTime = new Date(body.endDateTime);
-    
+    data.startDateTime = new Date(data.startDateTime);
+    data.endDateTime = new Date(data.endDateTime);
+
     // Validar fechas
-    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+    if (isNaN(data.startDateTime.getTime()) || isNaN(data.endDateTime.getTime())) {
       return NextResponse.json(
-        { error: 'Formato de fecha inválido' },
+        { error: 'Fechas inválidas' },
         { status: 400 }
       );
     }
-    
-    // Validar que la fecha de inicio sea anterior a la fecha de fin
-    if (startDateTime >= endDateTime) {
+
+    if (data.startDateTime >= data.endDateTime) {
       return NextResponse.json(
-        { error: 'La fecha de inicio debe ser anterior a la fecha de fin' },
+        { error: 'La fecha de fin debe ser posterior a la fecha de inicio' },
         { status: 400 }
       );
     }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+
+    // Establecer userId al del usuario autenticado
+    data.userId = session.user.id;
+
     // Crear reserva
-    const reservation = await reservationService.createReservation({
-      commonAreaId: body.commonAreaId,
-      userId: session.user.id,
-      propertyId: body.propertyId,
-      title: body.title,
-      description: body.description,
-      startDateTime,
-      endDateTime,
-      attendees: body.attendees || 1
-    });
+    const reservation = await reservationService.createReservation(data);
+
+    return NextResponse.json(reservation, { status: 201 });
+  } catch (error) {
+    serverLogger.error('Error al crear reserva', { error });
     
-    return NextResponse.json(reservation);
-  } catch (error: any) {
-    ServerLogger.error(`Error al crear reserva: ${error.message}`);
+    // Manejar errores específicos
+    if (error instanceof Error) {
+      if (error.message === 'El horario solicitado no está disponible' || 
+          error.message === 'Área común no encontrada') {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 400 }
+        );
+      }
+    }
     
     return NextResponse.json(
-      { error: 'Error al crear reserva', details: error.message },
+      { error: 'Error al crear reserva' },
       { status: 500 }
     );
   }

@@ -1,50 +1,41 @@
-// src/app/api/notifications/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { ReservationService } from '@/services/reservationService';
-import { ServerLogger } from '@/lib/logging/server-logger';
+import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/auth-options';
+import { authOptions } from '@/lib/auth';
+import { serverLogger } from '@/lib/logging/server-logger';
 
 /**
  * GET /api/notifications
  * Obtiene las notificaciones del usuario actual
  */
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
+
     // Obtener parámetros de consulta
-    const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+    const searchParams = req.nextUrl.searchParams;
+    const isRead = searchParams.get('isRead') === 'true' ? true : 
+                  searchParams.get('isRead') === 'false' ? false : undefined;
+    const type = searchParams.get('type') || undefined;
+
     // Obtener notificaciones del usuario
-    const result = await reservationService.getUserNotifications(
+    const notifications = await reservationService.getUserNotifications(
       session.user.id,
-      page,
-      limit
+      { isRead, type }
     );
-    
-    return NextResponse.json(result);
-  } catch (error: any) {
-    ServerLogger.error(`Error al obtener notificaciones: ${error.message}`);
-    
+
+    return NextResponse.json(notifications);
+  } catch (error) {
+    serverLogger.error('Error al obtener notificaciones', { error });
     return NextResponse.json(
-      { error: 'Error al obtener notificaciones', details: error.message },
+      { error: 'Error al obtener notificaciones' },
       { status: 500 }
     );
   }

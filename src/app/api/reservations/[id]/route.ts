@@ -1,171 +1,157 @@
-// src/app/api/reservations/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { ReservationService } from '@/services/reservationService';
-import { ServerLogger } from '@/lib/logging/server-logger';
+import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/auth-options';
-
-interface Params {
-  params: {
-    id: string;
-  };
-}
+import { authOptions } from '@/lib/auth';
+import { serverLogger } from '@/lib/logging/server-logger';
 
 /**
  * GET /api/reservations/[id]
- * Obtiene una reserva por su ID
+ * Obtiene los detalles de una reserva específica
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
-    // Obtener ID de la reserva
-    const id = parseInt(params.id, 10);
-    
+
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID de reserva inválido' },
+        { error: 'ID inválido' },
         { status: 400 }
       );
     }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+
     // Obtener reserva
     const reservation = await reservationService.getReservationById(id);
-    
     if (!reservation) {
       return NextResponse.json(
-        { error: `Reserva con ID ${id} no encontrada` },
+        { error: 'Reserva no encontrada' },
         { status: 404 }
       );
     }
-    
-    // Verificar que el usuario tiene acceso a la reserva
-    if (!session.user.isAdmin && reservation.userId !== session.user.id) {
+
+    // Verificar permisos (solo administradores o el propietario pueden ver la reserva)
+    if (session.user.role !== 'ADMIN' && reservation.userId !== session.user.id) {
       return NextResponse.json(
-        { error: 'No tienes permisos para ver esta reserva' },
+        { error: 'No tiene permiso para ver esta reserva' },
         { status: 403 }
       );
     }
-    
+
     return NextResponse.json(reservation);
-  } catch (error: any) {
-    ServerLogger.error(`Error al obtener reserva: ${error.message}`);
-    
+  } catch (error) {
+    serverLogger.error('Error al obtener reserva', { error, id: params.id });
     return NextResponse.json(
-      { error: 'Error al obtener reserva', details: error.message },
+      { error: 'Error al obtener reserva' },
       { status: 500 }
     );
   }
 }
 
 /**
- * PUT /api/reservations/[id]/status
- * Actualiza el estado de una reserva
+ * PUT /api/reservations/[id]
+ * Actualiza una reserva existente
  */
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
-    // Obtener ID de la reserva
-    const id = parseInt(params.id, 10);
-    
+
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID de reserva inválido' },
+        { error: 'ID inválido' },
         { status: 400 }
       );
     }
-    
-    // Obtener datos del cuerpo de la solicitud
-    const body = await request.json();
-    
-    // Validar datos requeridos
-    if (!body.status) {
-      return NextResponse.json(
-        { error: 'Falta campo requerido: status' },
-        { status: 400 }
-      );
-    }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+
     // Obtener reserva actual para verificar permisos
     const currentReservation = await reservationService.getReservationById(id);
-    
     if (!currentReservation) {
       return NextResponse.json(
-        { error: `Reserva con ID ${id} no encontrada` },
+        { error: 'Reserva no encontrada' },
         { status: 404 }
       );
     }
+
+    // Verificar permisos (solo administradores o el propietario pueden actualizar la reserva)
+    if (session.user.role !== 'ADMIN' && currentReservation.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'No tiene permiso para actualizar esta reserva' },
+        { status: 403 }
+      );
+    }
+
+    // Obtener datos del cuerpo de la solicitud
+    const data = await req.json();
+
+    // Convertir fechas si están presentes
+    if (data.startDateTime) {
+      data.startDateTime = new Date(data.startDateTime);
+      if (isNaN(data.startDateTime.getTime())) {
+        return NextResponse.json(
+          { error: 'Fecha de inicio inválida' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (data.endDateTime) {
+      data.endDateTime = new Date(data.endDateTime);
+      if (isNaN(data.endDateTime.getTime())) {
+        return NextResponse.json(
+          { error: 'Fecha de fin inválida' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validar que la fecha de fin sea posterior a la de inicio
+    if (data.startDateTime && data.endDateTime && data.startDateTime >= data.endDateTime) {
+      return NextResponse.json(
+        { error: 'La fecha de fin debe ser posterior a la fecha de inicio' },
+        { status: 400 }
+      );
+    }
+
+    // Actualizar reserva
+    const updatedReservation = await reservationService.updateReservation(id, data);
+
+    return NextResponse.json(updatedReservation);
+  } catch (error) {
+    serverLogger.error('Error al actualizar reserva', { error, id: params.id });
     
-    // Verificar permisos según el estado solicitado
-    if (body.status === 'APPROVED' || body.status === 'REJECTED') {
-      // Solo administradores pueden aprobar o rechazar
-      if (!session.user.isAdmin) {
+    // Manejar errores específicos
+    if (error instanceof Error) {
+      if (error.message === 'El horario solicitado no está disponible' || 
+          error.message === 'Reserva no encontrada') {
         return NextResponse.json(
-          { error: 'No tienes permisos para aprobar o rechazar reservas' },
-          { status: 403 }
-        );
-      }
-    } else if (body.status === 'CANCELLED') {
-      // Solo el creador o un administrador puede cancelar
-      if (!session.user.isAdmin && currentReservation.userId !== session.user.id) {
-        return NextResponse.json(
-          { error: 'No tienes permisos para cancelar esta reserva' },
-          { status: 403 }
-        );
-      }
-    } else if (body.status === 'COMPLETED') {
-      // Solo administradores pueden marcar como completada
-      if (!session.user.isAdmin) {
-        return NextResponse.json(
-          { error: 'No tienes permisos para marcar reservas como completadas' },
-          { status: 403 }
+          { error: error.message },
+          { status: 400 }
         );
       }
     }
     
-    // Actualizar estado de la reserva
-    const updatedReservation = await reservationService.updateReservationStatus({
-      reservationId: id,
-      status: body.status,
-      adminId: session.user.isAdmin ? session.user.id : undefined,
-      reason: body.reason
-    });
-    
-    return NextResponse.json(updatedReservation);
-  } catch (error: any) {
-    ServerLogger.error(`Error al actualizar estado de reserva: ${error.message}`);
-    
     return NextResponse.json(
-      { error: 'Error al actualizar estado de reserva', details: error.message },
+      { error: 'Error al actualizar reserva' },
       { status: 500 }
     );
   }
@@ -173,71 +159,60 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
 /**
  * DELETE /api/reservations/[id]
- * Elimina una reserva (equivalente a cancelarla)
+ * Cancela una reserva
  */
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
-    // Obtener ID de la reserva
-    const id = parseInt(params.id, 10);
-    
+
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID de reserva inválido' },
+        { error: 'ID inválido' },
         { status: 400 }
       );
     }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
-    // Obtener reserva actual para verificar permisos
-    const currentReservation = await reservationService.getReservationById(id);
-    
-    if (!currentReservation) {
-      return NextResponse.json(
-        { error: `Reserva con ID ${id} no encontrada` },
-        { status: 404 }
-      );
-    }
-    
-    // Verificar que el usuario tiene permisos para eliminar la reserva
-    if (!session.user.isAdmin && currentReservation.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: 'No tienes permisos para eliminar esta reserva' },
-        { status: 403 }
-      );
-    }
-    
-    // Obtener razón de la cancelación de los parámetros de consulta
-    const searchParams = request.nextUrl.searchParams;
-    const reason = searchParams.get('reason') || 'Cancelada por el usuario';
-    
-    // Cancelar la reserva (equivalente a eliminarla)
-    const cancelledReservation = await reservationService.updateReservationStatus({
-      reservationId: id,
-      status: 'CANCELLED',
-      reason
-    });
-    
+
+    // Obtener datos del cuerpo de la solicitud
+    const data = await req.json();
+    const cancellationReason = data.cancellationReason || 'Cancelada por el usuario';
+
+    // Cancelar reserva
+    const cancelledReservation = await reservationService.cancelReservation(
+      id,
+      cancellationReason,
+      session.user.id
+    );
+
     return NextResponse.json(cancelledReservation);
-  } catch (error: any) {
-    ServerLogger.error(`Error al eliminar reserva: ${error.message}`);
+  } catch (error) {
+    serverLogger.error('Error al cancelar reserva', { error, id: params.id });
+    
+    // Manejar errores específicos
+    if (error instanceof Error) {
+      if (error.message.includes('cancelaciones') || 
+          error.message === 'Reserva no encontrada' ||
+          error.message === 'Solo el propietario puede cancelar la reserva' ||
+          error.message === 'Solo se pueden cancelar reservas pendientes o aprobadas') {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 400 }
+        );
+      }
+    }
     
     return NextResponse.json(
-      { error: 'Error al eliminar reserva', details: error.message },
+      { error: 'Error al cancelar reserva' },
       { status: 500 }
     );
   }

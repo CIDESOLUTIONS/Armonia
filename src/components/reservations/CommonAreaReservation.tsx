@@ -1,37 +1,32 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Calendar as CalendarIcon, Users, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/components/ui/use-toast';
+import { AlertCircle, Calendar as CalendarIcon, Clock, Info, MapPin, Users } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useSession } from 'next-auth/react';
 
-// Configurar el localizador para el calendario
+// Localización del calendario
 moment.locale('es');
 const localizer = momentLocalizer(moment);
 
-// Mapeo de colores según el estado de la reserva
-const statusColors = {
-  PENDING: '#FFA500',   // Naranja
-  APPROVED: '#4CAF50',  // Verde
-  REJECTED: '#F44336',  // Rojo
-  CANCELLED: '#9E9E9E', // Gris
-  COMPLETED: '#2196F3'  // Azul
-};
-
-// Interfaz para áreas comunes
+// Tipos para los datos
 interface CommonArea {
   id: number;
   name: string;
@@ -43,52 +38,51 @@ interface CommonArea {
   requiresApproval: boolean;
   hasFee: boolean;
   feeAmount?: number;
-  availabilityConfig?: {
-    mondayStart?: string;
-    mondayEnd?: string;
-    tuesdayStart?: string;
-    tuesdayEnd?: string;
-    wednesdayStart?: string;
-    wednesdayEnd?: string;
-    thursdayStart?: string;
-    thursdayEnd?: string;
-    fridayStart?: string;
-    fridayEnd?: string;
-    saturdayStart?: string;
-    saturdayEnd?: string;
-    sundayStart?: string;
-    sundayEnd?: string;
-    holidaysAvailable: boolean;
-  };
-  reservationRules?: Array<{
-    id: number;
-    name: string;
-    description: string;
-    maxDurationHours: number;
-    minDurationHours: number;
-    maxAdvanceDays: number;
-    minAdvanceDays: number;
-    maxReservationsPerMonth: number;
-    maxReservationsPerWeek: number;
-    maxConcurrentReservations: number;
-    allowCancellation: boolean;
-    cancellationHours: number;
-    isActive: boolean;
-  }>;
+  availabilityConfig?: AvailabilityConfig;
+  reservationRules?: ReservationRule[];
 }
 
-// Interfaz para reservas
+interface AvailabilityConfig {
+  mondayStart?: string;
+  mondayEnd?: string;
+  tuesdayStart?: string;
+  tuesdayEnd?: string;
+  wednesdayStart?: string;
+  wednesdayEnd?: string;
+  thursdayStart?: string;
+  thursdayEnd?: string;
+  fridayStart?: string;
+  fridayEnd?: string;
+  saturdayStart?: string;
+  saturdayEnd?: string;
+  sundayStart?: string;
+  sundayEnd?: string;
+  holidaysAvailable: boolean;
+}
+
+interface ReservationRule {
+  id: number;
+  name: string;
+  description: string;
+  maxDurationHours: number;
+  minDurationHours: number;
+  maxAdvanceDays: number;
+  minAdvanceDays: number;
+  maxReservationsPerMonth: number;
+  maxReservationsPerWeek: number;
+  allowCancellation: boolean;
+  cancellationHours: number;
+}
+
 interface Reservation {
   id: number;
   commonAreaId: number;
-  commonAreaName?: string;
-  commonAreaLocation?: string;
   userId: number;
   propertyId: number;
   title: string;
   description?: string;
-  startDateTime: string;
-  endDateTime: string;
+  startDateTime: Date | string;
+  endDateTime: Date | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
   attendees: number;
   requiresPayment: boolean;
@@ -96,157 +90,189 @@ interface Reservation {
   paymentStatus?: string;
   rejectionReason?: string;
   approvedById?: number;
-  approvedAt?: string;
+  approvedAt?: Date | string;
   cancellationReason?: string;
-  cancelledAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  cancelledAt?: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  commonArea?: CommonArea;
 }
 
-// Interfaz para eventos del calendario
 interface CalendarEvent {
   id: number;
   title: string;
   start: Date;
   end: Date;
   status: string;
-  resourceId?: number;
-  reservation: Reservation;
+  resource?: any;
 }
 
-// Interfaz para propiedades del componente
-interface CommonAreaReservationProps {
-  propertyId: number;
+interface Property {
+  id: number;
+  name: string;
 }
 
-/**
- * Componente para la reserva de áreas comunes
- */
-const CommonAreaReservation: React.FC<CommonAreaReservationProps> = ({ propertyId }) => {
+const CommonAreaReservation: React.FC = () => {
   const { data: session } = useSession();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [areas, setAreas] = useState<CommonArea[]>([]);
+  const { toast } = useToast();
+  
+  // Estados
+  const [commonAreas, setCommonAreas] = useState<CommonArea[]>([]);
   const [selectedArea, setSelectedArea] = useState<CommonArea | null>(null);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [showReservationDialog, setShowReservationDialog] = useState<boolean>(false);
-  const [showEventDialog, setShowEventDialog] = useState<boolean>(false);
-  const [newReservation, setNewReservation] = useState({
-    commonAreaId: 0,
+  const [myReservations, setMyReservations] = useState<Reservation[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [viewDate, setViewDate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
+  
+  // Estados para el formulario de reserva
+  const [isReservationDialogOpen, setIsReservationDialogOpen] = useState<boolean>(false);
+  const [reservationForm, setReservationForm] = useState({
     title: '',
     description: '',
     startDateTime: '',
     endDateTime: '',
-    attendees: 1
+    attendees: 1,
+    propertyId: 0
   });
-  const [availabilityStatus, setAvailabilityStatus] = useState<{
-    checking: boolean;
-    available: boolean;
-    reason?: string;
-    conflicts?: Reservation[];
-  }>({
-    checking: false,
-    available: true
-  });
-  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-  const [date, setDate] = useState<Date>(new Date());
-
+  
+  // Estados para el detalle de reserva
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState<boolean>(false);
+  
   // Cargar áreas comunes al iniciar
   useEffect(() => {
-    if (session) {
-      loadCommonAreas();
-    }
-  }, [session]);
-
-  // Cargar reservas cuando cambia el área seleccionada o la fecha
+    const fetchCommonAreas = async () => {
+      try {
+        const response = await fetch('/api/common-areas?active=true');
+        if (response.ok) {
+          const data = await response.json();
+          setCommonAreas(data);
+          if (data.length > 0) {
+            setSelectedArea(data[0]);
+          }
+        } else {
+          toast({
+            title: 'Error',
+            description: 'No se pudieron cargar las áreas comunes',
+            variant: 'destructive'
+          });
+        }
+      } catch (error) {
+        console.error('Error al cargar áreas comunes:', error);
+        toast({
+          title: 'Error',
+          description: 'No se pudieron cargar las áreas comunes',
+          variant: 'destructive'
+        });
+      }
+    };
+    
+    const fetchProperties = async () => {
+      try {
+        // En una implementación real, esto cargaría las propiedades del usuario
+        // Por ahora, usamos datos de ejemplo
+        setProperties([
+          { id: 1, name: 'Apartamento 101' },
+          { id: 2, name: 'Apartamento 102' }
+        ]);
+        setSelectedProperty(1);
+      } catch (error) {
+        console.error('Error al cargar propiedades:', error);
+      }
+    };
+    
+    fetchCommonAreas();
+    fetchProperties();
+  }, [toast]);
+  
+  // Cargar reservas cuando cambia el área seleccionada
   useEffect(() => {
     if (selectedArea) {
-      loadReservations();
+      fetchReservations();
     }
-  }, [selectedArea, date, view]);
-
-  // Convertir reservas a eventos del calendario
-  useEffect(() => {
-    const newEvents = reservations.map(reservation => ({
-      id: reservation.id,
-      title: reservation.title,
-      start: new Date(reservation.startDateTime),
-      end: new Date(reservation.endDateTime),
-      status: reservation.status,
-      resourceId: reservation.commonAreaId,
-      reservation
-    }));
-    setEvents(newEvents);
-  }, [reservations]);
-
-  /**
-   * Carga las áreas comunes disponibles
-   */
-  const loadCommonAreas = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/common-areas');
-      
-      if (!response.ok) {
-        throw new Error('Error al cargar áreas comunes');
-      }
-      
-      const data = await response.json();
-      setAreas(data.areas || []);
-      
-      // Seleccionar la primera área por defecto si hay áreas disponibles
-      if (data.areas && data.areas.length > 0) {
-        setSelectedArea(data.areas[0]);
-      }
-    } catch (error) {
-      console.error('Error al cargar áreas comunes:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudieron cargar las áreas comunes',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Carga las reservas para el área seleccionada
-   */
-  const loadReservations = async () => {
+  }, [selectedArea, viewDate]);
+  
+  // Función para cargar reservas
+  const fetchReservations = async () => {
     if (!selectedArea) return;
     
+    setIsLoading(true);
+    
     try {
-      setLoading(true);
+      // Calcular rango de fechas para la vista actual (mes)
+      const startDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+      const endDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
       
-      // Calcular rango de fechas según la vista
-      let startDate, endDate;
-      
-      if (view === 'month') {
-        startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-        endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      } else if (view === 'week') {
-        const day = date.getDay();
-        startDate = new Date(date);
-        startDate.setDate(date.getDate() - day);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-      } else {
-        startDate = new Date(date);
-        endDate = new Date(date);
-      }
-      
-      const response = await fetch(
-        `/api/reservations?commonAreaId=${selectedArea.id}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&limit=100`
+      // Cargar disponibilidad del área común
+      const availabilityResponse = await fetch(
+        `/api/common-areas/${selectedArea.id}/availability?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
       );
       
-      if (!response.ok) {
-        throw new Error('Error al cargar reservas');
+      if (!availabilityResponse.ok) {
+        throw new Error('Error al cargar disponibilidad');
       }
       
-      const data = await response.json();
-      setReservations(data.reservations || []);
+      const availabilityData = await availabilityResponse.json();
+      
+      // Cargar mis reservas
+      const myReservationsResponse = await fetch(
+        `/api/reservations?commonAreaId=${selectedArea.id}`
+      );
+      
+      if (!myReservationsResponse.ok) {
+        throw new Error('Error al cargar mis reservas');
+      }
+      
+      const myReservationsData = await myReservationsResponse.json();
+      setMyReservations(myReservationsData);
+      
+      // Convertir reservas a eventos de calendario
+      const events: CalendarEvent[] = [];
+      
+      // Agregar slots ocupados
+      if (availabilityData.occupiedSlots) {
+        availabilityData.occupiedSlots.forEach((slot: any) => {
+          events.push({
+            id: slot.reservationId,
+            title: 'Reservado',
+            start: new Date(slot.startDateTime),
+            end: new Date(slot.endDateTime),
+            status: slot.status
+          });
+        });
+      }
+      
+      // Agregar mis reservas con más detalle
+      myReservationsData.forEach((reservation: Reservation) => {
+        // Buscar si ya existe un evento para esta reserva
+        const existingEventIndex = events.findIndex(event => event.id === reservation.id);
+        
+        // Si existe, actualizar con más detalle
+        if (existingEventIndex >= 0) {
+          events[existingEventIndex] = {
+            id: reservation.id,
+            title: reservation.title,
+            start: new Date(reservation.startDateTime),
+            end: new Date(reservation.endDateTime),
+            status: reservation.status,
+            resource: reservation
+          };
+        } else {
+          // Si no existe, agregar nuevo evento
+          events.push({
+            id: reservation.id,
+            title: reservation.title,
+            start: new Date(reservation.startDateTime),
+            end: new Date(reservation.endDateTime),
+            status: reservation.status,
+            resource: reservation
+          });
+        }
+      });
+      
+      setCalendarEvents(events);
     } catch (error) {
       console.error('Error al cargar reservas:', error);
       toast({
@@ -255,660 +281,579 @@ const CommonAreaReservation: React.FC<CommonAreaReservationProps> = ({ propertyI
         variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
-  /**
-   * Verifica la disponibilidad para una nueva reserva
-   */
-  const checkAvailability = async () => {
-    if (!selectedArea || !newReservation.startDateTime || !newReservation.endDateTime) {
-      return;
-    }
-    
-    try {
-      setAvailabilityStatus({ checking: true, available: false });
-      
-      const response = await fetch(
-        `/api/common-areas/${selectedArea.id}/availability?startDateTime=${new Date(newReservation.startDateTime).toISOString()}&endDateTime=${new Date(newReservation.endDateTime).toISOString()}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Error al verificar disponibilidad');
-      }
-      
-      const data = await response.json();
-      setAvailabilityStatus({
-        checking: false,
-        available: data.available,
-        reason: data.reason,
-        conflicts: data.conflicts
-      });
-    } catch (error) {
-      console.error('Error al verificar disponibilidad:', error);
-      setAvailabilityStatus({
-        checking: false,
-        available: false,
-        reason: 'Error al verificar disponibilidad'
-      });
-    }
-  };
-
-  /**
-   * Crea una nueva reserva
-   */
-  const createReservation = async () => {
-    if (!selectedArea || !newReservation.title || !newReservation.startDateTime || !newReservation.endDateTime) {
+  
+  // Función para crear una nueva reserva
+  const handleCreateReservation = async () => {
+    if (!selectedArea || !selectedProperty) {
       toast({
         title: 'Error',
-        description: 'Por favor completa todos los campos requeridos',
+        description: 'Seleccione un área común y una propiedad',
         variant: 'destructive'
       });
       return;
     }
     
     try {
-      setLoading(true);
-      
       const response = await fetch('/api/reservations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          ...newReservation,
           commonAreaId: selectedArea.id,
-          propertyId
+          propertyId: selectedProperty,
+          title: reservationForm.title,
+          description: reservationForm.description,
+          startDateTime: new Date(reservationForm.startDateTime).toISOString(),
+          endDateTime: new Date(reservationForm.endDateTime).toISOString(),
+          attendees: reservationForm.attendees
         })
       });
       
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: 'Reserva creada',
+          description: selectedArea.requiresApproval 
+            ? 'Su solicitud de reserva ha sido enviada y está pendiente de aprobación'
+            : 'Su reserva ha sido confirmada exitosamente',
+        });
+        setIsReservationDialogOpen(false);
+        resetReservationForm();
+        fetchReservations();
+      } else {
         const errorData = await response.json();
-        throw new Error(errorData.details || 'Error al crear reserva');
+        throw new Error(errorData.error || 'Error al crear la reserva');
       }
-      
-      const data = await response.json();
-      
-      toast({
-        title: 'Reserva creada',
-        description: selectedArea.requiresApproval
-          ? 'Tu reserva ha sido creada y está pendiente de aprobación'
-          : 'Tu reserva ha sido creada exitosamente',
-        variant: 'default'
-      });
-      
-      // Limpiar formulario y cerrar diálogo
-      setNewReservation({
-        commonAreaId: 0,
-        title: '',
-        description: '',
-        startDateTime: '',
-        endDateTime: '',
-        attendees: 1
-      });
-      setShowReservationDialog(false);
-      
-      // Recargar reservas
-      loadReservations();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error al crear reserva:', error);
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo crear la reserva',
+        description: error instanceof Error ? error.message : 'Error al crear la reserva',
         variant: 'destructive'
       });
-    } finally {
-      setLoading(false);
     }
   };
-
-  /**
-   * Actualiza el estado de una reserva
-   */
-  const updateReservationStatus = async (reservationId: number, status: string, reason?: string) => {
+  
+  // Función para cancelar una reserva
+  const handleCancelReservation = async (id: number) => {
     try {
-      setLoading(true);
-      
-      const response = await fetch(`/api/reservations/${reservationId}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/reservations/${id}`, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          status,
-          reason
+          cancellationReason: 'Cancelada por el usuario'
         })
       });
       
-      if (!response.ok) {
+      if (response.ok) {
+        toast({
+          title: 'Reserva cancelada',
+          description: 'La reserva ha sido cancelada exitosamente'
+        });
+        setIsDetailDialogOpen(false);
+        fetchReservations();
+      } else {
         const errorData = await response.json();
-        throw new Error(errorData.details || `Error al ${status === 'CANCELLED' ? 'cancelar' : 'actualizar'} reserva`);
+        throw new Error(errorData.error || 'Error al cancelar la reserva');
       }
-      
-      const data = await response.json();
-      
-      toast({
-        title: 'Reserva actualizada',
-        description: status === 'CANCELLED'
-          ? 'La reserva ha sido cancelada exitosamente'
-          : 'El estado de la reserva ha sido actualizado',
-        variant: 'default'
-      });
-      
-      // Cerrar diálogo y recargar reservas
-      setShowEventDialog(false);
-      loadReservations();
-    } catch (error: any) {
-      console.error('Error al actualizar reserva:', error);
+    } catch (error) {
+      console.error('Error al cancelar reserva:', error);
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo actualizar la reserva',
+        description: error instanceof Error ? error.message : 'Error al cancelar la reserva',
         variant: 'destructive'
       });
-    } finally {
-      setLoading(false);
     }
   };
-
-  /**
-   * Maneja el cambio de área común seleccionada
-   */
-  const handleAreaChange = (areaId: string) => {
-    const area = areas.find(a => a.id === parseInt(areaId, 10)) || null;
-    setSelectedArea(area);
+  
+  // Función para mostrar detalle de una reserva
+  const handleEventClick = (event: CalendarEvent) => {
+    if (event.resource) {
+      setSelectedReservation(event.resource);
+      setIsDetailDialogOpen(true);
+    }
   };
-
-  /**
-   * Maneja el cambio de vista del calendario
-   */
-  const handleViewChange = (newView: string) => {
-    setView(newView as 'month' | 'week' | 'day');
-  };
-
-  /**
-   * Maneja el cambio de fecha del calendario
-   */
-  const handleDateChange = (newDate: Date) => {
-    setDate(newDate);
-  };
-
-  /**
-   * Maneja la selección de un slot en el calendario para crear una reserva
-   */
-  const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
-    // Formatear fechas para el formulario
-    const startDateTime = start.toISOString().slice(0, 16);
-    const endDateTime = end.toISOString().slice(0, 16);
-    
-    setNewReservation({
-      ...newReservation,
-      startDateTime,
-      endDateTime
+  
+  // Función para resetear el formulario de reserva
+  const resetReservationForm = () => {
+    setReservationForm({
+      title: '',
+      description: '',
+      startDateTime: '',
+      endDateTime: '',
+      attendees: 1,
+      propertyId: selectedProperty || 0
     });
-    
-    // Verificar disponibilidad automáticamente
-    setTimeout(() => {
-      checkAvailability();
-    }, 100);
-    
-    setShowReservationDialog(true);
   };
-
-  /**
-   * Maneja la selección de un evento en el calendario
-   */
-  const handleSelectEvent = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    setShowEventDialog(true);
+  
+  // Función para abrir el diálogo de nueva reserva
+  const handleNewReservation = () => {
+    resetReservationForm();
+    setIsReservationDialogOpen(true);
   };
-
-  /**
-   * Renderiza el formulario de nueva reserva
-   */
-  const renderReservationForm = () => {
-    return (
-      <Dialog open={showReservationDialog} onOpenChange={setShowReservationDialog}>
+  
+  // Función para cambiar el área común seleccionada
+  const handleAreaChange = (areaId: string) => {
+    const area = commonAreas.find(a => a.id === parseInt(areaId));
+    if (area) {
+      setSelectedArea(area);
+    }
+  };
+  
+  // Función para renderizar eventos en el calendario
+  const eventStyleGetter = (event: CalendarEvent) => {
+    let backgroundColor = '#3182ce';
+    let borderColor = '#2b6cb0';
+    
+    switch (event.status) {
+      case 'PENDING':
+        backgroundColor = '#ed8936';
+        borderColor = '#dd6b20';
+        break;
+      case 'APPROVED':
+        backgroundColor = '#38a169';
+        borderColor = '#2f855a';
+        break;
+      case 'REJECTED':
+        backgroundColor = '#e53e3e';
+        borderColor = '#c53030';
+        break;
+      case 'CANCELLED':
+        backgroundColor = '#718096';
+        borderColor = '#4a5568';
+        break;
+    }
+    
+    return {
+      style: {
+        backgroundColor,
+        borderColor,
+        borderWidth: '1px',
+        color: 'white',
+        display: 'block',
+        padding: '2px 5px',
+        borderRadius: '4px'
+      }
+    };
+  };
+  
+  // Función para obtener el estado de una reserva en español
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'PENDING': return 'Pendiente';
+      case 'APPROVED': return 'Aprobada';
+      case 'REJECTED': return 'Rechazada';
+      case 'CANCELLED': return 'Cancelada';
+      case 'COMPLETED': return 'Completada';
+      default: return status;
+    }
+  };
+  
+  // Función para obtener el color de estado
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PENDING': return 'bg-orange-500';
+      case 'APPROVED': return 'bg-green-500';
+      case 'REJECTED': return 'bg-red-500';
+      case 'CANCELLED': return 'bg-gray-500';
+      case 'COMPLETED': return 'bg-blue-500';
+      default: return 'bg-gray-500';
+    }
+  };
+  
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Reserva de Áreas Comunes</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Panel lateral */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Áreas Comunes</CardTitle>
+              <CardDescription>Seleccione un área para reservar</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="area-select">Área Común</Label>
+                  <Select 
+                    value={selectedArea?.id.toString()} 
+                    onValueChange={handleAreaChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione un área" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonAreas.map(area => (
+                        <SelectItem key={area.id} value={area.id.toString()}>
+                          {area.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedArea && (
+                  <div className="space-y-2">
+                    <h3 className="font-medium">{selectedArea.name}</h3>
+                    <p className="text-sm text-gray-500">{selectedArea.description}</p>
+                    
+                    <div className="flex items-center text-sm text-gray-500">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span>{selectedArea.location}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span>Capacidad: {selectedArea.capacity} personas</span>
+                    </div>
+                    
+                    {selectedArea.hasFee && (
+                      <div className="flex items-center text-sm text-gray-500">
+                        <span>Costo: ${selectedArea.feeAmount}</span>
+                      </div>
+                    )}
+                    
+                    {selectedArea.requiresApproval && (
+                      <div className="mt-2">
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+                          Requiere aprobación
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <Button 
+                  className="w-full" 
+                  onClick={handleNewReservation}
+                  disabled={!selectedArea}
+                >
+                  Nueva Reserva
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Mis Reservas</CardTitle>
+              <CardDescription>Reservas activas y pendientes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {myReservations.length === 0 ? (
+                  <p className="text-sm text-gray-500">No tiene reservas activas</p>
+                ) : (
+                  myReservations.map(reservation => (
+                    <div 
+                      key={reservation.id} 
+                      className="p-3 border rounded-md cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        setSelectedReservation(reservation);
+                        setIsDetailDialogOpen(true);
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-medium">{reservation.title}</h4>
+                        <Badge className={getStatusColor(reservation.status)}>
+                          {getStatusText(reservation.status)}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        <div className="flex items-center">
+                          <CalendarIcon className="h-3 w-3 mr-1" />
+                          <span>
+                            {format(new Date(reservation.startDateTime), 'dd/MM/yyyy', { locale: es })}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          <span>
+                            {format(new Date(reservation.startDateTime), 'HH:mm', { locale: es })} - 
+                            {format(new Date(reservation.endDateTime), 'HH:mm', { locale: es })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Calendario */}
+        <div className="md:col-span-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Calendario de Disponibilidad</CardTitle>
+              <CardDescription>
+                {selectedArea ? `Reservas para ${selectedArea.name}` : 'Seleccione un área común'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-96">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                <div className="h-[600px]">
+                  <Calendar
+                    localizer={localizer}
+                    events={calendarEvents}
+                    startAccessor="start"
+                    endAccessor="end"
+                    style={{ height: '100%' }}
+                    onSelectEvent={handleEventClick}
+                    eventPropGetter={eventStyleGetter}
+                    onNavigate={(date) => setViewDate(date)}
+                    views={['month', 'week', 'day']}
+                    messages={{
+                      next: 'Siguiente',
+                      previous: 'Anterior',
+                      today: 'Hoy',
+                      month: 'Mes',
+                      week: 'Semana',
+                      day: 'Día',
+                      agenda: 'Agenda',
+                      date: 'Fecha',
+                      time: 'Hora',
+                      event: 'Evento',
+                      noEventsInRange: 'No hay reservas en este período'
+                    }}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      {/* Diálogo para nueva reserva */}
+      <Dialog open={isReservationDialogOpen} onOpenChange={setIsReservationDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Nueva Reserva</DialogTitle>
             <DialogDescription>
-              Completa los detalles para reservar {selectedArea?.name}
+              Complete el formulario para solicitar una reserva
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Título
-              </Label>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Título</Label>
               <Input
                 id="title"
-                value={newReservation.title}
-                onChange={(e) => setNewReservation({ ...newReservation, title: e.target.value })}
-                className="col-span-3"
+                value={reservationForm.title}
+                onChange={(e) => setReservationForm({...reservationForm, title: e.target.value})}
                 placeholder="Ej: Reunión familiar"
               />
             </div>
             
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Descripción
-              </Label>
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción</Label>
               <Textarea
                 id="description"
-                value={newReservation.description}
-                onChange={(e) => setNewReservation({ ...newReservation, description: e.target.value })}
-                className="col-span-3"
-                placeholder="Detalles adicionales de la reserva"
+                value={reservationForm.description}
+                onChange={(e) => setReservationForm({...reservationForm, description: e.target.value})}
+                placeholder="Detalles de la reserva"
+                rows={3}
               />
             </div>
             
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="startDateTime" className="text-right">
-                Inicio
-              </Label>
-              <Input
-                id="startDateTime"
-                type="datetime-local"
-                value={newReservation.startDateTime}
-                onChange={(e) => {
-                  setNewReservation({ ...newReservation, startDateTime: e.target.value });
-                  setAvailabilityStatus({ checking: false, available: true });
-                }}
-                className="col-span-3"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="endDateTime" className="text-right">
-                Fin
-              </Label>
-              <Input
-                id="endDateTime"
-                type="datetime-local"
-                value={newReservation.endDateTime}
-                onChange={(e) => {
-                  setNewReservation({ ...newReservation, endDateTime: e.target.value });
-                  setAvailabilityStatus({ checking: false, available: true });
-                }}
-                className="col-span-3"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="attendees" className="text-right">
-                Asistentes
-              </Label>
-              <Input
-                id="attendees"
-                type="number"
-                min="1"
-                max={selectedArea?.capacity || 10}
-                value={newReservation.attendees}
-                onChange={(e) => setNewReservation({ ...newReservation, attendees: parseInt(e.target.value, 10) })}
-                className="col-span-3"
-              />
-            </div>
-            
-            {/* Verificación de disponibilidad */}
-            <div className="col-span-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={checkAvailability}
-                disabled={availabilityStatus.checking || !newReservation.startDateTime || !newReservation.endDateTime}
-                className="w-full"
-              >
-                {availabilityStatus.checking ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verificando disponibilidad...
-                  </>
-                ) : (
-                  'Verificar disponibilidad'
-                )}
-              </Button>
-            </div>
-            
-            {/* Resultado de verificación */}
-            {!availabilityStatus.checking && (newReservation.startDateTime && newReservation.endDateTime) && (
-              <div className={`col-span-4 p-3 rounded-md ${availabilityStatus.available ? 'bg-green-50' : 'bg-red-50'}`}>
-                {availabilityStatus.available ? (
-                  <div className="flex items-center text-green-700">
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    <span>El horario seleccionado está disponible</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center text-red-700">
-                    <XCircle className="h-5 w-5 mr-2" />
-                    <span>{availabilityStatus.reason || 'El horario seleccionado no está disponible'}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowReservationDialog(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={createReservation}
-              disabled={loading || !availabilityStatus.available || !newReservation.title || !newReservation.startDateTime || !newReservation.endDateTime}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creando...
-                </>
-              ) : (
-                'Crear reserva'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
-  /**
-   * Renderiza el diálogo de detalles de evento
-   */
-  const renderEventDialog = () => {
-    if (!selectedEvent) return null;
-    
-    const reservation = selectedEvent.reservation;
-    const canCancel = reservation.status === 'PENDING' || reservation.status === 'APPROVED';
-    const isOwner = session?.user?.id === reservation.userId;
-    const isAdmin = session?.user?.isAdmin;
-    
-    return (
-      <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Detalles de la Reserva</DialogTitle>
-            <DialogDescription>
-              {reservation.commonAreaName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">{reservation.title}</h3>
-              <Badge
-                variant={reservation.status === 'APPROVED' ? 'default' : 
-                        reservation.status === 'PENDING' ? 'outline' :
-                        reservation.status === 'REJECTED' ? 'destructive' :
-                        reservation.status === 'CANCELLED' ? 'secondary' : 'default'}
-              >
-                {reservation.status === 'APPROVED' ? 'Aprobada' :
-                 reservation.status === 'PENDING' ? 'Pendiente' :
-                 reservation.status === 'REJECTED' ? 'Rechazada' :
-                 reservation.status === 'CANCELLED' ? 'Cancelada' : 'Completada'}
-              </Badge>
-            </div>
-            
-            {reservation.description && (
-              <p className="text-sm text-gray-500">{reservation.description}</p>
-            )}
-            
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="flex items-center">
-                <CalendarIcon className="h-4 w-4 mr-2 text-gray-500" />
-                <span>
-                  {moment(reservation.startDateTime).format('DD/MM/YYYY')}
-                </span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDateTime">Fecha y hora de inicio</Label>
+                <Input
+                  id="startDateTime"
+                  type="datetime-local"
+                  value={reservationForm.startDateTime}
+                  onChange={(e) => setReservationForm({...reservationForm, startDateTime: e.target.value})}
+                />
               </div>
               
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                <span>
-                  {moment(reservation.startDateTime).format('HH:mm')} - {moment(reservation.endDateTime).format('HH:mm')}
-                </span>
-              </div>
-              
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-gray-500" />
-                <span>{reservation.commonAreaLocation}</span>
-              </div>
-              
-              <div className="flex items-center">
-                <Users className="h-4 w-4 mr-2 text-gray-500" />
-                <span>{reservation.attendees} asistentes</span>
+              <div className="space-y-2">
+                <Label htmlFor="endDateTime">Fecha y hora de fin</Label>
+                <Input
+                  id="endDateTime"
+                  type="datetime-local"
+                  value={reservationForm.endDateTime}
+                  onChange={(e) => setReservationForm({...reservationForm, endDateTime: e.target.value})}
+                />
               </div>
             </div>
             
-            {reservation.rejectionReason && (
-              <div className="bg-red-50 p-3 rounded-md">
-                <div className="flex items-center text-red-700">
-                  <AlertCircle className="h-5 w-5 mr-2" />
-                  <span>Motivo de rechazo: {reservation.rejectionReason}</span>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="attendees">Número de asistentes</Label>
+                <Input
+                  id="attendees"
+                  type="number"
+                  min="1"
+                  value={reservationForm.attendees}
+                  onChange={(e) => setReservationForm({...reservationForm, attendees: parseInt(e.target.value)})}
+                />
               </div>
-            )}
-            
-            {reservation.cancellationReason && (
-              <div className="bg-gray-100 p-3 rounded-md">
-                <div className="flex items-center text-gray-700">
-                  <AlertCircle className="h-5 w-5 mr-2" />
-                  <span>Motivo de cancelación: {reservation.cancellationReason}</span>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowEventDialog(false)}
-            >
-              Cerrar
-            </Button>
-            
-            {canCancel && (isOwner || isAdmin) && (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => updateReservationStatus(reservation.id, 'CANCELLED', 'Cancelada por el usuario')}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Cancelando...
-                  </>
-                ) : (
-                  'Cancelar reserva'
-                )}
-              </Button>
-            )}
-            
-            {isAdmin && reservation.status === 'PENDING' && (
-              <>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => updateReservationStatus(reservation.id, 'REJECTED', 'Rechazada por el administrador')}
-                  disabled={loading}
+              
+              <div className="space-y-2">
+                <Label htmlFor="property">Propiedad</Label>
+                <Select 
+                  value={selectedProperty?.toString()} 
+                  onValueChange={(value) => setSelectedProperty(parseInt(value))}
                 >
-                  Rechazar
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => updateReservationStatus(reservation.id, 'APPROVED')}
-                  disabled={loading}
-                >
-                  Aprobar
-                </Button>
-              </>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
-  /**
-   * Renderiza el componente principal
-   */
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Reserva de Áreas Comunes</CardTitle>
-          <CardDescription>
-            Consulta disponibilidad y reserva áreas comunes del conjunto residencial
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between gap-4">
-              <div className="w-full sm:w-1/3">
-                <Label htmlFor="area-select">Área Común</Label>
-                <Select
-                  value={selectedArea?.id.toString()}
-                  onValueChange={handleAreaChange}
-                  disabled={loading || areas.length === 0}
-                >
-                  <SelectTrigger id="area-select">
-                    <SelectValue placeholder="Selecciona un área" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione una propiedad" />
                   </SelectTrigger>
                   <SelectContent>
-                    {areas.map((area) => (
-                      <SelectItem key={area.id} value={area.id.toString()}>
-                        {area.name}
+                    {properties.map(property => (
+                      <SelectItem key={property.id} value={property.id.toString()}>
+                        {property.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="w-full sm:w-1/3">
-                <Label htmlFor="view-select">Vista</Label>
-                <Select value={view} onValueChange={handleViewChange}>
-                  <SelectTrigger id="view-select">
-                    <SelectValue placeholder="Selecciona vista" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="month">Mes</SelectItem>
-                    <SelectItem value="week">Semana</SelectItem>
-                    <SelectItem value="day">Día</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="w-full sm:w-1/3 flex items-end">
-                <Button
-                  onClick={() => {
-                    if (selectedArea) {
-                      setShowReservationDialog(true);
-                    } else {
-                      toast({
-                        title: 'Error',
-                        description: 'Por favor selecciona un área común primero',
-                        variant: 'destructive'
-                      });
-                    }
-                  }}
-                  disabled={!selectedArea || loading}
-                  className="w-full"
-                >
-                  Nueva Reserva
-                </Button>
-              </div>
             </div>
             
-            {selectedArea && (
-              <div className="mt-4">
-                <Card>
-                  <CardHeader className="py-2">
-                    <CardTitle className="text-lg">{selectedArea.name}</CardTitle>
-                    <CardDescription>{selectedArea.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="py-2">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-2 text-gray-500" />
-                        <span>{selectedArea.location}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-2 text-gray-500" />
-                        <span>Capacidad: {selectedArea.capacity} personas</span>
-                      </div>
-                      {selectedArea.requiresApproval && (
-                        <div className="flex items-center">
-                          <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
-                          <span>Requiere aprobación</span>
-                        </div>
-                      )}
-                      {selectedArea.hasFee && (
-                        <div className="flex items-center">
-                          <AlertCircle className="h-4 w-4 mr-2 text-blue-500" />
-                          <span>Costo: ${selectedArea.feeAmount}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            {selectedArea?.requiresApproval && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Requiere aprobación</AlertTitle>
+                <AlertDescription>
+                  Esta área común requiere aprobación de la administración. Su reserva quedará en estado pendiente hasta ser aprobada.
+                </AlertDescription>
+              </Alert>
             )}
             
-            <div className="mt-4" style={{ height: 600 }}>
-              {loading ? (
-                <div className="h-full flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            {selectedArea?.hasFee && (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Área con costo</AlertTitle>
+                <AlertDescription>
+                  Esta área común tiene un costo de ${selectedArea.feeAmount} por reserva.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReservationDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateReservation}>
+              {selectedArea?.requiresApproval ? 'Solicitar Reserva' : 'Confirmar Reserva'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Diálogo para detalle de reserva */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Detalle de Reserva</DialogTitle>
+            <DialogDescription>
+              Información de la reserva seleccionada
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedReservation && (
+            <div className="space-y-4 py-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">{selectedReservation.title}</h3>
+                <Badge className={getStatusColor(selectedReservation.status)}>
+                  {getStatusText(selectedReservation.status)}
+                </Badge>
+              </div>
+              
+              <p className="text-sm text-gray-500">{selectedReservation.description}</p>
+              
+              <Separator />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium">Fecha y hora de inicio</h4>
+                  <p className="text-sm text-gray-500">
+                    {format(new Date(selectedReservation.startDateTime), 'dd/MM/yyyy HH:mm', { locale: es })}
+                  </p>
                 </div>
-              ) : (
-                <Calendar
-                  localizer={localizer}
-                  events={events}
-                  startAccessor="start"
-                  endAccessor="end"
-                  style={{ height: '100%' }}
-                  views={['month', 'week', 'day']}
-                  view={view}
-                  date={date}
-                  onView={handleViewChange as any}
-                  onNavigate={handleDateChange}
-                  onSelectEvent={handleSelectEvent}
-                  onSelectSlot={handleSelectSlot}
-                  selectable
-                  popup
-                  eventPropGetter={(event) => ({
-                    style: {
-                      backgroundColor: statusColors[event.status as keyof typeof statusColors] || '#3174ad'
-                    }
-                  })}
-                  messages={{
-                    today: 'Hoy',
-                    previous: 'Anterior',
-                    next: 'Siguiente',
-                    month: 'Mes',
-                    week: 'Semana',
-                    day: 'Día',
-                    agenda: 'Agenda',
-                    date: 'Fecha',
-                    time: 'Hora',
-                    event: 'Evento',
-                    allDay: 'Todo el día',
-                    noEventsInRange: 'No hay reservas en este período'
-                  }}
-                />
+                
+                <div>
+                  <h4 className="text-sm font-medium">Fecha y hora de fin</h4>
+                  <p className="text-sm text-gray-500">
+                    {format(new Date(selectedReservation.endDateTime), 'dd/MM/yyyy HH:mm', { locale: es })}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium">Área común</h4>
+                  <p className="text-sm text-gray-500">
+                    {selectedReservation.commonArea?.name || 'No disponible'}
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium">Asistentes</h4>
+                  <p className="text-sm text-gray-500">{selectedReservation.attendees}</p>
+                </div>
+              </div>
+              
+              {selectedReservation.requiresPayment && (
+                <div>
+                  <h4 className="text-sm font-medium">Pago</h4>
+                  <p className="text-sm text-gray-500">
+                    ${selectedReservation.paymentAmount} - {selectedReservation.paymentStatus || 'Pendiente'}
+                  </p>
+                </div>
+              )}
+              
+              {selectedReservation.rejectionReason && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Reserva rechazada</AlertTitle>
+                  <AlertDescription>
+                    {selectedReservation.rejectionReason}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {selectedReservation.cancellationReason && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Reserva cancelada</AlertTitle>
+                  <AlertDescription>
+                    {selectedReservation.cancellationReason}
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {renderReservationForm()}
-      {renderEventDialog()}
+          )}
+          
+          <DialogFooter>
+            {selectedReservation && ['PENDING', 'APPROVED'].includes(selectedReservation.status) && (
+              <Button 
+                variant="destructive" 
+                onClick={() => handleCancelReservation(selectedReservation.id)}
+              >
+                Cancelar Reserva
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

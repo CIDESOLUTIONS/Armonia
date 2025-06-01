@@ -1,51 +1,45 @@
-// src/app/api/common-areas/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { ReservationService } from '@/services/reservationService';
-import { ServerLogger } from '@/lib/logging/server-logger';
+import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/auth-options';
+import { authOptions } from '@/lib/auth';
+import { serverLogger } from '@/lib/logging/server-logger';
 
 /**
  * GET /api/common-areas
- * Obtiene las áreas comunes disponibles
+ * Obtiene la lista de todas las áreas comunes disponibles
  */
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
+
     // Obtener parámetros de consulta
-    const searchParams = request.nextUrl.searchParams;
-    const isActive = searchParams.get('isActive') !== 'false';
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+    const searchParams = req.nextUrl.searchParams;
+    const active = searchParams.get('active') === 'true' ? true : 
+                  searchParams.get('active') === 'false' ? false : undefined;
+    const requiresApproval = searchParams.get('requiresApproval') === 'true' ? true : 
+                            searchParams.get('requiresApproval') === 'false' ? false : undefined;
+    const hasFee = searchParams.get('hasFee') === 'true' ? true : 
+                  searchParams.get('hasFee') === 'false' ? false : undefined;
+
     // Obtener áreas comunes
-    const result = await reservationService.getCommonAreas({
-      isActive,
-      page,
-      limit
+    const commonAreas = await reservationService.getCommonAreas({
+      active,
+      requiresApproval,
+      hasFee,
     });
-    
-    return NextResponse.json(result);
-  } catch (error: any) {
-    ServerLogger.error(`Error al obtener áreas comunes: ${error.message}`);
-    
+
+    return NextResponse.json(commonAreas);
+  } catch (error) {
+    serverLogger.error('Error al obtener áreas comunes', { error });
     return NextResponse.json(
-      { error: 'Error al obtener áreas comunes', details: error.message },
+      { error: 'Error al obtener áreas comunes' },
       { status: 500 }
     );
   }
@@ -53,58 +47,38 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/common-areas
- * Crea un área común (solo administradores)
+ * Crea una nueva área común
  */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación y permisos de administrador
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
-    // Verificar que el usuario es administrador
-    if (!session.user.isAdmin) {
-      return NextResponse.json(
-        { error: 'No tienes permisos para crear áreas comunes' },
-        { status: 403 }
-      );
-    }
-    
+
     // Obtener datos del cuerpo de la solicitud
-    const body = await request.json();
-    
+    const data = await req.json();
+
     // Validar datos requeridos
-    if (!body.name || !body.location) {
+    if (!data.name || !data.location) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: name, location' },
+        { error: 'Nombre y ubicación son requeridos' },
         { status: 400 }
       );
     }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+
     // Crear área común
-    // Nota: Esta funcionalidad no está implementada en el servicio actual
-    // Se debe implementar en una iteración futura
-    
+    const commonArea = await reservationService.createCommonArea(data);
+
+    return NextResponse.json(commonArea, { status: 201 });
+  } catch (error) {
+    serverLogger.error('Error al crear área común', { error });
     return NextResponse.json(
-      { error: 'Funcionalidad no implementada' },
-      { status: 501 }
-    );
-  } catch (error: any) {
-    ServerLogger.error(`Error al crear área común: ${error.message}`);
-    
-    return NextResponse.json(
-      { error: 'Error al crear área común', details: error.message },
+      { error: 'Error al crear área común' },
       { status: 500 }
     );
   }
