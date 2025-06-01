@@ -63,6 +63,15 @@ jobs:
       - name: Security audit
         run: npm audit --production
       
+      - name: Set environment variables
+        id: set-env
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            echo "::set-output name=environment::Production"
+          else
+            echo "::set-output name=environment::Staging"
+          fi
+      
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
         run: |
@@ -88,5 +97,5 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: deployments
           SLACK_COLOR: ${{ job.status }}
-          SLACK_TITLE: Deployment ${{ job.status }}
-          SLACK_MESSAGE: 'Armonía Platform deployment to ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }} ${{ job.status }}'
+          SLACK_TITLE: "Deployment ${{ job.status }}"
+          SLACK_MESSAGE: "Armonía Platform deployment to ${{ steps.set-env.outputs.environment }} ${{ job.status }}"
