@@ -1,8 +1,8 @@
-// CommonAreaReservation.test.js - Convertido a CommonJS para compatibilidad con Jest
-const React = require('react');
-const { render, screen, fireEvent, waitFor } = require('@testing-library/react');
-require('@testing-library/jest-dom');
-const CommonAreaReservation = require('../CommonAreaReservation').default;
+// CommonAreaReservation.test.js - Migrado a sintaxis ES6 para compatibilidad con ESLint
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import CommonAreaReservation from '../CommonAreaReservation';
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -121,13 +121,13 @@ describe('CommonAreaReservation Component', () => {
   });
 
   it('renders the component title', async () => {
-    render(React.createElement(CommonAreaReservation));
+    render(<CommonAreaReservation />);
     
     expect(screen.getByText('Reserva de Áreas Comunes')).toBeInTheDocument();
   });
 
   it('loads and displays common areas', async () => {
-    render(React.createElement(CommonAreaReservation));
+    render(<CommonAreaReservation />);
     
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/common-areas?active=true');
@@ -139,7 +139,7 @@ describe('CommonAreaReservation Component', () => {
   });
 
   it('loads user reservations', async () => {
-    render(React.createElement(CommonAreaReservation));
+    render(<CommonAreaReservation />);
     
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/reservations'));
@@ -151,7 +151,7 @@ describe('CommonAreaReservation Component', () => {
   });
 
   it('opens new reservation dialog when button is clicked', async () => {
-    render(React.createElement(CommonAreaReservation));
+    render(<CommonAreaReservation />);
     
     await waitFor(() => {
       expect(screen.getByText('Nueva Reserva')).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe('CommonAreaReservation Component', () => {
   });
 
   it('submits new reservation form', async () => {
-    render(React.createElement(CommonAreaReservation));
+    render(<CommonAreaReservation />);
     
     // Wait for component to load
     await waitFor(() => {
@@ -247,7 +247,7 @@ describe('CommonAreaReservation Component', () => {
       json: () => Promise.resolve({ error: 'Error al cargar áreas comunes' })
     }));
     
-    render(React.createElement(CommonAreaReservation));
+    render(<CommonAreaReservation />);
     
     // Wait for component to attempt loading
     await waitFor(() => {

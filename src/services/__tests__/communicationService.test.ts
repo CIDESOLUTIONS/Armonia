@@ -1,5 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import communicationService from '@/services/communicationService';
+import { PrismaClient } from '@prisma/client';
+import { sendNotificationToUser } from '@/lib/communications/websocket-server';
 
 // Mock PrismaClient
 jest.mock('@prisma/client', () => {
@@ -91,7 +93,7 @@ describe('CommunicationService', () => {
     jest.clearAllMocks();
     
     // Get the mocked PrismaClient instance
-    mockPrisma = require('@prisma/client').PrismaClient();
+    mockPrisma = new PrismaClient();
   });
   
   describe('notifyUser', () => {
