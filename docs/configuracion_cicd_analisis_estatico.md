@@ -29,6 +29,11 @@ El pipeline de integración continua y despliegue continuo (CI/CD) ha sido mejor
    - Aseguramiento de compatibilidad entre dependencias de desarrollo
    - Estabilización del proceso de instalación de dependencias
 
+6. **Corrección de sintaxis YAML**:
+   - Mejora de la sintaxis en la configuración de notificaciones Slack
+   - Implementación de pasos intermedios para definir variables de entorno
+   - Validación de la sintaxis YAML para evitar errores en tiempo de ejecución
+
 ## Estructura del Pipeline
 
 El pipeline de CI/CD ahora consta de dos jobs principales:
