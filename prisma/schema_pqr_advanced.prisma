@@ -1,0 +1,306 @@
+// Esquema Prisma para el sistema PQR avanzado
+// Este esquema extiende el modelo básico de PQR con funcionalidades avanzadas
+
+// Enumeración para categorías de PQR
+enum PQRCategory {
+  MAINTENANCE     // Mantenimiento de instalaciones
+  SECURITY        // Seguridad y vigilancia
+  ADMINISTRATIVE  // Procesos administrativos
+  FINANCIAL       // Pagos, cuotas, facturas
+  COMMUNITY       // Convivencia y comunidad
+  SERVICES        // Servicios comunes
+  SUGGESTION      // Sugerencias de mejora
+  COMPLAINT       // Quejas formales
+  OTHER           // Otros tipos
+  
+  @@schema("tenant")
+}
+
+// Enumeración para prioridades de PQR
+enum PQRPriority {
+  LOW            // Baja prioridad
+  MEDIUM         // Prioridad media
+  HIGH           // Alta prioridad
+  URGENT         // Urgente (atención inmediata)
+  
+  @@schema("tenant")
+}
+
+// Enumeración para estados de PQR
+enum PQRStatus {
+  OPEN           // Abierto (recién creado)
+  CATEGORIZED    // Categorizado y priorizado
+  ASSIGNED       // Asignado a responsable
+  IN_PROGRESS    // En proceso de atención
+  WAITING        // En espera de información o acción
+  RESOLVED       // Resuelto
+  CLOSED         // Cerrado
+  REOPENED       // Reabierto
+  CANCELLED      // Cancelado
+  
+  @@schema("tenant")
+}
+
+// Modelo principal para PQR avanzado
+model PQR {
+  id                Int               @id @default(autoincrement())
+  ticketNumber      String            // Número único de ticket (ej: PQR-20250602-001)
+  type              String            // Tipo: petición, queja, reclamo, sugerencia
+  title             String            // Título descriptivo
+  description       String            // Descripción detallada
+  
+  // Categorización y priorización
+  category          PQRCategory       // Categoría principal
+  subcategory       String?           // Subcategoría (opcional)
+  priority          PQRPriority       // Prioridad asignada
+  impact            String?           // Impacto (Alto, Medio, Bajo)
+  
+  // Estado y asignación
+  status            PQRStatus         @default(OPEN) // Estado actual
+  assignedToId      Int?              // ID del responsable asignado
+  assignedToName    String?           // Nombre del responsable
+  assignedToRole    String?           // Rol del responsable
+  assignedTeamId    Int?              // ID del equipo asignado
+  
+  // Fechas y tiempos
+  createdAt         DateTime          @default(now()) // Fecha de creación
+  updatedAt         DateTime          @updatedAt      // Última actualización
+  submittedAt       DateTime          @default(now()) // Fecha de envío
+  assignedAt        DateTime?         // Fecha de asignación
+  startedAt         DateTime?         // Fecha de inicio de atención
+  resolvedAt        DateTime?         // Fecha de resolución
+  closedAt          DateTime?         // Fecha de cierre
+  dueDate           DateTime?         // Fecha límite según SLA
+  
+  // Usuario y unidad
+  userId            Int               // ID del usuario que reporta
+  userName          String            // Nombre de quien reporta
+  userRole          String            // Rol de quien reporta
+  unitId            Int?              // ID de la unidad relacionada
+  unitNumber        String?           // Número de la unidad
+  complexId         Int               // ID del conjunto residencial
+  
+  // Resolución
+  resolution        String?           // Descripción de la resolución
+  satisfactionRating Int?             // Calificación de satisfacción (1-5)
+  satisfactionComment String?         // Comentario sobre la satisfacción
+  
+  // Métricas y SLA
+  responseTime      Int?              // Tiempo de primera respuesta (minutos)
+  resolutionTime    Int?              // Tiempo total de resolución (minutos)
+  slaId             Int?              // ID del SLA aplicable
+  slaBreached       Boolean?          // Si se incumplió el SLA
+  
+  // Etiquetas y clasificación
+  isPrivate         Boolean           @default(false) // Si es visible solo para administradores
+  requiresFollowUp  Boolean           @default(false) // Si requiere seguimiento posterior
+  tags              String[]          // Etiquetas para categorización
+  
+  // Relaciones
+  statusHistory     PQRStatusHistory[] // Historial de estados
+  comments          PQRComment[]      // Comentarios
+  attachments       PQRAttachment[]   // Archivos adjuntos
+  notifications     PQRNotification[] // Notificaciones enviadas
+  
+  // Índices para optimización
+  @@index([status])
+  @@index([category])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([userId])
+  @@index([complexId])
+  @@index([ticketNumber])
+  
+  @@schema("tenant")
+}
+
+// Modelo para historial de estados de PQR
+model PQRStatusHistory {
+  id                Int               @id @default(autoincrement())
+  pqrId             Int               // ID del PQR
+  pqr               PQR               @relation(fields: [pqrId], references: [id])
+  previousStatus    PQRStatus?        // Estado anterior
+  newStatus         PQRStatus         // Nuevo estado
+  changedAt         DateTime          @default(now()) // Fecha del cambio
+  changedById       Int               // ID del usuario que realizó el cambio
+  changedByName     String            // Nombre del usuario
+  changedByRole     String            // Rol del usuario
+  comment           String?           // Comentario sobre el cambio
+  timeInStatus      Int?              // Tiempo en el estado anterior (minutos)
+  
+  @@index([pqrId])
+  @@index([changedAt])
+  
+  @@schema("tenant")
+}
+
+// Modelo para comentarios en PQR
+model PQRComment {
+  id                Int               @id @default(autoincrement())
+  pqrId             Int               // ID del PQR
+  pqr               PQR               @relation(fields: [pqrId], references: [id])
+  content           String            // Contenido del comentario
+  authorId          Int               // ID del autor
+  authorName        String            // Nombre del autor
+  authorRole        String            // Rol del autor
+  isInternal        Boolean           @default(false) // Si es visible solo para administradores
+  createdAt         DateTime          @default(now()) // Fecha de creación
+  
+  @@index([pqrId])
+  @@index([createdAt])
+  
+  @@schema("tenant")
+}
+
+// Modelo para archivos adjuntos en PQR
+model PQRAttachment {
+  id                Int               @id @default(autoincrement())
+  pqrId             Int               // ID del PQR
+  pqr               PQR               @relation(fields: [pqrId], references: [id])
+  fileName          String            // Nombre del archivo
+  fileUrl           String            // URL del archivo
+  fileType          String            // Tipo de archivo (imagen, documento, etc.)
+  fileSize          Int               // Tamaño en bytes
+  uploadedAt        DateTime          @default(now()) // Fecha de subida
+  uploadedById      Int               // ID del usuario que subió el archivo
+  uploadedByName    String            // Nombre del usuario
+  
+  @@index([pqrId])
+  
+  @@schema("tenant")
+}
+
+// Modelo para notificaciones de PQR
+model PQRNotification {
+  id                Int               @id @default(autoincrement())
+  pqrId             Int               // ID del PQR
+  pqr               PQR               @relation(fields: [pqrId], references: [id])
+  type              String            // Tipo de notificación (email, sms, push, etc.)
+  recipientId       Int               // ID del destinatario
+  recipientEmail    String?           // Email del destinatario
+  recipientName     String            // Nombre del destinatario
+  subject           String            // Asunto
+  content           String            // Contenido
+  sentAt            DateTime          @default(now()) // Fecha de envío
+  status            String            // Estado (enviado, entregado, leído, fallido)
+  
+  @@index([pqrId])
+  @@index([sentAt])
+  
+  @@schema("tenant")
+}
+
+// Modelo para SLA de PQR
+model PQRSLA {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre del SLA
+  description       String?           // Descripción
+  category          PQRCategory?      // Categoría aplicable (null = todas)
+  priority          PQRPriority?      // Prioridad aplicable (null = todas)
+  responseTime      Int               // Tiempo de respuesta objetivo (minutos)
+  resolutionTime    Int               // Tiempo de resolución objetivo (minutos)
+  businessHoursOnly Boolean           @default(true) // Si aplica solo en horario laboral
+  escalationRules   Json?             // Reglas de escalamiento
+  isActive          Boolean           @default(true) // Si está activo
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para equipos de atención de PQR
+model PQRTeam {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre del equipo
+  description       String?           // Descripción
+  memberIds         Int[]             // IDs de los miembros
+  memberNames       String[]          // Nombres de los miembros
+  categories        PQRCategory[]     // Categorías que atiende
+  isActive          Boolean           @default(true) // Si está activo
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para reglas de asignación automática
+model PQRAssignmentRule {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre de la regla
+  description       String?           // Descripción
+  isActive          Boolean           @default(true) // Si está activa
+  priority          Int               // Prioridad de la regla (orden de evaluación)
+  
+  // Condiciones
+  categories        PQRCategory[]     // Categorías a las que aplica
+  priorities        PQRPriority[]     // Prioridades a las que aplica
+  keywords          String[]          // Palabras clave en título o descripción
+  
+  // Acción
+  assignToTeamId    Int?              // ID del equipo a asignar
+  assignToUserId    Int?              // ID del usuario a asignar
+  setPriority       PQRPriority?      // Prioridad a establecer
+  setDueDate        String?           // Expresión para calcular fecha límite
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para configuración del sistema PQR
+model PQRSettings {
+  id                      Int       @id @default(autoincrement())
+  autoAssignEnabled       Boolean   @default(true)  // Asignación automática
+  autoCategorizeEnabled   Boolean   @default(true)  // Categorización automática
+  autoNotifyEnabled       Boolean   @default(true)  // Notificaciones automáticas
+  satisfactionSurveyEnabled Boolean  @default(true)  // Encuesta de satisfacción
+  allowAnonymousReports   Boolean   @default(false) // Permitir reportes anónimos
+  requireApprovalToClose  Boolean   @default(true)  // Requiere aprobación para cerrar
+  defaultPriority         PQRPriority @default(MEDIUM) // Prioridad predeterminada
+  updatedAt               DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para categorías personalizadas
+model PQRCustomCategory {
+  id                Int       @id @default(autoincrement())
+  name              String    // Nombre de la categoría
+  parentCategory    PQRCategory // Categoría principal
+  description       String?   // Descripción
+  isActive          Boolean   @default(true) // Si está activa
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para plantillas de respuesta
+model PQRResponseTemplate {
+  id                Int       @id @default(autoincrement())
+  name              String    // Nombre de la plantilla
+  category          PQRCategory? // Categoría aplicable
+  subject           String    // Asunto
+  content           String    // Contenido
+  isActive          Boolean   @default(true) // Si está activa
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para reportes y métricas
+model PQRReport {
+  id                Int       @id @default(autoincrement())
+  name              String    // Nombre del reporte
+  type              String    // Tipo (diario, semanal, mensual, personalizado)
+  parameters        Json      // Parámetros del reporte
+  schedule          String?   // Programación (expresión cron)
+  recipients        String[]  // Destinatarios
+  lastRun           DateTime? // Última ejecución
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
