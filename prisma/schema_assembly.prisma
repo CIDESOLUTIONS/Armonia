@@ -1,0 +1,266 @@
+// Esquema Prisma para el Módulo de Asamblea Avanzado
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  schemas    = ["tenant"] // Asumiendo que estos modelos van en el schema del tenant
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+// --- ENUMERACIONES --- //
+
+enum AssemblyStatus {
+  SCHEDULED   // Programada
+  IN_PROGRESS // En progreso
+  COMPLETED   // Completada
+  CANCELLED   // Cancelada
+  SUSPENDED   // Suspendida temporalmente
+  
+  @@schema("tenant")
+}
+
+enum AssemblyType {
+  ORDINARY      // Ordinaria
+  EXTRAORDINARY // Extraordinaria
+  COMMITTEE     // De comité
+  
+  @@schema("tenant")
+}
+
+enum VotingStatus {
+  PENDING     // Pendiente de iniciar
+  ACTIVE      // Activa (votación en curso)
+  CLOSED      // Cerrada (votación finalizada)
+  CANCELLED   // Cancelada
+  
+  @@schema("tenant")
+}
+
+enum VotingType {
+  SIMPLE_MAJORITY     // Mayoría simple (más del 50% de los presentes)
+  QUALIFIED_MAJORITY  // Mayoría calificada (ej: 70% de coeficientes totales)
+  UNANIMOUS           // Unanimidad
+  COEFFICIENT_BASED   // Basada en coeficientes (configurable)
+  
+  @@schema("tenant")
+}
+
+enum AttendanceType {
+  PRESENT     // Presencial
+  PROXY       // Por poder
+  VIRTUAL     // Virtual
+  
+  @@schema("tenant")
+}
+
+enum QuorumStatus {
+  NOT_REACHED // No alcanzado
+  REACHED     // Alcanzado
+  VERIFYING   // Verificando
+  
+  @@schema("tenant")
+}
+
+enum MinutesStatus {
+  PENDING     // Pendiente de generación
+  GENERATING  // Generando
+  GENERATED   // Generada (sin firmar)
+  SIGNING     // En proceso de firma
+  SIGNED      // Firmada
+  REJECTED    // Rechazada (requiere corrección)
+  FAILED      // Falló la generación/firma
+  
+  @@schema("tenant")
+}
+
+enum SignatureStatus {
+  PENDING     // Pendiente de firma
+  SIGNED      // Firmado
+  REJECTED    // Rechazado
+  
+  @@schema("tenant")
+}
+
+// --- MODELOS PRINCIPALES --- //
+
+model Assembly {
+  id                Int           @id @default(autoincrement())
+  title             String
+  description       String?
+  type              AssemblyType
+  status            AssemblyStatus  @default(SCHEDULED)
+  date              DateTime      // Fecha y hora de inicio programada
+  endTime           DateTime?     // Fecha y hora de finalización real
+  location          String        // Puede ser físico o virtual (URL)
+  agenda            Json          // Agenda detallada (ej: [{ point: 1, topic: "...", duration: 30 }])
+  
+  // Quórum
+  requiredCoefficient Float       // Coeficiente mínimo requerido para quórum
+  currentCoefficient  Float         @default(0.0)
+  quorumStatus        QuorumStatus  @default(NOT_REACHED)
+  quorumReachedAt     DateTime?     // Momento en que se alcanzó el quórum
+  
+  // Tiempo Real
+  realtimeChannel   String?       // Canal de WebSocket para esta asamblea
+  
+  // Relaciones
+  attendees         AssemblyAttendee[]
+  votings           Voting[]
+  minutes           AssemblyMinutes? // Relación uno a uno con el acta
+  
+  // Auditoría
+  createdBy         Int           // ID del usuario que creó la asamblea
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([status])
+  @@index([date])
+  @@schema("tenant")
+}
+
+model AssemblyAttendee {
+  id                Int           @id @default(autoincrement())
+  assemblyId        Int
+  assembly          Assembly      @relation(fields: [assemblyId], references: [id])
+  userId            Int           // ID del usuario asistente
+  propertyUnitId    Int           // ID de la unidad/propiedad representada
+  coefficient       Float         // Coeficiente de la propiedad
+  attendanceType    AttendanceType
+  proxyUserId       Int?          // ID del usuario que otorga el poder (si aplica)
+  proxyDocumentUrl  String?       // URL del documento de poder
+  checkInTime       DateTime      @default(now())
+  checkOutTime      DateTime?
+  ipAddress         String?       // IP para asistentes virtuales
+  userAgent         String?       // User agent para asistentes virtuales
+  
+  @@unique([assemblyId, userId, propertyUnitId]) // Evita duplicados
+  @@index([assemblyId])
+  @@index([userId])
+  @@schema("tenant")
+}
+
+model Voting {
+  id                Int           @id @default(autoincrement())
+  assemblyId        Int
+  assembly          Assembly      @relation(fields: [assemblyId], references: [id])
+  agendaPoint       Int           // Número del punto de la agenda relacionado
+  title             String
+  description       String?
+  type              VotingType
+  status            VotingStatus  @default(PENDING)
+  options           Json          // Opciones de votación (ej: ["Sí", "No", "Abstenerse"])
+  startTime         DateTime?     // Hora de inicio real de la votación
+  endTime           DateTime?     // Hora de cierre real de la votación
+  
+  // Resultados
+  result            Json?         // Resultados detallados (ej: { "Sí": { count: 10, coefficient: 45.5 }, ... })
+  totalVotes        Int           @default(0)
+  totalCoefficientVoted Float     @default(0.0)
+  isApproved        Boolean?      // Resultado final (aprobado/rechazado)
+  
+  // Configuración (para tipos complejos)
+  requiredPercentage Float?       // Porcentaje requerido para aprobación (ej: 70%)
+  baseForPercentage String?       // Base para el cálculo (ej: 'ATTENDEES', 'TOTAL_COEFFICIENTS')
+  
+  // Relaciones
+  votes             Vote[]
+  
+  // Auditoría
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([assemblyId])
+  @@index([status])
+  @@schema("tenant")
+}
+
+model Vote {
+  id                Int           @id @default(autoincrement())
+  votingId          Int
+  voting            Voting        @relation(fields: [votingId], references: [id])
+  attendeeId        Int           // ID del registro de asistencia
+  userId            Int           // ID del usuario que vota
+  propertyUnitId    Int           // ID de la unidad/propiedad que representa
+  coefficient       Float         // Coeficiente al momento de votar
+  value             String        // Valor del voto (debe coincidir con una opción)
+  comments          String?
+  timestamp         DateTime      @default(now())
+  ipAddress         String?       // IP desde donde se emitió el voto
+  userAgent         String?       // User agent
+  
+  @@unique([votingId, attendeeId]) // Un voto por asistente por votación
+  @@index([votingId])
+  @@index([userId])
+  @@schema("tenant")
+}
+
+model AssemblyMinutes {
+  id                Int           @id @default(autoincrement())
+  assemblyId        Int           @unique // Clave única para relación uno a uno
+  assembly          Assembly      @relation(fields: [assemblyId], references: [id])
+  status            MinutesStatus @default(PENDING)
+  content           String?       // Contenido del acta (puede ser Markdown o HTML)
+  generatedAt       DateTime?
+  pdfUrl            String?       // URL del PDF generado
+  generationLog     String?       // Log de la generación
+  
+  // Firmas
+  signaturesRequired Int          @default(2) // Número de firmas requeridas (ej: Presidente, Secretario)
+  signaturesCompleted Int          @default(0)
+  signatures        DigitalSignature[]
+  signedPdfUrl      String?       // URL del PDF firmado
+  
+  // Auditoría
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([assemblyId])
+  @@index([status])
+  @@schema("tenant")
+}
+
+model DigitalSignature {
+  id                Int           @id @default(autoincrement())
+  minutesId         Int
+  minutes           AssemblyMinutes @relation(fields: [minutesId], references: [id])
+  signerUserId      Int           // ID del usuario firmante
+  signerName        String
+  signerRole        String        // Rol en la asamblea (ej: Presidente, Secretario)
+  status            SignatureStatus @default(PENDING)
+  signedAt          DateTime?
+  signatureData     String?       // Datos de la firma (ej: hash, certificado)
+  ipAddress         String?
+  userAgent         String?
+  rejectionReason   String?
+  
+  @@index([minutesId])
+  @@index([signerUserId])
+  @@index([status])
+  @@schema("tenant")
+}
+
+// --- MODELOS RELACIONADOS (Asegurar que existan o crearlos) --- //
+
+// Modelo de Usuario (simplificado, ajustar según modelo real en schema "armonia")
+// model User {
+//   id    Int     @id @default(autoincrement())
+//   name  String
+//   email String  @unique
+//   // ... otros campos
+//   @@schema("armonia") // O donde esté definido
+// }
+
+// Modelo de Propiedad/Unidad (simplificado, ajustar según modelo real)
+// model PropertyUnit {
+//   id          Int     @id @default(autoincrement())
+//   number      String  // Número de la unidad (ej: "Apto 101", "Local 20")
+//   coefficient Float   // Coeficiente de copropiedad
+//   ownerId     Int     // ID del propietario principal
+//   // ... otros campos
+//   @@schema("tenant")
+// }
+
