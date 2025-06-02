@@ -1,0 +1,207 @@
+// Esquema para el Sistema de Citofonía Virtual
+// Este archivo define los modelos de datos para la integración con WhatsApp y Telegram
+// para notificaciones de visitantes y control de accesos
+
+// Enumeraciones para el sistema de citofonía virtual
+enum VisitStatus {
+  PENDING      // Visita pendiente de notificación
+  NOTIFIED     // Visitante notificado al residente
+  APPROVED     // Visita aprobada por el residente
+  REJECTED     // Visita rechazada por el residente
+  IN_PROGRESS  // Visita en curso (visitante dentro)
+  COMPLETED    // Visita completada (visitante salió)
+  CANCELLED    // Visita cancelada
+  
+  @@schema("tenant")
+}
+
+enum NotificationChannel {
+  WHATSAPP     // Notificación por WhatsApp
+  TELEGRAM     // Notificación por Telegram
+  SMS          // Notificación por SMS
+  EMAIL        // Notificación por Email
+  APP          // Notificación en la aplicación
+  
+  @@schema("tenant")
+}
+
+enum NotificationStatus {
+  PENDING      // Pendiente de envío
+  SENT         // Enviada
+  DELIVERED    // Entregada al dispositivo
+  READ         // Leída por el usuario
+  RESPONDED    // Respondida por el usuario
+  FAILED       // Falló el envío
+  EXPIRED      // Expiró sin respuesta
+  
+  @@schema("tenant")
+}
+
+enum ResponseType {
+  APPROVE      // Aprobación de acceso
+  REJECT       // Rechazo de acceso
+  CUSTOM       // Respuesta personalizada
+  
+  @@schema("tenant")
+}
+
+// Modelo para tipos de visitantes
+model VisitorType {
+  id                Int               @id @default(autoincrement())
+  name              String            // Tipo de visitante (Familiar, Servicio, Delivery, etc.)
+  description       String?           // Descripción opcional
+  requiresApproval  Boolean           @default(true) // Si requiere aprobación explícita
+  color             String?           // Color para UI
+  icon              String?           // Icono para UI
+  visitors          Visitor[]         // Visitantes asociados
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para visitantes
+model Visitor {
+  id                String            @id @default(uuid())
+  name              String            // Nombre del visitante
+  identification    String?           // Documento de identidad
+  phone             String?           // Teléfono de contacto
+  photo             String?           // URL de foto (opcional)
+  typeId            Int               // Tipo de visitante
+  type              VisitorType       @relation(fields: [typeId], references: [id])
+  company           String?           // Empresa (si aplica)
+  isFrequent        Boolean           @default(false) // Si es visitante frecuente
+  isBlocked         Boolean           @default(false) // Si está bloqueado
+  blockReason       String?           // Razón de bloqueo
+  visits            Visit[]           // Visitas asociadas
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@index([typeId])
+  @@index([isFrequent])
+  @@index([isBlocked])
+  @@schema("tenant")
+}
+
+// Modelo para unidades residenciales
+model Unit {
+  id                Int               @id @default(autoincrement())
+  number            String            // Número o identificador de la unidad
+  type              String            // Tipo (apartamento, casa, oficina)
+  floor             Int?              // Piso (si aplica)
+  tower             String?           // Torre o bloque (si aplica)
+  ownerId           Int?              // ID del propietario
+  residents         Int[]             // IDs de residentes
+  visits            Visit[]           // Visitas a esta unidad
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@unique([number, tower])
+  @@schema("tenant")
+}
+
+// Modelo para visitas
+model Visit {
+  id                String            @id @default(uuid())
+  visitorId         String            // Visitante
+  visitor           Visitor           @relation(fields: [visitorId], references: [id])
+  unitId            Int               // Unidad a visitar
+  unit              Unit              @relation(fields: [unitId], references: [id])
+  purpose           String            // Propósito de la visita
+  status            VisitStatus       @default(PENDING) // Estado de la visita
+  entryTime         DateTime?         // Hora de entrada
+  exitTime          DateTime?         // Hora de salida
+  authorizedBy      Int?              // Usuario que autorizó
+  notes             String?           // Notas adicionales
+  notifications     VirtualIntercomNotification[] // Notificaciones enviadas
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@index([visitorId])
+  @@index([unitId])
+  @@index([status])
+  @@index([entryTime])
+  @@schema("tenant")
+}
+
+// Modelo para notificaciones de citofonía virtual
+model VirtualIntercomNotification {
+  id                String            @id @default(uuid())
+  visitId           String            // Visita asociada
+  visit             Visit             @relation(fields: [visitId], references: [id])
+  userId            Int               // Usuario notificado
+  channel           NotificationChannel // Canal de notificación (WhatsApp, Telegram)
+  status            NotificationStatus @default(PENDING) // Estado de la notificación
+  sentAt            DateTime          @default(now()) // Fecha de envío
+  deliveredAt       DateTime?         // Fecha de entrega
+  readAt            DateTime?         // Fecha de lectura
+  respondedAt       DateTime?         // Fecha de respuesta
+  response          String?           // Respuesta del usuario
+  responseType      ResponseType?     // Tipo de respuesta (Aprobar, Rechazar)
+  messageId         String?           // ID del mensaje en el canal
+  errorMessage      String?           // Mensaje de error (si aplica)
+  retries           Int               @default(0) // Número de reintentos
+  
+  @@index([visitId])
+  @@index([userId])
+  @@index([channel])
+  @@index([status])
+  @@schema("tenant")
+}
+
+// Modelo para preferencias de citofonía por usuario
+model UserIntercomPreference {
+  id                Int               @id @default(autoincrement())
+  userId            Int               // Usuario
+  whatsappEnabled   Boolean           @default(true) // Notificaciones por WhatsApp habilitadas
+  whatsappNumber    String?           // Número de WhatsApp
+  telegramEnabled   Boolean           @default(false) // Notificaciones por Telegram habilitadas
+  telegramUsername  String?           // Usuario de Telegram
+  telegramChatId    String?           // Chat ID de Telegram
+  notifyAllVisitors Boolean           @default(true) // Notificar todos los visitantes
+  allowedVisitorTypes Int[]           // Tipos de visitantes permitidos sin notificación
+  autoApproveTypes  Int[]             // Tipos de visitantes con aprobación automática
+  quietHoursStart   String?           // Inicio de horas de silencio (HH:MM)
+  quietHoursEnd     String?           // Fin de horas de silencio (HH:MM)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@unique([userId])
+  @@schema("tenant")
+}
+
+// Modelo para configuración general de citofonía virtual
+model IntercomSettings {
+  id                Int               @id @default(autoincrement())
+  whatsappEnabled   Boolean           @default(true) // WhatsApp habilitado a nivel de sistema
+  whatsappProvider  String?           // Proveedor de WhatsApp (Twilio, MessageBird, etc.)
+  whatsappConfig    Json?             // Configuración de WhatsApp
+  telegramEnabled   Boolean           @default(true) // Telegram habilitado a nivel de sistema
+  telegramBotToken  String?           // Token del bot de Telegram
+  telegramConfig    Json?             // Configuración de Telegram
+  defaultResponseTimeout Int          @default(60) // Tiempo de espera para respuesta (segundos)
+  maxRetries        Int               @default(2) // Máximo de reintentos
+  retryDelay        Int               @default(30) // Tiempo entre reintentos (segundos)
+  messageTemplates  Json              // Plantillas de mensajes
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para registro de actividad de citofonía virtual
+model IntercomActivityLog {
+  id                String            @id @default(uuid())
+  eventType         String            // Tipo de evento
+  visitId           String?           // ID de visita relacionada
+  userId            Int?              // ID de usuario relacionado
+  visitorId         String?           // ID de visitante relacionado
+  channel           NotificationChannel? // Canal utilizado
+  details           Json              // Detalles del evento
+  timestamp         DateTime          @default(now())
+  
+  @@index([eventType])
+  @@index([visitId])
+  @@index([userId])
+  @@index([timestamp])
+  @@schema("tenant")
+}
