@@ -1,0 +1,170 @@
+// Esquema para la Integración de Pagos
+// Este archivo define los modelos de datos para la integración con pasarelas de pago
+// y el registro de transacciones financieras
+
+// Modelo para pasarelas de pago
+model PaymentGateway {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre de la pasarela (PayU, Wompi, etc.)
+  isActive          Boolean           @default(true)
+  apiKey            String?           // Clave API (encriptada)
+  apiSecret         String?           // Secreto API (encriptado)
+  merchantId        String?           // ID de comercio
+  accountId         String?           // ID de cuenta (si aplica)
+  testMode          Boolean           @default(false)
+  supportedMethods  String[]          // Métodos de pago soportados
+  webhookUrl        String?           // URL para webhooks
+  webhookSecret     String?           // Secreto para validar webhooks
+  config            Json?             // Configuración adicional específica
+  transactions      Transaction[]     // Transacciones asociadas
+  paymentTokens     PaymentToken[]    // Tokens de pago asociados
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para métodos de pago
+model PaymentMethod {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre del método (Tarjeta, PSE, etc.)
+  code              String            // Código único
+  isActive          Boolean           @default(true)
+  icon              String?           // Icono para UI
+  gatewayMethods    Json              // Mapeo a métodos específicos de pasarelas
+  surcharge         Float             @default(0) // Recargo adicional (%)
+  minAmount         Float?            // Monto mínimo
+  maxAmount         Float?            // Monto máximo
+  instructions      String?           // Instrucciones especiales
+  transactions      Transaction[]     // Transacciones asociadas
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para transacciones
+model Transaction {
+  id                String            @id @default(uuid())
+  userId            Int               // Usuario que realiza el pago
+  invoiceId         Int?              // Factura asociada (opcional)
+  amount            Float             // Monto de la transacción
+  currency          String            @default("COP")
+  description       String            // Descripción del pago
+  status            TransactionStatus // Estado de la transacción
+  gatewayId         Int               // Pasarela utilizada
+  gateway           PaymentGateway    @relation(fields: [gatewayId], references: [id])
+  methodId          Int               // Método de pago utilizado
+  method            PaymentMethod     @relation(fields: [methodId], references: [id])
+  gatewayReference  String?           // Referencia en la pasarela
+  gatewayResponse   Json?             // Respuesta completa de la pasarela
+  paymentUrl        String?           // URL de pago (si aplica)
+  paymentData       Json?             // Datos adicionales del pago
+  metadata          Json?             // Metadatos adicionales
+  errorCode         String?           // Código de error (si aplica)
+  errorMessage      String?           // Mensaje de error (si aplica)
+  receiptId         String?           // ID del recibo generado
+  receiptUrl        String?           // URL del recibo
+  ipAddress         String?           // IP del pagador
+  userAgent         String?           // User-Agent del pagador
+  attempts          Int               @default(1) // Número de intentos
+  expiresAt         DateTime?         // Fecha de expiración
+  completedAt       DateTime?         // Fecha de completado
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@index([userId])
+  @@index([invoiceId])
+  @@index([status])
+  @@index([gatewayId])
+  @@index([createdAt])
+  @@schema("tenant")
+}
+
+// Modelo para tokens de pago (tarjetas guardadas, etc.)
+model PaymentToken {
+  id                String            @id @default(uuid())
+  userId            Int               // Usuario propietario
+  gatewayId         Int               // Pasarela asociada
+  gateway           PaymentGateway    @relation(fields: [gatewayId], references: [id])
+  type              String            // Tipo de token (tarjeta, cuenta)
+  token             String            // Token encriptado
+  lastFour          String?           // Últimos 4 dígitos (tarjetas)
+  brand             String?           // Marca (Visa, Mastercard, etc.)
+  expiryMonth       Int?              // Mes de expiración
+  expiryYear        Int?              // Año de expiración
+  holderName        String?           // Nombre del titular
+  isDefault         Boolean           @default(false)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@index([userId])
+  @@index([gatewayId])
+  @@schema("tenant")
+}
+
+// Modelo para configuración de pagos
+model PaymentSettings {
+  id                Int               @id @default(autoincrement())
+  defaultGatewayId  Int?              // Pasarela predeterminada
+  allowSaveCards    Boolean           @default(true) // Permitir guardar tarjetas
+  minPaymentAmount  Float             @default(0) // Monto mínimo de pago
+  maxPaymentAmount  Float?            // Monto máximo de pago
+  paymentExpiry     Int               @default(24) // Horas hasta expiración
+  autoGenerateReceipt Boolean         @default(true) // Generar recibo automáticamente
+  receiptTemplate   String?           // Plantilla para recibos
+  notifyOnPayment   Boolean           @default(true) // Notificar pagos
+  emailSettings     Json?             // Configuración de emails
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para descuentos por pronto pago
+model EarlyPaymentDiscount {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre del descuento
+  description       String?           // Descripción
+  discountType      DiscountType      // Tipo de descuento
+  discountValue     Float             // Valor del descuento
+  daysBeforeDue     Int               // Días antes del vencimiento
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para recargos por pago tardío
+model LatePaymentSurcharge {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre del recargo
+  description       String?           // Descripción
+  surchargeType     DiscountType      // Tipo de recargo
+  surchargeValue    Float             // Valor del recargo
+  daysAfterDue      Int               // Días después del vencimiento
+  maxSurcharge      Float?            // Recargo máximo
+  compounding       Boolean           @default(false) // Si es compuesto
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Enumeraciones
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+  EXPIRED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
