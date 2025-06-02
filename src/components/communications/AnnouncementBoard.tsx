@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRealTimeCommunication } from '@/lib/communications/real-time-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/components/ui/use-toast';
 
 // Tipos para los anuncios
 export interface Announcement {
@@ -36,6 +37,7 @@ export interface Announcement {
     readAt: Date;
   }[];
   requiresConfirmation: boolean;
+  isRead: boolean;
 }
 
 interface AnnouncementBoardProps {
@@ -53,23 +55,39 @@ export default function AnnouncementBoard({
 }: AnnouncementBoardProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [expandedAnnouncement, setExpandedAnnouncement] = useState<string | null>(null);
-  // useState activeTab eliminado por lint
+  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'important'>('all');
   const [loading, setLoading] = useState(true);
   
   const { subscribeToEvent, socket } = useRealTimeCommunication();
+  const { toast } = useToast();
   
   // Cargar anuncios
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
         setLoading(true);
-        // Variable response eliminada por lint
+        const response = await fetch('/api/communications/announcements');
         if (response.ok) {
-          const _data = await response.json();
+          const data = await response.json();
           setAnnouncements(data);
+        } else {
+          toast({
+            title: language === 'Español' ? 'Error' : 'Error',
+            description: language === 'Español' 
+              ? 'No se pudieron cargar los anuncios' 
+              : 'Could not load announcements',
+            variant: 'destructive'
+          });
         }
       } catch (error) {
         console.error('Error al cargar anuncios:', error);
+        toast({
+          title: language === 'Español' ? 'Error' : 'Error',
+          description: language === 'Español' 
+            ? 'No se pudieron cargar los anuncios' 
+            : 'Could not load announcements',
+          variant: 'destructive'
+        });
       } finally {
         setLoading(false);
       }
@@ -80,6 +98,13 @@ export default function AnnouncementBoard({
     // Suscribirse a nuevos anuncios
     const handleNewAnnouncement = (announcement: Announcement) => {
       setAnnouncements(prev => [announcement, ...prev]);
+      
+      toast({
+        title: language === 'Español' ? 'Nuevo anuncio' : 'New announcement',
+        description: announcement.title,
+        variant: announcement.type === 'emergency' ? 'destructive' : 
+                 announcement.type === 'important' ? 'warning' : 'default'
+      });
     };
     
     subscribeToEvent('new_announcement', handleNewAnnouncement);
@@ -90,7 +115,7 @@ export default function AnnouncementBoard({
         socket.off('new_announcement', handleNewAnnouncement);
       }
     };
-  }, [subscribeToEvent, socket]);
+  }, [subscribeToEvent, socket, toast, language]);
   
   // Formatear fecha relativa
   const formatRelativeTime = (date: Date) => {
@@ -109,13 +134,18 @@ export default function AnnouncementBoard({
   
   // Verificar si un anuncio ha sido leído por el usuario actual
   const isAnnouncementRead = (announcement: Announcement) => {
-    return announcement.readBy.some(reader => reader.userId === userId);
+    return announcement.isRead || announcement.readBy.some(reader => reader.userId === userId);
   };
   
   // Marcar anuncio como leído
   const markAsRead = async (announcementId: string) => {
     try {
-      // Variable response eliminada por lint
+      const response = await fetch(`/api/communications/announcements/${announcementId}/read`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (response.ok) {
         setAnnouncements(prev => 
@@ -123,21 +153,42 @@ export default function AnnouncementBoard({
             a.id === announcementId 
               ? { 
                   ...a, 
+                  isRead: true,
                   readBy: [...a.readBy, { userId, readAt: new Date() }] 
                 } 
               : a
           )
         );
+      } else {
+        toast({
+          title: language === 'Español' ? 'Error' : 'Error',
+          description: language === 'Español' 
+            ? 'No se pudo marcar el anuncio como leído' 
+            : 'Could not mark announcement as read',
+          variant: 'destructive'
+        });
       }
     } catch (error) {
       console.error('Error al marcar anuncio como leído:', error);
+      toast({
+        title: language === 'Español' ? 'Error' : 'Error',
+        description: language === 'Español' 
+          ? 'No se pudo marcar el anuncio como leído' 
+          : 'Could not mark announcement as read',
+        variant: 'destructive'
+      });
     }
   };
   
   // Confirmar lectura de anuncio
   const confirmReading = async (announcementId: string) => {
     try {
-      // Variable response eliminada por lint
+      const response = await fetch(`/api/communications/announcements/${announcementId}/confirm`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (response.ok) {
         setAnnouncements(prev => 
@@ -145,14 +196,38 @@ export default function AnnouncementBoard({
             a.id === announcementId 
               ? { 
                   ...a, 
+                  isRead: true,
                   readBy: [...a.readBy, { userId, readAt: new Date() }] 
                 } 
               : a
           )
         );
+        
+        toast({
+          title: language === 'Español' ? 'Confirmado' : 'Confirmed',
+          description: language === 'Español' 
+            ? 'Lectura confirmada correctamente' 
+            : 'Reading confirmed successfully',
+          variant: 'success'
+        });
+      } else {
+        toast({
+          title: language === 'Español' ? 'Error' : 'Error',
+          description: language === 'Español' 
+            ? 'No se pudo confirmar la lectura' 
+            : 'Could not confirm reading',
+          variant: 'destructive'
+        });
       }
     } catch (error) {
       console.error('Error al confirmar lectura:', error);
+      toast({
+        title: language === 'Español' ? 'Error' : 'Error',
+        description: language === 'Español' 
+          ? 'No se pudo confirmar la lectura' 
+          : 'Could not confirm reading',
+        variant: 'destructive'
+      });
     }
   };
   
@@ -213,6 +288,12 @@ export default function AnnouncementBoard({
     return new Date(announcement.expiresAt) < new Date();
   };
   
+  // Crear nuevo anuncio
+  const handleCreateAnnouncement = () => {
+    // Implementar navegación a la página de creación de anuncios
+    window.location.href = '/admin/communications/announcements/create';
+  };
+  
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -223,7 +304,7 @@ export default function AnnouncementBoard({
           </CardTitle>
           
           {isAdmin && (
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleCreateAnnouncement}>
               {language === 'Español' ? 'Crear Anuncio' : 'Create Announcement'}
             </Button>
           )}
@@ -410,23 +491,6 @@ export default function AnnouncementBoard({
           )}
         </ScrollArea>
       </CardContent>
-      
-      <CardFooter className="flex justify-between py-2 px-4 border-t">
-        <div className="text-xs text-gray-500">
-          {filteredAnnouncements.length} {language === 'Español' ? 'anuncios' : 'announcements'}
-        </div>
-        
-        {activeTab !== 'all' && (
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => setActiveTab('all')}
-          >
-            {language === 'Español' ? 'Ver todos' : 'View all'}
-          </Button>
-        )}
-      </CardFooter>
     </Card>
   );
 }

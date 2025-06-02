@@ -14,27 +14,43 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18.x'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: Lint
+        run: npm run lint
+      
+      - name: Static code analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          languages: javascript, typescript
+      
+      - name: Run tests
+        run: npm run test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
 
   build-and-deploy:
     needs: lint-and-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18.x'
+          cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       
       - name: Generate Prisma Client
         run: npx prisma generate
@@ -44,8 +60,17 @@ jobs:
         env:
           NODE_ENV: production
       
-      - name: Run tests
-        run: npm run test
+      - name: Security audit
+        run: npm audit --production
+      
+      - name: Set environment variables
+        id: set-env
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            echo "::set-output name=environment::Production"
+          else
+            echo "::set-output name=environment::Staging"
+          fi
       
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
@@ -64,3 +89,13 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+      
+      - name: Notify deployment status
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: "Deployment ${{ job.status }}"
+          SLACK_MESSAGE: "Armonía Platform deployment to ${{ steps.set-env.outputs.environment }} ${{ job.status }}"

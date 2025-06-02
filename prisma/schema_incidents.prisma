@@ -1,0 +1,319 @@
+// Esquema Prisma para el sistema de gestión de incidentes
+// Ampliación del modelo existente con nuevas funcionalidades
+
+// Enumeración para categorías de incidentes
+enum IncidentCategory {
+  SECURITY       // Seguridad (robos, intrusiones, alarmas)
+  MAINTENANCE    // Mantenimiento (daños, reparaciones)
+  EMERGENCY      // Emergencias (incendios, inundaciones)
+  NOISE          // Ruido o perturbaciones
+  PARKING        // Problemas de estacionamiento
+  COMMON_AREAS   // Problemas en áreas comunes
+  NEIGHBOR       // Conflictos entre vecinos
+  SERVICES       // Servicios públicos (agua, luz, gas)
+  PETS           // Problemas con mascotas
+  OTHER          // Otros tipos
+  
+  @@schema("tenant")
+}
+
+// Enumeración para prioridades de incidentes
+enum IncidentPriority {
+  LOW           // Baja prioridad
+  MEDIUM        // Prioridad media
+  HIGH          // Alta prioridad
+  CRITICAL      // Crítica (emergencia)
+  
+  @@schema("tenant")
+}
+
+// Enumeración para estados de incidentes
+enum IncidentStatus {
+  REPORTED      // Reportado (inicial)
+  ASSIGNED      // Asignado a responsable
+  IN_PROGRESS   // En proceso de atención
+  ON_HOLD       // En espera (por materiales, terceros, etc.)
+  RESOLVED      // Resuelto
+  CLOSED        // Cerrado
+  CANCELLED     // Cancelado
+  REOPENED      // Reabierto
+  
+  @@schema("tenant")
+}
+
+// Enumeración para tipos de notificación
+enum NotificationType {
+  EMAIL         // Correo electrónico
+  SMS           // Mensaje de texto
+  PUSH          // Notificación push
+  APP           // Notificación en app
+  WHATSAPP      // Mensaje de WhatsApp
+  
+  @@schema("tenant")
+}
+
+// Enumeración para tipos de adjuntos
+enum AttachmentType {
+  IMAGE         // Imagen
+  DOCUMENT      // Documento
+  VIDEO         // Video
+  AUDIO         // Audio
+  OTHER         // Otro tipo
+  
+  @@schema("tenant")
+}
+
+// Modelo ampliado para Incidentes
+model Incident {
+  id                Int               @id @default(autoincrement())
+  incidentNumber    String            // Número único de incidente (ej: INC-20250601-001)
+  title             String            // Título del incidente
+  description       String            // Descripción detallada
+  
+  // Categorización
+  category          IncidentCategory  // Categoría del incidente
+  subcategory       String?           // Subcategoría (opcional)
+  priority          IncidentPriority  // Prioridad
+  impact            String?           // Impacto (Alto, Medio, Bajo)
+  
+  // Ubicación
+  location          String            // Ubicación del incidente
+  unitId            Int?              // ID de la unidad relacionada (si aplica)
+  unitNumber        String?           // Número de la unidad (si aplica)
+  area              String?           // Área específica
+  
+  // Fechas y tiempos
+  reportedAt        DateTime          // Fecha y hora del reporte
+  assignedAt        DateTime?         // Fecha y hora de asignación
+  startedAt         DateTime?         // Fecha y hora de inicio de atención
+  resolvedAt        DateTime?         // Fecha y hora de resolución
+  closedAt          DateTime?         // Fecha y hora de cierre
+  dueDate           DateTime?         // Fecha límite según SLA
+  
+  // Personas involucradas
+  reportedById      Int               // ID del usuario que reporta
+  reportedByName    String            // Nombre de quien reporta
+  reportedByRole    String            // Rol de quien reporta (residente, staff, admin)
+  assignedToId      Int?              // ID del responsable asignado
+  assignedToName    String?           // Nombre del responsable
+  assignedToRole    String?           // Rol del responsable
+  
+  // Estado y seguimiento
+  status            IncidentStatus    @default(REPORTED) // Estado actual
+  resolution        String?           // Descripción de la resolución
+  rootCause         String?           // Causa raíz identificada
+  preventiveActions String?           // Acciones preventivas recomendadas
+  
+  // Etiquetas y clasificación
+  isPublic          Boolean           @default(false) // Si es visible para todos los residentes
+  isEmergency       Boolean           @default(false) // Si requiere atención inmediata
+  requiresFollowUp  Boolean           @default(false) // Si requiere seguimiento posterior
+  tags              String[]          // Etiquetas para categorización
+  
+  // SLA y métricas
+  slaId             Int?              // ID del SLA aplicable
+  responseTime      Int?              // Tiempo de respuesta en minutos
+  resolutionTime    Int?              // Tiempo de resolución en minutos
+  slaBreached       Boolean?          // Si se incumplió el SLA
+  
+  // Relaciones con otros módulos
+  relatedIncidentIds String[]         // IDs de incidentes relacionados
+  visitorId         Int?              // ID de visitante relacionado (si aplica)
+  packageId         Int?              // ID de paquete relacionado (si aplica)
+  
+  // Archivos adjuntos
+  mainPhotoUrl      String?           // URL de la foto principal
+  attachments       Json?             // Lista de adjuntos con metadatos
+  
+  // Auditoría y relaciones
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  updates           IncidentUpdate[]  // Actualizaciones del incidente
+  comments          IncidentComment[] // Comentarios
+  statusHistory     IncidentStatusHistory[] // Historial de estados
+  notifications     IncidentNotification[]  // Notificaciones enviadas
+  
+  // Índices para optimización
+  @@index([status])
+  @@index([category])
+  @@index([priority])
+  @@index([reportedAt])
+  @@index([assignedToId])
+  @@index([unitNumber])
+  @@index([incidentNumber])
+  
+  @@schema("tenant")
+}
+
+// Modelo mejorado para actualizaciones de incidentes
+model IncidentUpdate {
+  id                Int               @id @default(autoincrement())
+  incidentId        Int               // ID del incidente
+  incident          Incident          @relation(fields: [incidentId], references: [id])
+  content           String            // Contenido de la actualización
+  type              String            // Tipo de actualización (progress, note, action)
+  authorId          Int               // ID del autor
+  authorName        String            // Nombre del autor
+  authorRole        String            // Rol del autor
+  isInternal        Boolean           @default(false) // Si es solo para personal interno
+  timestamp         DateTime          @default(now()) // Fecha y hora de la actualización
+  attachments       Json?             // Adjuntos específicos de esta actualización
+  
+  @@index([incidentId])
+  @@index([timestamp])
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para comentarios de incidentes
+model IncidentComment {
+  id                Int               @id @default(autoincrement())
+  incidentId        Int               // ID del incidente
+  incident          Incident          @relation(fields: [incidentId], references: [id])
+  content           String            // Contenido del comentario
+  authorId          Int               // ID del autor
+  authorName        String            // Nombre del autor
+  authorRole        String            // Rol del autor
+  isInternal        Boolean           @default(false) // Si es solo para personal interno
+  timestamp         DateTime          @default(now()) // Fecha y hora del comentario
+  parentId          Int?              // ID del comentario padre (para respuestas)
+  attachments       Json?             // Adjuntos específicos de este comentario
+  
+  @@index([incidentId])
+  @@index([timestamp])
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para historial de estados de incidentes
+model IncidentStatusHistory {
+  id                Int               @id @default(autoincrement())
+  incidentId        Int               // ID del incidente
+  incident          Incident          @relation(fields: [incidentId], references: [id])
+  previousStatus    IncidentStatus?   // Estado anterior
+  newStatus         IncidentStatus    // Nuevo estado
+  changedAt         DateTime          @default(now()) // Fecha y hora del cambio
+  changedById       Int               // ID del usuario que realizó el cambio
+  changedByName     String            // Nombre del usuario
+  changedByRole     String            // Rol del usuario
+  reason            String?           // Razón del cambio
+  timeInStatus      Int?              // Tiempo en el estado anterior (minutos)
+  
+  @@index([incidentId])
+  @@index([changedAt])
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para notificaciones de incidentes
+model IncidentNotification {
+  id                Int               @id @default(autoincrement())
+  incidentId        Int               // ID del incidente
+  incident          Incident          @relation(fields: [incidentId], references: [id])
+  type              NotificationType  // Tipo de notificación
+  recipient         String            // Destinatario (email, teléfono, etc.)
+  recipientId       Int?              // ID del destinatario (si es usuario)
+  recipientRole     String?           // Rol del destinatario
+  subject           String            // Asunto de la notificación
+  content           String            // Contenido de la notificación
+  sentAt            DateTime          @default(now()) // Fecha y hora de envío
+  status            String            // Estado (sent, delivered, read, failed)
+  
+  @@index([incidentId])
+  @@index([sentAt])
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para SLA de incidentes
+model IncidentSLA {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre del SLA
+  description       String?           // Descripción
+  category          IncidentCategory? // Categoría aplicable (null = todas)
+  priority          IncidentPriority? // Prioridad aplicable (null = todas)
+  responseTime      Int               // Tiempo de respuesta objetivo (minutos)
+  resolutionTime    Int               // Tiempo de resolución objetivo (minutos)
+  businessHoursOnly Boolean           @default(true) // Si aplica solo en horario laboral
+  escalationRules   Json?             // Reglas de escalamiento
+  notifyRules       Json?             // Reglas de notificación
+  isActive          Boolean           @default(true) // Si está activo
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para plantillas de notificación de incidentes
+model IncidentNotificationTemplate {
+  id                Int               @id @default(autoincrement())
+  name              String            // Nombre de la plantilla
+  type              NotificationType  // Tipo de notificación
+  eventType         String            // Tipo de evento (created, assigned, updated, etc.)
+  subject           String            // Asunto (para emails)
+  template          String            // Plantilla con variables
+  isDefault         Boolean           @default(false) // Si es la plantilla predeterminada
+  isActive          Boolean           @default(true)  // Si está activa
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para configuración de incidentes
+model IncidentSettings {
+  id                      Int       @id @default(autoincrement())
+  autoAssignEnabled       Boolean   @default(false) // Asignación automática
+  autoNotifyResident      Boolean   @default(true)  // Notificar automáticamente al residente
+  autoNotifyStaff         Boolean   @default(true)  // Notificar automáticamente al personal
+  notificationMethods     String[]  // Métodos de notificación
+  requirePhoto            Boolean   @default(false) // Requerir foto al reportar
+  allowAnonymousReports   Boolean   @default(false) // Permitir reportes anónimos
+  publicIncidentsEnabled  Boolean   @default(true)  // Habilitar incidentes públicos
+  residentCanClose        Boolean   @default(false) // Residentes pueden cerrar sus incidentes
+  updatedAt               DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para categorías personalizadas de incidentes
+model IncidentCustomCategory {
+  id                Int       @id @default(autoincrement())
+  name              String    // Nombre de la categoría
+  parentCategory    IncidentCategory // Categoría principal
+  description       String?   // Descripción
+  isActive          Boolean   @default(true) // Si está activa
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para reportes de incidentes
+model IncidentReport {
+  id                Int       @id @default(autoincrement())
+  name              String    // Nombre del reporte
+  type              String    // Tipo de reporte (daily, weekly, monthly, custom)
+  parameters        Json      // Parámetros del reporte
+  schedule          String?   // Programación (cron expression)
+  recipients        String[]  // Destinatarios del reporte
+  lastRun           DateTime? // Última ejecución
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para equipos de atención de incidentes
+model IncidentTeam {
+  id                Int       @id @default(autoincrement())
+  name              String    // Nombre del equipo
+  description       String?   // Descripción
+  memberIds         Int[]     // IDs de los miembros
+  categories        IncidentCategory[] // Categorías que atiende
+  isActive          Boolean   @default(true) // Si está activo
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@schema("tenant")
+}

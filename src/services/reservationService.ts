@@ -1,828 +1,785 @@
-// src/services/reservationService.ts
 import { PrismaClient, ReservationStatus } from '@prisma/client';
-import { ServerLogger } from '@/lib/logging/server-logger';
-import { formatDate } from '@/lib/utils/formatters';
 
-// Interfaces para los parámetros de entrada
-interface GetCommonAreasParams {
-  isActive?: boolean;
-  page?: number;
-  limit?: number;
-}
-
-interface GetReservationsParams {
-  userId?: number;
-  propertyId?: number;
-  commonAreaId?: number;
-  status?: ReservationStatus;
-  startDate?: Date;
-  endDate?: Date;
-  page?: number;
-  limit?: number;
-}
-
-interface CreateReservationParams {
-  commonAreaId: number;
-  userId: number;
-  propertyId: number;
-  title: string;
-  description?: string;
-  startDateTime: Date;
-  endDateTime: Date;
-  attendees: number;
-}
-
-interface UpdateReservationStatusParams {
-  reservationId: number;
-  status: ReservationStatus;
-  adminId?: number;
-  reason?: string;
-}
+const prisma = new PrismaClient();
 
 /**
- * Servicio para la gestión de reservas de áreas comunes
+ * Servicio para la gestión de áreas comunes y reservas
  */
 export class ReservationService {
-  private prisma: PrismaClient;
-  private schema: string;
-
   /**
-   * Constructor del servicio
-   * @param schema Esquema de la base de datos (tenant)
+   * Obtiene todas las áreas comunes disponibles
+   * @param filters Filtros opcionales (active, requiresApproval, hasFee)
+   * @returns Lista de áreas comunes
    */
-  constructor(schema: string) {
-    this.schema = schema;
-    this.prisma = new PrismaClient();
-  }
-
-  /**
-   * Obtiene las áreas comunes disponibles
-   * @param params Parámetros de filtrado
-   * @returns Lista de áreas comunes y total
-   */
-  async getCommonAreas(params: GetCommonAreasParams = {}) {
-    try {
-      const { isActive = true, page = 1, limit = 10 } = params;
-      const offset = (page - 1) * limit;
-
-      // Consulta para obtener el total de áreas comunes
-      const totalQuery = `
-        SELECT COUNT(*) as count
-        FROM "${this.schema}"."CommonArea"
-        WHERE "isActive" = ${isActive}
-      `;
-      const totalResult = await this.prisma.$queryRawUnsafe(totalQuery);
-      const total = parseInt(totalResult[0]?.count || '0', 10);
-
-      // Consulta para obtener las áreas comunes con paginación
-      const areasQuery = `
-        SELECT *
-        FROM "${this.schema}"."CommonArea"
-        WHERE "isActive" = ${isActive}
-        ORDER BY "name" ASC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      const areas = await this.prisma.$queryRawUnsafe(areasQuery);
-
-      // Para cada área común, obtener su configuración de disponibilidad
-      const areasWithConfig = await Promise.all(
-        areas.map(async (area: any) => {
-          const configQuery = `
-            SELECT *
-            FROM "${this.schema}"."AvailabilityConfig"
-            WHERE "commonAreaId" = ${area.id}
-          `;
-          const config = await this.prisma.$queryRawUnsafe(configQuery);
-          
-          return {
-            ...area,
-            availabilityConfig: config[0] || null
-          };
-        })
-      );
-
-      return {
-        areas: areasWithConfig,
-        total
-      };
-    } catch (error) {
-      ServerLogger.error(`Error al obtener áreas comunes: ${error}`);
-      throw error;
-    }
+  async getCommonAreas(filters: {
+    active?: boolean;
+    requiresApproval?: boolean;
+    hasFee?: boolean;
+  } = {}) {
+    const { active, requiresApproval, hasFee } = filters;
+    
+    return prisma.commonArea.findMany({
+      where: {
+        ...(active !== undefined && { isActive: active }),
+        ...(requiresApproval !== undefined && { requiresApproval }),
+        ...(hasFee !== undefined && { hasFee }),
+      },
+      include: {
+        availabilityConfig: true,
+        reservationRules: {
+          where: { isActive: true },
+        },
+      },
+    });
   }
 
   /**
    * Obtiene un área común por su ID
    * @param id ID del área común
-   * @returns Área común con su configuración de disponibilidad
+   * @returns Área común con su configuración y reglas
    */
   async getCommonAreaById(id: number) {
-    try {
-      const areaQuery = `
-        SELECT *
-        FROM "${this.schema}"."CommonArea"
-        WHERE "id" = ${id}
-      `;
-      const areas = await this.prisma.$queryRawUnsafe(areaQuery);
-      
-      if (!areas || areas.length === 0) {
-        return null;
-      }
-
-      const area = areas[0];
-
-      // Obtener configuración de disponibilidad
-      const configQuery = `
-        SELECT *
-        FROM "${this.schema}"."AvailabilityConfig"
-        WHERE "commonAreaId" = ${id}
-      `;
-      const configs = await this.prisma.$queryRawUnsafe(configQuery);
-      
-      // Obtener reglas de reserva
-      const rulesQuery = `
-        SELECT *
-        FROM "${this.schema}"."ReservationRule"
-        WHERE "commonAreaId" = ${id} AND "isActive" = true
-      `;
-      const rules = await this.prisma.$queryRawUnsafe(rulesQuery);
-
-      return {
-        ...area,
-        availabilityConfig: configs[0] || null,
-        reservationRules: rules || []
-      };
-    } catch (error) {
-      ServerLogger.error(`Error al obtener área común ${id}: ${error}`);
-      throw error;
-    }
+    return prisma.commonArea.findUnique({
+      where: { id },
+      include: {
+        availabilityConfig: true,
+        reservationRules: {
+          where: { isActive: true },
+        },
+      },
+    });
   }
 
   /**
-   * Obtiene las reservas según los filtros especificados
-   * @param params Parámetros de filtrado
-   * @returns Lista de reservas y total
+   * Crea una nueva área común
+   * @param data Datos del área común
+   * @returns Área común creada
    */
-  async getReservations(params: GetReservationsParams = {}) {
-    try {
-      const {
-        userId,
-        propertyId,
-        commonAreaId,
-        status,
-        startDate,
-        endDate,
-        page = 1,
-        limit = 10
-      } = params;
-      
-      const offset = (page - 1) * limit;
-      
-      // Construir condiciones de filtrado
-      const conditions = [];
-      
-      if (userId !== undefined) {
-        conditions.push(`"userId" = ${userId}`);
-      }
-      
-      if (propertyId !== undefined) {
-        conditions.push(`"propertyId" = ${propertyId}`);
-      }
-      
-      if (commonAreaId !== undefined) {
-        conditions.push(`"commonAreaId" = ${commonAreaId}`);
-      }
-      
-      if (status !== undefined) {
-        conditions.push(`"status" = '${status}'`);
-      }
-      
-      if (startDate !== undefined) {
-        conditions.push(`"startDateTime" >= '${startDate.toISOString()}'`);
-      }
-      
-      if (endDate !== undefined) {
-        conditions.push(`"endDateTime" <= '${endDate.toISOString()}'`);
-      }
-      
-      const whereClause = conditions.length > 0
-        ? `WHERE ${conditions.join(' AND ')}`
-        : '';
-      
-      // Consulta para obtener el total de reservas
-      const totalQuery = `
-        SELECT COUNT(*) as count
-        FROM "${this.schema}"."Reservation"
-        ${whereClause}
-      `;
-      const totalResult = await this.prisma.$queryRawUnsafe(totalQuery);
-      const total = parseInt(totalResult[0]?.count || '0', 10);
-      
-      // Consulta para obtener las reservas con paginación
-      const reservationsQuery = `
-        SELECT r.*, ca.name as "commonAreaName", ca.location as "commonAreaLocation"
-        FROM "${this.schema}"."Reservation" r
-        LEFT JOIN "${this.schema}"."CommonArea" ca ON r."commonAreaId" = ca.id
-        ${whereClause}
-        ORDER BY r."startDateTime" DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      const reservations = await this.prisma.$queryRawUnsafe(reservationsQuery);
-      
-      return {
-        reservations,
-        total
-      };
-    } catch (error) {
-      ServerLogger.error(`Error al obtener reservas: ${error}`);
-      throw error;
-    }
+  async createCommonArea(data: {
+    name: string;
+    description?: string;
+    location: string;
+    capacity: number;
+    imageUrl?: string;
+    isActive?: boolean;
+    requiresApproval?: boolean;
+    hasFee?: boolean;
+    feeAmount?: number;
+  }) {
+    return prisma.commonArea.create({
+      data,
+    });
   }
 
   /**
-   * Obtiene una reserva por su ID
-   * @param id ID de la reserva
-   * @returns Reserva con detalles del área común
+   * Actualiza un área común existente
+   * @param id ID del área común
+   * @param data Datos actualizados
+   * @returns Área común actualizada
    */
-  async getReservationById(id: number) {
-    try {
-      const query = `
-        SELECT r.*, ca.name as "commonAreaName", ca.location as "commonAreaLocation",
-               ca.capacity as "commonAreaCapacity", ca.imageUrl as "commonAreaImageUrl"
-        FROM "${this.schema}"."Reservation" r
-        LEFT JOIN "${this.schema}"."CommonArea" ca ON r."commonAreaId" = ca.id
-        WHERE r."id" = ${id}
-      `;
-      const reservations = await this.prisma.$queryRawUnsafe(query);
-      
-      if (!reservations || reservations.length === 0) {
-        return null;
-      }
-      
-      return reservations[0];
-    } catch (error) {
-      ServerLogger.error(`Error al obtener reserva ${id}: ${error}`);
-      throw error;
+  async updateCommonArea(id: number, data: {
+    name?: string;
+    description?: string;
+    location?: string;
+    capacity?: number;
+    imageUrl?: string;
+    isActive?: boolean;
+    requiresApproval?: boolean;
+    hasFee?: boolean;
+    feeAmount?: number;
+  }) {
+    return prisma.commonArea.update({
+      where: { id },
+      data,
+    });
+  }
+
+  /**
+   * Desactiva un área común (no elimina)
+   * @param id ID del área común
+   * @returns Área común desactivada
+   */
+  async deactivateCommonArea(id: number) {
+    return prisma.commonArea.update({
+      where: { id },
+      data: { isActive: false },
+    });
+  }
+
+  /**
+   * Configura la disponibilidad de un área común
+   * @param commonAreaId ID del área común
+   * @param config Configuración de disponibilidad
+   * @returns Configuración actualizada
+   */
+  async setAvailabilityConfig(commonAreaId: number, config: {
+    mondayStart?: string;
+    mondayEnd?: string;
+    tuesdayStart?: string;
+    tuesdayEnd?: string;
+    wednesdayStart?: string;
+    wednesdayEnd?: string;
+    thursdayStart?: string;
+    thursdayEnd?: string;
+    fridayStart?: string;
+    fridayEnd?: string;
+    saturdayStart?: string;
+    saturdayEnd?: string;
+    sundayStart?: string;
+    sundayEnd?: string;
+    holidaysAvailable?: boolean;
+  }) {
+    // Verificar si ya existe una configuración
+    const existingConfig = await prisma.availabilityConfig.findUnique({
+      where: { commonAreaId },
+    });
+
+    if (existingConfig) {
+      // Actualizar configuración existente
+      return prisma.availabilityConfig.update({
+        where: { commonAreaId },
+        data: config,
+      });
+    } else {
+      // Crear nueva configuración
+      return prisma.availabilityConfig.create({
+        data: {
+          ...config,
+          commonArea: {
+            connect: { id: commonAreaId },
+          },
+        },
+      });
     }
   }
 
   /**
    * Verifica la disponibilidad de un área común en un rango de fechas
    * @param commonAreaId ID del área común
-   * @param startDateTime Fecha y hora de inicio
-   * @param endDateTime Fecha y hora de fin
-   * @returns Objeto con disponibilidad y conflictos
+   * @param startDate Fecha de inicio
+   * @param endDate Fecha de fin
+   * @returns Objeto con slots disponibles y ocupados
    */
-  async checkAvailability(
-    commonAreaId: number,
-    startDateTime: Date,
-    endDateTime: Date
-  ) {
-    try {
-      // 1. Verificar que el área común existe y está activa
-      const area = await this.getCommonAreaById(commonAreaId);
-      
-      if (!area) {
-        throw new Error(`El área común con ID ${commonAreaId} no existe`);
-      }
-      
-      if (!area.isActive) {
-        throw new Error(`El área común ${area.name} no está disponible actualmente`);
-      }
-      
-      // 2. Verificar que el horario está dentro de la configuración de disponibilidad
-      const isWithinBusinessHours = await this.isWithinBusinessHours(
-        commonAreaId,
-        startDateTime,
-        endDateTime
-      );
-      
-      if (!isWithinBusinessHours) {
-        return {
-          available: false,
-          reason: 'El horario solicitado está fuera del horario de disponibilidad del área común',
-          conflicts: []
-        };
-      }
-      
-      // 3. Verificar que no hay conflictos con otras reservas
-      const conflictsQuery = `
-        SELECT id, title, "startDateTime", "endDateTime", status
-        FROM "${this.schema}"."Reservation"
-        WHERE "commonAreaId" = ${commonAreaId}
-        AND status IN ('PENDING', 'APPROVED')
-        AND (
-          ("startDateTime" < '${endDateTime.toISOString()}' AND "endDateTime" > '${startDateTime.toISOString()}')
-        )
-      `;
-      const conflicts = await this.prisma.$queryRawUnsafe(conflictsQuery);
-      
-      return {
-        available: conflicts.length === 0,
-        reason: conflicts.length > 0 ? 'Existen reservas que se solapan con el horario solicitado' : null,
-        conflicts
-      };
-    } catch (error) {
-      ServerLogger.error(`Error al verificar disponibilidad: ${error}`);
-      throw error;
+  async checkAvailability(commonAreaId: number, startDate: Date, endDate: Date) {
+    // Obtener área común con su configuración
+    const commonArea = await prisma.commonArea.findUnique({
+      where: { id: commonAreaId },
+      include: {
+        availabilityConfig: true,
+        reservationRules: {
+          where: { isActive: true },
+        },
+      },
+    });
+
+    if (!commonArea) {
+      throw new Error('Área común no encontrada');
     }
+
+    // Obtener reservas existentes en el rango de fechas
+    const existingReservations = await prisma.reservation.findMany({
+      where: {
+        commonAreaId,
+        status: {
+          in: [ReservationStatus.APPROVED, ReservationStatus.PENDING],
+        },
+        OR: [
+          {
+            // Reservas que comienzan dentro del rango
+            startDateTime: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          {
+            // Reservas que terminan dentro del rango
+            endDateTime: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          {
+            // Reservas que abarcan todo el rango
+            startDateTime: {
+              lte: startDate,
+            },
+            endDateTime: {
+              gte: endDate,
+            },
+          },
+        ],
+      },
+    });
+
+    // Generar slots de disponibilidad basados en la configuración
+    // Este es un cálculo simplificado, en una implementación real
+    // se generarían slots por hora según la configuración de días y horarios
+    const availabilitySlots = this.generateAvailabilitySlots(
+      startDate,
+      endDate,
+      commonArea.availabilityConfig,
+    );
+
+    // Marcar slots ocupados basados en reservas existentes
+    const occupiedSlots = existingReservations.map(reservation => ({
+      startDateTime: reservation.startDateTime,
+      endDateTime: reservation.endDateTime,
+      reservationId: reservation.id,
+      status: reservation.status,
+    }));
+
+    return {
+      commonArea,
+      availabilitySlots,
+      occupiedSlots,
+    };
   }
 
   /**
-   * Verifica si un horario está dentro de la configuración de disponibilidad
-   * @param commonAreaId ID del área común
-   * @param startDateTime Fecha y hora de inicio
-   * @param endDateTime Fecha y hora de fin
-   * @returns true si está dentro del horario de disponibilidad
+   * Genera slots de disponibilidad basados en la configuración
+   * @param startDate Fecha de inicio
+   * @param endDate Fecha de fin
+   * @param config Configuración de disponibilidad
+   * @returns Array de slots disponibles
    */
-  private async isWithinBusinessHours(
-    commonAreaId: number,
-    startDateTime: Date,
-    endDateTime: Date
-  ): Promise<boolean> {
-    try {
-      // Obtener la configuración de disponibilidad
-      const configQuery = `
-        SELECT *
-        FROM "${this.schema}"."AvailabilityConfig"
-        WHERE "commonAreaId" = ${commonAreaId}
-      `;
-      const configs = await this.prisma.$queryRawUnsafe(configQuery);
-      
-      if (!configs || configs.length === 0) {
-        // Si no hay configuración, asumimos que está disponible 24/7
-        return true;
-      }
-      
-      const config = configs[0];
-      
-      // Obtener el día de la semana de la fecha de inicio (0 = domingo, 1 = lunes, etc.)
-      const startDay = startDateTime.getDay();
-      const endDay = endDateTime.getDay();
-      
-      // Si la reserva abarca más de un día, verificar cada día
-      if (startDay !== endDay) {
-        return false; // Por simplicidad, no permitimos reservas que abarquen más de un día
-      }
-      
-      // Convertir la hora a formato "HH:MM"
-      const startHour = `${startDateTime.getHours().toString().padStart(2, '0')}:${startDateTime.getMinutes().toString().padStart(2, '0')}`;
-      const endHour = `${endDateTime.getHours().toString().padStart(2, '0')}:${endDateTime.getMinutes().toString().padStart(2, '0')}`;
-      
-      // Verificar según el día de la semana
-      let dayStart: string | null = null;
-      let dayEnd: string | null = null;
-      
-      switch (startDay) {
+  private generateAvailabilitySlots(startDate: Date, endDate: Date, config: any) {
+    // Implementación simplificada para generar slots
+    // En una implementación real, se generarían slots por hora
+    // según la configuración de días y horarios
+    const slots = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dayOfWeek = currentDate.getDay();
+      let startTime = null;
+      let endTime = null;
+
+      // Determinar horarios según el día de la semana
+      switch (dayOfWeek) {
         case 0: // Domingo
-          dayStart = config.sundayStart;
-          dayEnd = config.sundayEnd;
+          startTime = config?.sundayStart;
+          endTime = config?.sundayEnd;
           break;
         case 1: // Lunes
-          dayStart = config.mondayStart;
-          dayEnd = config.mondayEnd;
+          startTime = config?.mondayStart;
+          endTime = config?.mondayEnd;
           break;
         case 2: // Martes
-          dayStart = config.tuesdayStart;
-          dayEnd = config.tuesdayEnd;
+          startTime = config?.tuesdayStart;
+          endTime = config?.tuesdayEnd;
           break;
         case 3: // Miércoles
-          dayStart = config.wednesdayStart;
-          dayEnd = config.wednesdayEnd;
+          startTime = config?.wednesdayStart;
+          endTime = config?.wednesdayEnd;
           break;
         case 4: // Jueves
-          dayStart = config.thursdayStart;
-          dayEnd = config.thursdayEnd;
+          startTime = config?.thursdayStart;
+          endTime = config?.thursdayEnd;
           break;
         case 5: // Viernes
-          dayStart = config.fridayStart;
-          dayEnd = config.fridayEnd;
+          startTime = config?.fridayStart;
+          endTime = config?.fridayEnd;
           break;
         case 6: // Sábado
-          dayStart = config.saturdayStart;
-          dayEnd = config.saturdayEnd;
+          startTime = config?.saturdayStart;
+          endTime = config?.saturdayEnd;
           break;
       }
-      
-      // Si no hay configuración para ese día, no está disponible
-      if (!dayStart || !dayEnd) {
-        return false;
+
+      // Si hay horario definido para este día, crear slot
+      if (startTime && endTime) {
+        const [startHour, startMinute] = startTime.split(':').map(Number);
+        const [endHour, endMinute] = endTime.split(':').map(Number);
+
+        const slotStart = new Date(currentDate);
+        slotStart.setHours(startHour, startMinute, 0, 0);
+
+        const slotEnd = new Date(currentDate);
+        slotEnd.setHours(endHour, endMinute, 0, 0);
+
+        slots.push({
+          date: new Date(currentDate),
+          startDateTime: slotStart,
+          endDateTime: slotEnd,
+          available: true,
+        });
       }
-      
-      // Verificar que el horario solicitado está dentro del horario de disponibilidad
-      return startHour >= dayStart && endHour <= dayEnd;
-    } catch (error) {
-      ServerLogger.error(`Error al verificar horario de disponibilidad: ${error}`);
-      throw error;
+
+      // Avanzar al siguiente día
+      currentDate.setDate(currentDate.getDate() + 1);
     }
+
+    return slots;
   }
 
   /**
-   * Crea una nueva reserva
-   * @param params Parámetros de la reserva
+   * Crea una regla de reserva para un área común
+   * @param commonAreaId ID del área común
+   * @param ruleData Datos de la regla
+   * @returns Regla creada
+   */
+  async createReservationRule(commonAreaId: number, ruleData: {
+    name: string;
+    description: string;
+    maxDurationHours?: number;
+    minDurationHours?: number;
+    maxAdvanceDays?: number;
+    minAdvanceDays?: number;
+    maxReservationsPerMonth?: number;
+    maxReservationsPerWeek?: number;
+    maxConcurrentReservations?: number;
+    allowCancellation?: boolean;
+    cancellationHours?: number;
+    isActive?: boolean;
+  }) {
+    return prisma.reservationRule.create({
+      data: {
+        ...ruleData,
+        commonArea: {
+          connect: { id: commonAreaId },
+        },
+      },
+    });
+  }
+
+  /**
+   * Obtiene todas las reservas según filtros
+   * @param filters Filtros opcionales
+   * @returns Lista de reservas
+   */
+  async getReservations(filters: {
+    userId?: number;
+    propertyId?: number;
+    commonAreaId?: number;
+    status?: ReservationStatus;
+    startDate?: Date;
+    endDate?: Date;
+  } = {}) {
+    const { userId, propertyId, commonAreaId, status, startDate, endDate } = filters;
+    
+    return prisma.reservation.findMany({
+      where: {
+        ...(userId !== undefined && { userId }),
+        ...(propertyId !== undefined && { propertyId }),
+        ...(commonAreaId !== undefined && { commonAreaId }),
+        ...(status !== undefined && { status }),
+        ...(startDate !== undefined && {
+          startDateTime: {
+            gte: startDate,
+          },
+        }),
+        ...(endDate !== undefined && {
+          endDateTime: {
+            lte: endDate,
+          },
+        }),
+      },
+      include: {
+        commonArea: true,
+      },
+      orderBy: {
+        startDateTime: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Obtiene una reserva por su ID
+   * @param id ID de la reserva
+   * @returns Reserva con detalles
+   */
+  async getReservationById(id: number) {
+    return prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        commonArea: true,
+      },
+    });
+  }
+
+  /**
+   * Crea una nueva solicitud de reserva
+   * @param data Datos de la reserva
    * @returns Reserva creada
    */
-  async createReservation(params: CreateReservationParams) {
-    try {
-      const {
-        commonAreaId,
-        userId,
-        propertyId,
-        title,
-        description,
-        startDateTime,
-        endDateTime,
-        attendees
-      } = params;
-      
-      // 1. Verificar disponibilidad
-      const availability = await this.checkAvailability(
-        commonAreaId,
-        startDateTime,
-        endDateTime
-      );
-      
-      if (!availability.available) {
-        throw new Error(availability.reason || 'El área común no está disponible en el horario solicitado');
-      }
-      
-      // 2. Verificar reglas de reserva
-      await this.validateReservationRules(
-        commonAreaId,
-        userId,
-        startDateTime,
-        endDateTime
-      );
-      
-      // 3. Obtener información del área común
-      const area = await this.getCommonAreaById(commonAreaId);
-      
-      // 4. Crear la reserva
-      const insertQuery = `
-        INSERT INTO "${this.schema}"."Reservation" (
-          "commonAreaId", "userId", "propertyId", "title", "description",
-          "startDateTime", "endDateTime", "attendees", "status",
-          "requiresPayment", "paymentAmount", "createdAt", "updatedAt"
-        )
-        VALUES (
-          ${commonAreaId}, ${userId}, ${propertyId}, '${title}',
-          ${description ? `'${description}'` : 'NULL'},
-          '${startDateTime.toISOString()}', '${endDateTime.toISOString()}',
-          ${attendees}, '${area?.requiresApproval ? 'PENDING' : 'APPROVED'}',
-          ${area?.hasFee}, ${area?.hasFee ? area.feeAmount : 'NULL'},
-          NOW(), NOW()
-        )
-        RETURNING *
-      `;
-      
-      const result = await this.prisma.$queryRawUnsafe(insertQuery);
-      const reservation = result[0];
-      
-      // 5. Crear notificación
-      await this.createReservationNotification(
-        reservation.id,
-        userId,
-        area?.requiresApproval ? 'reservation_pending' : 'reservation_confirmed',
-        area?.requiresApproval
-          ? `Tu reserva para ${area.name} está pendiente de aprobación`
-          : `Tu reserva para ${area.name} ha sido confirmada`
-      );
-      
-      return reservation;
-    } catch (error) {
-      ServerLogger.error(`Error al crear reserva: ${error}`);
-      throw error;
+  async createReservation(data: {
+    commonAreaId: number;
+    userId: number;
+    propertyId: number;
+    title: string;
+    description?: string;
+    startDateTime: Date;
+    endDateTime: Date;
+    attendees?: number;
+    requiresPayment?: boolean;
+    paymentAmount?: number;
+  }) {
+    // Validar disponibilidad
+    const availability = await this.checkAvailability(
+      data.commonAreaId,
+      data.startDateTime,
+      data.endDateTime,
+    );
+
+    // Verificar si hay conflictos con otras reservas
+    const hasConflict = this.checkForConflicts(
+      data.startDateTime,
+      data.endDateTime,
+      availability.occupiedSlots,
+    );
+
+    if (hasConflict) {
+      throw new Error('El horario solicitado no está disponible');
     }
+
+    // Obtener área común para verificar si requiere aprobación
+    const commonArea = await prisma.commonArea.findUnique({
+      where: { id: data.commonAreaId },
+    });
+
+    if (!commonArea) {
+      throw new Error('Área común no encontrada');
+    }
+
+    // Determinar estado inicial (pendiente o aprobado)
+    const initialStatus = commonArea.requiresApproval
+      ? ReservationStatus.PENDING
+      : ReservationStatus.APPROVED;
+
+    // Crear la reserva
+    const reservation = await prisma.reservation.create({
+      data: {
+        ...data,
+        status: initialStatus,
+      },
+    });
+
+    // Crear notificación de confirmación
+    await this.createReservationNotification({
+      reservationId: reservation.id,
+      userId: data.userId,
+      type: 'confirmation',
+      message: commonArea.requiresApproval
+        ? 'Su solicitud de reserva ha sido recibida y está pendiente de aprobación.'
+        : 'Su reserva ha sido confirmada exitosamente.',
+    });
+
+    return reservation;
   }
 
   /**
-   * Valida las reglas de reserva
-   * @param commonAreaId ID del área común
-   * @param userId ID del usuario
+   * Verifica si hay conflictos con otras reservas
    * @param startDateTime Fecha y hora de inicio
    * @param endDateTime Fecha y hora de fin
+   * @param occupiedSlots Slots ocupados
+   * @returns true si hay conflicto, false en caso contrario
    */
-  private async validateReservationRules(
-    commonAreaId: number,
-    userId: number,
+  private checkForConflicts(
     startDateTime: Date,
-    endDateTime: Date
+    endDateTime: Date,
+    occupiedSlots: Array<{
+      startDateTime: Date;
+      endDateTime: Date;
+      reservationId: number;
+      status: ReservationStatus;
+    }>,
   ) {
-    try {
-      // Obtener reglas de reserva
-      const rulesQuery = `
-        SELECT *
-        FROM "${this.schema}"."ReservationRule"
-        WHERE "commonAreaId" = ${commonAreaId} AND "isActive" = true
-      `;
-      const rules = await this.prisma.$queryRawUnsafe(rulesQuery);
-      
-      if (!rules || rules.length === 0) {
-        // Si no hay reglas, no hay validaciones adicionales
-        return;
-      }
-      
-      const rule = rules[0]; // Tomamos la primera regla activa
-      
-      // 1. Validar duración mínima y máxima
-      const durationHours = (endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
-      
-      if (durationHours < rule.minDurationHours) {
-        throw new Error(`La duración mínima de reserva es de ${rule.minDurationHours} horas`);
-      }
-      
-      if (durationHours > rule.maxDurationHours) {
-        throw new Error(`La duración máxima de reserva es de ${rule.maxDurationHours} horas`);
-      }
-      
-      // 2. Validar anticipación mínima y máxima
-      const now = new Date();
-      const daysInAdvance = (startDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-      
-      if (daysInAdvance < rule.minAdvanceDays) {
-        throw new Error(`Debes reservar con al menos ${rule.minAdvanceDays} días de anticipación`);
-      }
-      
-      if (daysInAdvance > rule.maxAdvanceDays) {
-        throw new Error(`No puedes reservar con más de ${rule.maxAdvanceDays} días de anticipación`);
-      }
-      
-      // 3. Validar número máximo de reservas por semana
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay()); // Domingo de la semana actual
-      startOfWeek.setHours(0, 0, 0, 0);
-      
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 7); // Sábado de la semana actual
-      endOfWeek.setHours(23, 59, 59, 999);
-      
-      const weeklyReservationsQuery = `
-        SELECT COUNT(*) as count
-        FROM "${this.schema}"."Reservation"
-        WHERE "userId" = ${userId}
-        AND "commonAreaId" = ${commonAreaId}
-        AND "status" IN ('PENDING', 'APPROVED')
-        AND "startDateTime" >= '${startOfWeek.toISOString()}'
-        AND "startDateTime" <= '${endOfWeek.toISOString()}'
-      `;
-      const weeklyResult = await this.prisma.$queryRawUnsafe(weeklyReservationsQuery);
-      const weeklyCount = parseInt(weeklyResult[0]?.count || '0', 10);
-      
-      if (weeklyCount >= rule.maxReservationsPerWeek) {
-        throw new Error(`Has alcanzado el límite de ${rule.maxReservationsPerWeek} reservas por semana para esta área`);
-      }
-      
-      // 4. Validar número máximo de reservas por mes
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-      
-      const monthlyReservationsQuery = `
-        SELECT COUNT(*) as count
-        FROM "${this.schema}"."Reservation"
-        WHERE "userId" = ${userId}
-        AND "commonAreaId" = ${commonAreaId}
-        AND "status" IN ('PENDING', 'APPROVED')
-        AND "startDateTime" >= '${startOfMonth.toISOString()}'
-        AND "startDateTime" <= '${endOfMonth.toISOString()}'
-      `;
-      const monthlyResult = await this.prisma.$queryRawUnsafe(monthlyReservationsQuery);
-      const monthlyCount = parseInt(monthlyResult[0]?.count || '0', 10);
-      
-      if (monthlyCount >= rule.maxReservationsPerMonth) {
-        throw new Error(`Has alcanzado el límite de ${rule.maxReservationsPerMonth} reservas por mes para esta área`);
-      }
-      
-      // 5. Validar número máximo de reservas concurrentes
-      const concurrentReservationsQuery = `
-        SELECT COUNT(*) as count
-        FROM "${this.schema}"."Reservation"
-        WHERE "userId" = ${userId}
-        AND "status" IN ('PENDING', 'APPROVED')
-        AND (
-          ("startDateTime" <= '${endDateTime.toISOString()}' AND "endDateTime" >= '${startDateTime.toISOString()}')
-        )
-      `;
-      const concurrentResult = await this.prisma.$queryRawUnsafe(concurrentReservationsQuery);
-      const concurrentCount = parseInt(concurrentResult[0]?.count || '0', 10);
-      
-      if (concurrentCount >= rule.maxConcurrentReservations) {
-        throw new Error(`Has alcanzado el límite de ${rule.maxConcurrentReservations} reservas concurrentes`);
-      }
-    } catch (error) {
-      ServerLogger.error(`Error al validar reglas de reserva: ${error}`);
-      throw error;
-    }
+    return occupiedSlots.some(slot => {
+      // Verificar si hay solapamiento
+      return (
+        (startDateTime >= slot.startDateTime && startDateTime < slot.endDateTime) ||
+        (endDateTime > slot.startDateTime && endDateTime <= slot.endDateTime) ||
+        (startDateTime <= slot.startDateTime && endDateTime >= slot.endDateTime)
+      );
+    });
   }
 
   /**
-   * Actualiza el estado de una reserva
-   * @param params Parámetros de actualización
+   * Actualiza una reserva existente
+   * @param id ID de la reserva
+   * @param data Datos actualizados
    * @returns Reserva actualizada
    */
-  async updateReservationStatus(params: UpdateReservationStatusParams) {
-    try {
-      const { reservationId, status, adminId, reason } = params;
-      
-      // 1. Verificar que la reserva existe
-      const reservation = await this.getReservationById(reservationId);
-      
-      if (!reservation) {
-        throw new Error(`La reserva con ID ${reservationId} no existe`);
-      }
-      
-      // 2. Validar transiciones de estado permitidas
-      this.validateStatusTransition(reservation.status, status);
-      
-      // 3. Actualizar el estado de la reserva
-      let updateFields = `"status" = '${status}', "updatedAt" = NOW()`;
-      
-      if (status === 'APPROVED' && adminId) {
-        updateFields += `, "approvedById" = ${adminId}, "approvedAt" = NOW()`;
-      }
-      
-      if (status === 'REJECTED' && reason) {
-        updateFields += `, "rejectionReason" = '${reason}'`;
-      }
-      
-      if (status === 'CANCELLED') {
-        updateFields += `, "cancelledAt" = NOW()`;
-        
-        if (reason) {
-          updateFields += `, "cancellationReason" = '${reason}'`;
-        }
-      }
-      
-      const updateQuery = `
-        UPDATE "${this.schema}"."Reservation"
-        SET ${updateFields}
-        WHERE "id" = ${reservationId}
-        RETURNING *
-      `;
-      
-      const result = await this.prisma.$queryRawUnsafe(updateQuery);
-      const updatedReservation = result[0];
-      
-      // 4. Crear notificación según el nuevo estado
-      let notificationType = '';
-      let notificationMessage = '';
-      
-      switch (status) {
-        case 'APPROVED':
-          notificationType = 'reservation_approved';
-          notificationMessage = `Tu reserva para ${reservation.commonAreaName} ha sido aprobada`;
-          break;
-        case 'REJECTED':
-          notificationType = 'reservation_rejected';
-          notificationMessage = `Tu reserva para ${reservation.commonAreaName} ha sido rechazada${reason ? `: ${reason}` : ''}`;
-          break;
-        case 'CANCELLED':
-          notificationType = 'reservation_cancelled';
-          notificationMessage = `Tu reserva para ${reservation.commonAreaName} ha sido cancelada${reason ? `: ${reason}` : ''}`;
-          break;
-        case 'COMPLETED':
-          notificationType = 'reservation_completed';
-          notificationMessage = `Tu reserva para ${reservation.commonAreaName} ha sido completada`;
-          break;
-      }
-      
-      if (notificationType) {
-        await this.createReservationNotification(
-          reservationId,
-          reservation.userId,
-          notificationType,
-          notificationMessage
-        );
-      }
-      
-      return updatedReservation;
-    } catch (error) {
-      ServerLogger.error(`Error al actualizar estado de reserva: ${error}`);
-      throw error;
+  async updateReservation(id: number, data: {
+    title?: string;
+    description?: string;
+    startDateTime?: Date;
+    endDateTime?: Date;
+    attendees?: number;
+  }) {
+    // Obtener reserva actual
+    const currentReservation = await prisma.reservation.findUnique({
+      where: { id },
+    });
+
+    if (!currentReservation) {
+      throw new Error('Reserva no encontrada');
     }
+
+    // Si se están actualizando las fechas, verificar disponibilidad
+    if (data.startDateTime || data.endDateTime) {
+      const startDateTime = data.startDateTime || currentReservation.startDateTime;
+      const endDateTime = data.endDateTime || currentReservation.endDateTime;
+
+      // Validar disponibilidad
+      const availability = await this.checkAvailability(
+        currentReservation.commonAreaId,
+        startDateTime,
+        endDateTime,
+      );
+
+      // Verificar si hay conflictos con otras reservas (excluyendo la actual)
+      const hasConflict = this.checkForConflicts(
+        startDateTime,
+        endDateTime,
+        availability.occupiedSlots.filter(slot => slot.reservationId !== id),
+      );
+
+      if (hasConflict) {
+        throw new Error('El horario solicitado no está disponible');
+      }
+    }
+
+    // Actualizar la reserva
+    return prisma.reservation.update({
+      where: { id },
+      data,
+    });
   }
 
   /**
-   * Valida las transiciones de estado permitidas
-   * @param currentStatus Estado actual
-   * @param newStatus Nuevo estado
+   * Aprueba una solicitud de reserva pendiente
+   * @param id ID de la reserva
+   * @param approvedById ID del administrador que aprueba
+   * @returns Reserva aprobada
    */
-  private validateStatusTransition(currentStatus: string, newStatus: ReservationStatus) {
-    // Definir transiciones permitidas
-    const allowedTransitions: Record<string, ReservationStatus[]> = {
-      'PENDING': ['APPROVED', 'REJECTED', 'CANCELLED'],
-      'APPROVED': ['CANCELLED', 'COMPLETED'],
-      'REJECTED': [],
-      'CANCELLED': [],
-      'COMPLETED': []
-    };
-    
-    if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
-      throw new Error(`No se puede cambiar el estado de ${currentStatus} a ${newStatus}`);
+  async approveReservation(id: number, approvedById: number) {
+    // Obtener reserva actual
+    const reservation = await prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        commonArea: true,
+      },
+    });
+
+    if (!reservation) {
+      throw new Error('Reserva no encontrada');
     }
+
+    if (reservation.status !== ReservationStatus.PENDING) {
+      throw new Error('Solo se pueden aprobar reservas pendientes');
+    }
+
+    // Actualizar la reserva
+    const updatedReservation = await prisma.reservation.update({
+      where: { id },
+      data: {
+        status: ReservationStatus.APPROVED,
+        approvedById,
+        approvedAt: new Date(),
+      },
+    });
+
+    // Crear notificación de aprobación
+    await this.createReservationNotification({
+      reservationId: id,
+      userId: reservation.userId,
+      type: 'approval',
+      message: `Su reserva para ${reservation.commonArea.name} ha sido aprobada.`,
+    });
+
+    return updatedReservation;
+  }
+
+  /**
+   * Rechaza una solicitud de reserva pendiente
+   * @param id ID de la reserva
+   * @param rejectionReason Razón del rechazo
+   * @param approvedById ID del administrador que rechaza
+   * @returns Reserva rechazada
+   */
+  async rejectReservation(id: number, rejectionReason: string, approvedById: number) {
+    // Obtener reserva actual
+    const reservation = await prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        commonArea: true,
+      },
+    });
+
+    if (!reservation) {
+      throw new Error('Reserva no encontrada');
+    }
+
+    if (reservation.status !== ReservationStatus.PENDING) {
+      throw new Error('Solo se pueden rechazar reservas pendientes');
+    }
+
+    // Actualizar la reserva
+    const updatedReservation = await prisma.reservation.update({
+      where: { id },
+      data: {
+        status: ReservationStatus.REJECTED,
+        rejectionReason,
+        approvedById,
+        approvedAt: new Date(),
+      },
+    });
+
+    // Crear notificación de rechazo
+    await this.createReservationNotification({
+      reservationId: id,
+      userId: reservation.userId,
+      type: 'rejection',
+      message: `Su reserva para ${reservation.commonArea.name} ha sido rechazada. Razón: ${rejectionReason}`,
+    });
+
+    return updatedReservation;
+  }
+
+  /**
+   * Cancela una reserva
+   * @param id ID de la reserva
+   * @param cancellationReason Razón de la cancelación
+   * @param userId ID del usuario que cancela
+   * @returns Reserva cancelada
+   */
+  async cancelReservation(id: number, cancellationReason: string, userId: number) {
+    // Obtener reserva actual
+    const reservation = await prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        commonArea: true,
+      },
+    });
+
+    if (!reservation) {
+      throw new Error('Reserva no encontrada');
+    }
+
+    // Verificar si el usuario es el propietario de la reserva
+    if (reservation.userId !== userId) {
+      throw new Error('Solo el propietario puede cancelar la reserva');
+    }
+
+    // Verificar que la reserva esté en estado pendiente o aprobada
+    if (reservation.status !== ReservationStatus.PENDING && 
+        reservation.status !== ReservationStatus.APPROVED) {
+      throw new Error('Solo se pueden cancelar reservas pendientes o aprobadas');
+    }
+
+    // Verificar reglas de cancelación
+    const rules = await prisma.reservationRule.findMany({
+      where: {
+        commonAreaId: reservation.commonAreaId,
+        isActive: true,
+      },
+    });
+
+    const rule = rules[0]; // Tomamos la primera regla activa
+    if (rule && !rule.allowCancellation) {
+      throw new Error('Las cancelaciones no están permitidas para esta área común');
+    }
+
+    if (rule && rule.allowCancellation && rule.cancellationHours > 0) {
+      const hoursUntilStart = Math.floor(
+        (reservation.startDateTime.getTime() - new Date().getTime()) / (1000 * 60 * 60)
+      );
+      
+      if (hoursUntilStart < rule.cancellationHours) {
+        throw new Error(`Las cancelaciones deben realizarse con al menos ${rule.cancellationHours} horas de anticipación`);
+      }
+    }
+
+    // Actualizar la reserva
+    const updatedReservation = await prisma.reservation.update({
+      where: { id },
+      data: {
+        status: ReservationStatus.CANCELLED,
+        cancellationReason,
+        cancelledAt: new Date(),
+      },
+    });
+
+    // Crear notificación de cancelación
+    await this.createReservationNotification({
+      reservationId: id,
+      userId: reservation.userId,
+      type: 'cancellation',
+      message: `Su reserva para ${reservation.commonArea.name} ha sido cancelada.`,
+    });
+
+    return updatedReservation;
   }
 
   /**
    * Crea una notificación de reserva
-   * @param reservationId ID de la reserva
-   * @param userId ID del usuario
-   * @param type Tipo de notificación
-   * @param message Mensaje de la notificación
+   * @param data Datos de la notificación
    * @returns Notificación creada
    */
-  private async createReservationNotification(
-    reservationId: number,
-    userId: number,
-    type: string,
-    message: string
-  ) {
-    try {
-      const insertQuery = `
-        INSERT INTO "${this.schema}"."ReservationNotification" (
-          "reservationId", "userId", "type", "message", "isRead", "sentAt"
-        )
-        VALUES (
-          ${reservationId}, ${userId}, '${type}', '${message}', false, NOW()
-        )
-        RETURNING *
-      `;
-      
-      const result = await this.prisma.$queryRawUnsafe(insertQuery);
-      return result[0];
-    } catch (error) {
-      ServerLogger.error(`Error al crear notificación de reserva: ${error}`);
-      // No propagamos el error para no interrumpir el flujo principal
-      return null;
-    }
+  async createReservationNotification(data: {
+    reservationId: number;
+    userId: number;
+    type: string;
+    message: string;
+  }) {
+    return prisma.reservationNotification.create({
+      data,
+    });
   }
 
   /**
    * Obtiene las notificaciones de un usuario
    * @param userId ID del usuario
-   * @param page Página
-   * @param limit Límite por página
-   * @returns Lista de notificaciones y total
+   * @param filters Filtros opcionales
+   * @returns Lista de notificaciones
    */
-  async getUserNotifications(userId: number, page = 1, limit = 10) {
-    try {
-      const offset = (page - 1) * limit;
-      
-      // Consulta para obtener el total de notificaciones
-      const totalQuery = `
-        SELECT COUNT(*) as count
-        FROM "${this.schema}"."ReservationNotification"
-        WHERE "userId" = ${userId}
-      `;
-      const totalResult = await this.prisma.$queryRawUnsafe(totalQuery);
-      const total = parseInt(totalResult[0]?.count || '0', 10);
-      
-      // Consulta para obtener las notificaciones con paginación
-      const notificationsQuery = `
-        SELECT n.*, r.title as "reservationTitle", r."startDateTime", r."endDateTime",
-               ca.name as "commonAreaName"
-        FROM "${this.schema}"."ReservationNotification" n
-        LEFT JOIN "${this.schema}"."Reservation" r ON n."reservationId" = r.id
-        LEFT JOIN "${this.schema}"."CommonArea" ca ON r."commonAreaId" = ca.id
-        WHERE n."userId" = ${userId}
-        ORDER BY n."sentAt" DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      const notifications = await this.prisma.$queryRawUnsafe(notificationsQuery);
-      
-      return {
-        notifications,
-        total
-      };
-    } catch (error) {
-      ServerLogger.error(`Error al obtener notificaciones del usuario ${userId}: ${error}`);
-      throw error;
-    }
+  async getUserNotifications(userId: number, filters: {
+    isRead?: boolean;
+    type?: string;
+  } = {}) {
+    const { isRead, type } = filters;
+    
+    return prisma.reservationNotification.findMany({
+      where: {
+        userId,
+        ...(isRead !== undefined && { isRead }),
+        ...(type !== undefined && { type }),
+      },
+      orderBy: {
+        sentAt: 'desc',
+      },
+    });
   }
 
   /**
    * Marca una notificación como leída
-   * @param notificationId ID de la notificación
+   * @param id ID de la notificación
    * @param userId ID del usuario
    * @returns Notificación actualizada
    */
-  async markNotificationAsRead(notificationId: number, userId: number) {
-    try {
-      const updateQuery = `
-        UPDATE "${this.schema}"."ReservationNotification"
-        SET "isRead" = true, "readAt" = NOW()
-        WHERE "id" = ${notificationId} AND "userId" = ${userId}
-        RETURNING *
-      `;
-      
-      const result = await this.prisma.$queryRawUnsafe(updateQuery);
-      
-      if (!result || result.length === 0) {
-        throw new Error(`La notificación con ID ${notificationId} no existe o no pertenece al usuario ${userId}`);
-      }
-      
-      return result[0];
-    } catch (error) {
-      ServerLogger.error(`Error al marcar notificación como leída: ${error}`);
-      throw error;
+  async markNotificationAsRead(id: number, userId: number) {
+    // Verificar que la notificación pertenece al usuario
+    const notification = await prisma.reservationNotification.findUnique({
+      where: { id },
+    });
+
+    if (!notification) {
+      throw new Error('Notificación no encontrada');
     }
+
+    if (notification.userId !== userId) {
+      throw new Error('No tiene permiso para acceder a esta notificación');
+    }
+
+    return prisma.reservationNotification.update({
+      where: { id },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    });
   }
 }
+
+export default new ReservationService();

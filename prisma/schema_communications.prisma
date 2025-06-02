@@ -1,0 +1,266 @@
+// schema_communications.prisma
+// Modelos de datos unificados para el sistema de comunicaciones
+
+// Modelo para notificaciones unificadas
+model Notification {
+  id                String                 @id @default(uuid())
+  type              String                 // info, success, warning, error
+  title             String
+  message           String                 @db.Text
+  link              String?
+  data              Json?                  // Datos adicionales específicos del tipo de notificación
+  sourceType        String                 // Origen: system, reservation, assembly, financial, security, etc.
+  sourceId          String?                // ID de referencia al origen (ej: ID de reserva)
+  priority          String                 @default("medium") // low, medium, high, urgent
+  requireConfirmation Boolean              @default(false)
+  expiresAt         DateTime?
+  
+  // Relaciones
+  recipientId       Int
+  recipient         User                   @relation(fields: [recipientId], references: [id])
+  
+  // Estado de lectura
+  read              Boolean                @default(false)
+  readAt            DateTime?
+  
+  // Confirmación
+  confirmations     NotificationConfirmation[]
+  
+  // Metadatos
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  
+  @@index([recipientId])
+  @@index([sourceType, sourceId])
+  @@index([read])
+}
+
+// Modelo para confirmaciones de notificaciones
+model NotificationConfirmation {
+  id                String                 @id @default(uuid())
+  notificationId    String
+  notification      Notification           @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  userId            Int
+  user              User                   @relation(fields: [userId], references: [id])
+  confirmedAt       DateTime               @default(now())
+  
+  @@unique([notificationId, userId])
+  @@index([userId])
+}
+
+// Modelo para anuncios
+model Announcement {
+  id                String                 @id @default(uuid())
+  title             String
+  content           String                 @db.Text
+  type              String                 @default("general") // general, important, emergency
+  visibility        String                 @default("public")  // public, private, role-based
+  targetRoles       String[]               // Roles a los que va dirigido
+  requiresConfirmation Boolean             @default(false)
+  expiresAt         DateTime?
+  
+  // Relaciones
+  createdById       Int
+  createdBy         User                   @relation(fields: [createdById], references: [id])
+  attachments       AnnouncementAttachment[]
+  readBy            AnnouncementRead[]
+  
+  // Metadatos
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  
+  @@index([createdById])
+  @@index([type])
+  @@index([visibility])
+}
+
+// Modelo para archivos adjuntos de anuncios
+model AnnouncementAttachment {
+  id                String                 @id @default(uuid())
+  announcementId    String
+  announcement      Announcement           @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  name              String
+  url               String
+  type              String                 // mime type
+  size              Int?                   // tamaño en bytes
+  
+  // Metadatos
+  createdAt         DateTime               @default(now())
+  
+  @@index([announcementId])
+}
+
+// Modelo para registro de lectura de anuncios
+model AnnouncementRead {
+  id                String                 @id @default(uuid())
+  announcementId    String
+  announcement      Announcement           @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId            Int
+  user              User                   @relation(fields: [userId], references: [id])
+  readAt            DateTime               @default(now())
+  
+  @@unique([announcementId, userId])
+  @@index([userId])
+}
+
+// Modelo para conversaciones de mensajes
+model Conversation {
+  id                String                 @id @default(uuid())
+  type              String                 @default("direct") // direct, group
+  title             String?                // Solo para conversaciones grupales
+  
+  // Relaciones
+  participants      ConversationParticipant[]
+  messages          Message[]
+  
+  // Metadatos
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+}
+
+// Modelo para participantes en conversaciones
+model ConversationParticipant {
+  id                String                 @id @default(uuid())
+  conversationId    String
+  conversation      Conversation           @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId            Int
+  user              User                   @relation(fields: [userId], references: [id])
+  role              String                 @default("member") // owner, admin, member
+  lastReadMessageId String?
+  
+  // Metadatos
+  joinedAt          DateTime               @default(now())
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+// Modelo para mensajes
+model Message {
+  id                String                 @id @default(uuid())
+  conversationId    String
+  conversation      Conversation           @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId          Int
+  sender            User                   @relation(fields: [senderId], references: [id])
+  content           String                 @db.Text
+  
+  // Estado y metadatos
+  status            String                 @default("sent") // sent, delivered, read
+  readBy            MessageRead[]
+  attachments       MessageAttachment[]
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// Modelo para registro de lectura de mensajes
+model MessageRead {
+  id                String                 @id @default(uuid())
+  messageId         String
+  message           Message                @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId            Int
+  user              User                   @relation(fields: [userId], references: [id])
+  readAt            DateTime               @default(now())
+  
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
+// Modelo para archivos adjuntos de mensajes
+model MessageAttachment {
+  id                String                 @id @default(uuid())
+  messageId         String
+  message           Message                @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  name              String
+  url               String
+  type              String                 // mime type
+  size              Int?                   // tamaño en bytes
+  
+  // Metadatos
+  createdAt         DateTime               @default(now())
+  
+  @@index([messageId])
+}
+
+// Modelo para eventos comunitarios
+model CommunityEvent {
+  id                String                 @id @default(uuid())
+  title             String
+  description       String                 @db.Text
+  location          String
+  startDateTime     DateTime
+  endDateTime       DateTime
+  type              String                 @default("general") // general, meeting, social, maintenance
+  visibility        String                 @default("public")  // public, private, role-based
+  targetRoles       String[]               // Roles a los que va dirigido
+  maxAttendees      Int?                   // Límite de asistentes (null = sin límite)
+  
+  // Relaciones
+  organizerId       Int
+  organizer         User                   @relation(fields: [organizerId], references: [id])
+  attendees         EventAttendee[]
+  attachments       EventAttachment[]
+  
+  // Metadatos
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  
+  @@index([organizerId])
+  @@index([startDateTime])
+  @@index([type])
+  @@index([visibility])
+}
+
+// Modelo para asistentes a eventos
+model EventAttendee {
+  id                String                 @id @default(uuid())
+  eventId           String
+  event             CommunityEvent         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId            Int
+  user              User                   @relation(fields: [userId], references: [id])
+  status            String                 @default("confirmed") // confirmed, tentative, declined
+  
+  // Metadatos
+  registeredAt      DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+// Modelo para archivos adjuntos de eventos
+model EventAttachment {
+  id                String                 @id @default(uuid())
+  eventId           String
+  event             CommunityEvent         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name              String
+  url               String
+  type              String                 // mime type
+  size              Int?                   // tamaño en bytes
+  
+  // Metadatos
+  createdAt         DateTime               @default(now())
+  
+  @@index([eventId])
+}
+
+// Relaciones con el modelo User existente
+model User {
+  id                Int                    @id @default(autoincrement())
+  // Campos existentes...
+  
+  // Relaciones con comunicaciones
+  notifications     Notification[]
+  notificationConfirmations NotificationConfirmation[]
+  announcements     Announcement[]         // Anuncios creados
+  announcementsRead AnnouncementRead[]     // Anuncios leídos
+  conversations     ConversationParticipant[]
+  messages          Message[]              // Mensajes enviados
+  messagesRead      MessageRead[]          // Mensajes leídos
+  organizedEvents   CommunityEvent[]       // Eventos organizados
+  eventAttendance   EventAttendee[]        // Asistencia a eventos
+}

@@ -24,7 +24,7 @@ export function generateCsrfToken(): string {
  * Establece un token CSRF en las cookies
  */
 export function setCsrfToken(response: NextResponse): string {
-  const _token = generateCsrfToken();
+  const token = generateCsrfToken();
   
   // Configurar la cookie con opciones de seguridad
   response.cookies.set({
@@ -105,11 +105,12 @@ export function csrfProtection(handler: Function) {
 export function useCsrfToken() {
   const getCsrfTokenForRequest = async () => {
     try {
-      // Variable response eliminada por lint
+      // Implementación correcta para obtener el token CSRF
+      const response = await fetch('/api/security/csrf-token');
       if (!response.ok) {
         throw new Error('Error al obtener token CSRF');
       }
-      const _data = await response.json();
+      const data = await response.json();
       return data.csrfToken;
     } catch (error) {
       console.error('Error al obtener token CSRF:', error);

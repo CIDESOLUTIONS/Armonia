@@ -1,64 +1,49 @@
-// src/app/api/common-areas/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { ReservationService } from '@/services/reservationService';
-import { ServerLogger } from '@/lib/logging/server-logger';
+import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/auth-options';
-
-interface Params {
-  params: {
-    id: string;
-  };
-}
+import { authOptions } from '@/lib/auth';
+import { serverLogger } from '@/lib/logging/server-logger';
 
 /**
  * GET /api/common-areas/[id]
- * Obtiene un área común por su ID
+ * Obtiene los detalles de un área común específica
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
-    // Obtener ID del área común
-    const id = parseInt(params.id, 10);
-    
+
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID de área común inválido' },
+        { error: 'ID inválido' },
         { status: 400 }
       );
     }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+
     // Obtener área común
     const commonArea = await reservationService.getCommonAreaById(id);
-    
     if (!commonArea) {
       return NextResponse.json(
-        { error: `Área común con ID ${id} no encontrada` },
+        { error: 'Área común no encontrada' },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(commonArea);
-  } catch (error: any) {
-    ServerLogger.error(`Error al obtener área común: ${error.message}`);
-    
+  } catch (error) {
+    serverLogger.error('Error al obtener área común', { error, id: params.id });
     return NextResponse.json(
-      { error: 'Error al obtener área común', details: error.message },
+      { error: 'Error al obtener área común' },
       { status: 500 }
     );
   }
@@ -66,60 +51,41 @@ export async function GET(request: NextRequest, { params }: Params) {
 
 /**
  * PUT /api/common-areas/[id]
- * Actualiza un área común (solo administradores)
+ * Actualiza un área común existente
  */
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación y permisos de administrador
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
-    // Verificar que el usuario es administrador
-    if (!session.user.isAdmin) {
-      return NextResponse.json(
-        { error: 'No tienes permisos para actualizar áreas comunes' },
-        { status: 403 }
-      );
-    }
-    
-    // Obtener ID del área común
-    const id = parseInt(params.id, 10);
-    
+
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID de área común inválido' },
+        { error: 'ID inválido' },
         { status: 400 }
       );
     }
-    
+
     // Obtener datos del cuerpo de la solicitud
-    const body = await request.json();
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
+    const data = await req.json();
+
     // Actualizar área común
-    // Nota: Esta funcionalidad no está implementada en el servicio actual
-    // Se debe implementar en una iteración futura
-    
+    const commonArea = await reservationService.updateCommonArea(id, data);
+
+    return NextResponse.json(commonArea);
+  } catch (error) {
+    serverLogger.error('Error al actualizar área común', { error, id: params.id });
     return NextResponse.json(
-      { error: 'Funcionalidad no implementada' },
-      { status: 501 }
-    );
-  } catch (error: any) {
-    ServerLogger.error(`Error al actualizar área común: ${error.message}`);
-    
-    return NextResponse.json(
-      { error: 'Error al actualizar área común', details: error.message },
+      { error: 'Error al actualizar área común' },
       { status: 500 }
     );
   }
@@ -127,57 +93,38 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
 /**
  * DELETE /api/common-areas/[id]
- * Elimina un área común (solo administradores)
+ * Desactiva un área común (no elimina, solo marca como inactiva)
  */
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    // Obtener sesión del usuario
+    // Verificar autenticación y permisos de administrador
     const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user) {
+    if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
-    
-    // Verificar que el usuario es administrador
-    if (!session.user.isAdmin) {
-      return NextResponse.json(
-        { error: 'No tienes permisos para eliminar áreas comunes' },
-        { status: 403 }
-      );
-    }
-    
-    // Obtener ID del área común
-    const id = parseInt(params.id, 10);
-    
+
+    const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID de área común inválido' },
+        { error: 'ID inválido' },
         { status: 400 }
       );
     }
-    
-    // Obtener esquema del tenant
-    const schema = session.user.tenantSchema || 'tenant';
-    
-    // Crear servicio de reservas
-    const reservationService = new ReservationService(schema);
-    
-    // Eliminar área común
-    // Nota: Esta funcionalidad no está implementada en el servicio actual
-    // Se debe implementar en una iteración futura
-    
+
+    // Desactivar área común
+    const commonArea = await reservationService.deactivateCommonArea(id);
+
+    return NextResponse.json(commonArea);
+  } catch (error) {
+    serverLogger.error('Error al desactivar área común', { error, id: params.id });
     return NextResponse.json(
-      { error: 'Funcionalidad no implementada' },
-      { status: 501 }
-    );
-  } catch (error: any) {
-    ServerLogger.error(`Error al eliminar área común: ${error.message}`);
-    
-    return NextResponse.json(
-      { error: 'Error al eliminar área común', details: error.message },
+      { error: 'Error al desactivar área común' },
       { status: 500 }
     );
   }

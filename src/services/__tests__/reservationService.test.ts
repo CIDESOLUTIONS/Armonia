@@ -1,518 +1,528 @@
-// src/services/__tests__/reservationService.test.ts
-import { ReservationService } from '../reservationService';
-import { PrismaClient } from '@prisma/client';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { PrismaClient, ReservationStatus } from '@prisma/client';
+import reservationService from '../reservationService';
 
-// Mock de PrismaClient
+// Mock PrismaClient and ReservationStatus
 jest.mock('@prisma/client', () => {
-  const mockQueryRawUnsafe = jest.fn();
+  // Mock ReservationStatus enum
+  const ReservationStatus = {
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
+    REJECTED: 'REJECTED',
+    CANCELLED: 'CANCELLED',
+    COMPLETED: 'COMPLETED'
+  };
+
+  const mockPrisma = {
+    commonArea: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn()
+    },
+    availabilityConfig: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn()
+    },
+    reservationRule: {
+      findMany: jest.fn(),
+      create: jest.fn()
+    },
+    reservation: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn()
+    },
+    reservationNotification: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn()
+    }
+  };
+
   return {
-    PrismaClient: jest.fn().mockImplementation(() => ({
-      $queryRawUnsafe: mockQueryRawUnsafe
-    }))
+    PrismaClient: jest.fn(() => mockPrisma),
+    ReservationStatus
   };
 });
 
-// Mock de ServerLogger
-jest.mock('@/lib/logging/server-logger', () => ({
-  ServerLogger: {
-    error: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn()
-  }
-}));
+// Get the mocked prisma instance
+const prisma = new PrismaClient();
 
 describe('ReservationService', () => {
-  let service: ReservationService;
-  let mockPrisma: any;
-  
   beforeEach(() => {
+    // Clear all mocks before each test
     jest.clearAllMocks();
-    service = new ReservationService('test_tenant');
-    mockPrisma = (PrismaClient as jest.Mock).mock.results[0].value;
   });
-  
+
   describe('getCommonAreas', () => {
-    it('debe obtener áreas comunes con paginación', async () => {
-      // Configurar mocks
+    it('should return all common areas when no filters are provided', async () => {
       const mockAreas = [
         { id: 1, name: 'Salón Comunal', isActive: true },
         { id: 2, name: 'Piscina', isActive: true }
       ];
+
+      prisma.commonArea.findMany.mockResolvedValue(mockAreas);
+
+      const result = await reservationService.getCommonAreas();
       
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce([{ count: '2' }])
-        .mockResolvedValueOnce(mockAreas)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
-      
-      // Ejecutar método
-      const result = await service.getCommonAreas({ isActive: true, page: 1, limit: 10 });
-      
-      // Verificar resultados
-      expect(result.total).toBe(2);
-      expect(result.areas).toHaveLength(2);
-      expect(result.areas[0].name).toBe('Salón Comunal');
-      expect(result.areas[1].name).toBe('Piscina');
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(4);
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('SELECT COUNT(*) as count');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('"test_tenant"."CommonArea"');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[1][0]).toContain('SELECT *');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[1][0]).toContain('LIMIT 10 OFFSET 0');
+      expect(prisma.commonArea.findMany).toHaveBeenCalledWith({
+        where: {},
+        include: {
+          availabilityConfig: true,
+          reservationRules: {
+            where: { isActive: true },
+          },
+        },
+      });
+      expect(result).toEqual(mockAreas);
     });
-    
-    it('debe manejar errores correctamente', async () => {
-      // Configurar mock para lanzar error
-      mockPrisma.$queryRawUnsafe.mockRejectedValue(new Error('Error de base de datos'));
+
+    it('should apply filters when provided', async () => {
+      const mockAreas = [
+        { id: 1, name: 'Salón Comunal', isActive: true, requiresApproval: true }
+      ];
+
+      prisma.commonArea.findMany.mockResolvedValue(mockAreas);
+
+      const result = await reservationService.getCommonAreas({
+        active: true,
+        requiresApproval: true
+      });
       
-      // Verificar que se lanza el error
-      await expect(service.getCommonAreas()).rejects.toThrow('Error de base de datos');
+      expect(prisma.commonArea.findMany).toHaveBeenCalledWith({
+        where: {
+          isActive: true,
+          requiresApproval: true
+        },
+        include: {
+          availabilityConfig: true,
+          reservationRules: {
+            where: { isActive: true },
+          },
+        },
+      });
+      expect(result).toEqual(mockAreas);
     });
   });
-  
+
   describe('getCommonAreaById', () => {
-    it('debe obtener un área común por ID con su configuración y reglas', async () => {
-      // Configurar mocks
-      const mockArea = [{ id: 1, name: 'Salón Comunal', isActive: true }];
-      const mockConfig = [{ id: 1, commonAreaId: 1, mondayStart: '08:00', mondayEnd: '20:00' }];
-      const mockRules = [
-        { id: 1, commonAreaId: 1, name: 'Regla estándar', maxDurationHours: 4, isActive: true }
-      ];
+    it('should return a common area by id', async () => {
+      const mockArea = {
+        id: 1,
+        name: 'Salón Comunal',
+        isActive: true,
+        availabilityConfig: {
+          mondayStart: '08:00',
+          mondayEnd: '20:00'
+        },
+        reservationRules: [
+          { id: 1, name: 'Regla 1', isActive: true }
+        ]
+      };
+
+      prisma.commonArea.findUnique.mockResolvedValue(mockArea);
+
+      const result = await reservationService.getCommonAreaById(1);
       
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce(mockArea)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockRules);
-      
-      // Ejecutar método
-      const result = await service.getCommonAreaById(1);
-      
-      // Verificar resultados
-      expect(result).toBeDefined();
-      expect(result.id).toBe(1);
-      expect(result.name).toBe('Salón Comunal');
-      expect(result.availabilityConfig).toBeDefined();
-      expect(result.availabilityConfig.mondayStart).toBe('08:00');
-      expect(result.reservationRules).toHaveLength(1);
-      expect(result.reservationRules[0].maxDurationHours).toBe(4);
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(3);
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('WHERE "id" = 1');
-    });
-    
-    it('debe devolver null si el área no existe', async () => {
-      // Configurar mock para devolver array vacío
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
-      
-      // Ejecutar método
-      const result = await service.getCommonAreaById(999);
-      
-      // Verificar resultado
-      expect(result).toBeNull();
+      expect(prisma.commonArea.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        include: {
+          availabilityConfig: true,
+          reservationRules: {
+            where: { isActive: true },
+          },
+        },
+      });
+      expect(result).toEqual(mockArea);
     });
   });
-  
-  describe('checkAvailability', () => {
-    it('debe verificar disponibilidad y devolver true si no hay conflictos', async () => {
-      // Configurar mocks
-      const mockArea = [{ id: 1, name: 'Salón Comunal', isActive: true }];
-      const mockConfig = [{ 
-        id: 1, 
-        commonAreaId: 1, 
-        mondayStart: '08:00', 
-        mondayEnd: '20:00',
-        tuesdayStart: '08:00',
-        tuesdayEnd: '20:00',
-        wednesdayStart: '08:00',
-        wednesdayEnd: '20:00',
-        thursdayStart: '08:00',
-        thursdayEnd: '20:00',
-        fridayStart: '08:00',
-        fridayEnd: '20:00',
-        saturdayStart: '10:00',
-        saturdayEnd: '18:00',
-        sundayStart: '10:00',
-        sundayEnd: '18:00'
-      }];
-      const mockRules = [
-        { id: 1, commonAreaId: 1, name: 'Regla estándar', maxDurationHours: 4, isActive: true }
-      ];
-      const mockConflicts = [];
-      
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce(mockArea)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockRules)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockConflicts);
-      
-      // Crear fechas para prueba (un lunes a las 10:00 y 12:00)
-      const startDateTime = new Date(2025, 5, 2, 10, 0); // Lunes 2 de junio de 2025 a las 10:00
-      const endDateTime = new Date(2025, 5, 2, 12, 0);   // Lunes 2 de junio de 2025 a las 12:00
-      
-      // Ejecutar método
-      const result = await service.checkAvailability(1, startDateTime, endDateTime);
-      
-      // Verificar resultados
-      expect(result.available).toBe(true);
-      expect(result.conflicts).toHaveLength(0);
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(5);
-    });
-    
-    it('debe devolver false si hay conflictos con otras reservas', async () => {
-      // Configurar mocks
-      const mockArea = [{ id: 1, name: 'Salón Comunal', isActive: true }];
-      const mockConfig = [{ 
-        id: 1, 
-        commonAreaId: 1, 
-        mondayStart: '08:00', 
-        mondayEnd: '20:00',
-        tuesdayStart: '08:00',
-        tuesdayEnd: '20:00',
-        wednesdayStart: '08:00',
-        wednesdayEnd: '20:00',
-        thursdayStart: '08:00',
-        thursdayEnd: '20:00',
-        fridayStart: '08:00',
-        fridayEnd: '20:00',
-        saturdayStart: '10:00',
-        saturdayEnd: '18:00',
-        sundayStart: '10:00',
-        sundayEnd: '18:00'
-      }];
-      const mockRules = [
-        { id: 1, commonAreaId: 1, name: 'Regla estándar', maxDurationHours: 4, isActive: true }
-      ];
-      const mockConflicts = [
-        { id: 5, title: 'Reserva existente', startDateTime: '2025-06-02T09:00:00Z', endDateTime: '2025-06-02T11:00:00Z', status: 'APPROVED' }
-      ];
-      
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce(mockArea)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockRules)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockConflicts);
-      
-      // Crear fechas para prueba (un lunes a las 10:00 y 12:00)
-      const startDateTime = new Date(2025, 5, 2, 10, 0); // Lunes 2 de junio de 2025 a las 10:00
-      const endDateTime = new Date(2025, 5, 2, 12, 0);   // Lunes 2 de junio de 2025 a las 12:00
-      
-      // Ejecutar método
-      const result = await service.checkAvailability(1, startDateTime, endDateTime);
-      
-      // Verificar resultados
-      expect(result.available).toBe(false);
-      expect(result.conflicts).toHaveLength(1);
-      expect(result.reason).toBe('Existen reservas que se solapan con el horario solicitado');
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(5);
-    });
-  });
-  
-  describe('createReservation', () => {
-    it('debe crear una reserva exitosamente cuando está disponible', async () => {
-      // Configurar mocks para checkAvailability
-      const mockArea = [{ 
-        id: 1, 
-        name: 'Salón Comunal', 
+
+  describe('createCommonArea', () => {
+    it('should create a new common area', async () => {
+      const mockAreaData = {
+        name: 'Nueva Área',
+        location: 'Piso 1',
+        capacity: 20
+      };
+
+      const mockCreatedArea = {
+        id: 3,
+        ...mockAreaData,
         isActive: true,
         requiresApproval: false,
         hasFee: false
-      }];
-      const mockConfig = [{ 
-        id: 1, 
-        commonAreaId: 1, 
-        mondayStart: '08:00', 
-        mondayEnd: '20:00'
-      }];
-      const mockRules = [
-        { 
-          id: 1, 
-          commonAreaId: 1, 
-          name: 'Regla estándar', 
-          maxDurationHours: 4,
-          minDurationHours: 1,
-          maxAdvanceDays: 30,
-          minAdvanceDays: 1,
-          maxReservationsPerMonth: 4,
-          maxReservationsPerWeek: 2,
-          maxConcurrentReservations: 1,
-          isActive: true 
-        }
-      ];
-      const mockConflicts = [];
-      const mockWeeklyCount = [{ count: '0' }];
-      const mockMonthlyCount = [{ count: '0' }];
-      const mockConcurrentCount = [{ count: '0' }];
-      const mockNewReservation = [{ 
-        id: 10, 
-        commonAreaId: 1,
-        userId: 5,
-        propertyId: 3,
-        title: 'Reunión familiar',
-        startDateTime: '2025-06-02T10:00:00Z',
-        endDateTime: '2025-06-02T12:00:00Z',
-        status: 'APPROVED'
-      }];
-      const mockNotification = [{ id: 1, reservationId: 10, userId: 5 }];
+      };
+
+      prisma.commonArea.create.mockResolvedValue(mockCreatedArea);
+
+      const result = await reservationService.createCommonArea(mockAreaData);
       
-      mockPrisma.$queryRawUnsafe
-        // Para checkAvailability
-        .mockResolvedValueOnce(mockArea)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockRules)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockConflicts)
-        // Para validateReservationRules
-        .mockResolvedValueOnce(mockRules)
-        .mockResolvedValueOnce(mockWeeklyCount)
-        .mockResolvedValueOnce(mockMonthlyCount)
-        .mockResolvedValueOnce(mockConcurrentCount)
-        // Para getCommonAreaById
-        .mockResolvedValueOnce(mockArea)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockRules)
-        // Para createReservation
-        .mockResolvedValueOnce(mockNewReservation)
-        // Para createReservationNotification
-        .mockResolvedValueOnce(mockNotification);
-      
-      // Crear fechas para prueba
-      const startDateTime = new Date(2025, 5, 2, 10, 0);
-      const endDateTime = new Date(2025, 5, 2, 12, 0);
-      
-      // Ejecutar método
-      const result = await service.createReservation({
-        commonAreaId: 1,
-        userId: 5,
-        propertyId: 3,
-        title: 'Reunión familiar',
-        startDateTime,
-        endDateTime,
-        attendees: 10
+      expect(prisma.commonArea.create).toHaveBeenCalledWith({
+        data: mockAreaData
       });
-      
-      // Verificar resultados
-      expect(result).toBeDefined();
-      expect(result.id).toBe(10);
-      expect(result.title).toBe('Reunión familiar');
-      expect(result.status).toBe('APPROVED');
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(13);
-    });
-    
-    it('debe lanzar error si el área no está disponible', async () => {
-      // Configurar mocks para checkAvailability que devuelve no disponible
-      const mockArea = [{ id: 1, name: 'Salón Comunal', isActive: true }];
-      const mockConfig = [{ 
-        id: 1, 
-        commonAreaId: 1, 
-        mondayStart: '08:00', 
-        mondayEnd: '20:00'
-      }];
-      const mockRules = [
-        { id: 1, commonAreaId: 1, name: 'Regla estándar', maxDurationHours: 4, isActive: true }
-      ];
-      const mockConflicts = [
-        { id: 5, title: 'Reserva existente', startDateTime: '2025-06-02T09:00:00Z', endDateTime: '2025-06-02T11:00:00Z', status: 'APPROVED' }
-      ];
-      
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce(mockArea)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockRules)
-        .mockResolvedValueOnce(mockConfig)
-        .mockResolvedValueOnce(mockConflicts);
-      
-      // Crear fechas para prueba
-      const startDateTime = new Date(2025, 5, 2, 10, 0);
-      const endDateTime = new Date(2025, 5, 2, 12, 0);
-      
-      // Verificar que se lanza el error
-      await expect(service.createReservation({
-        commonAreaId: 1,
-        userId: 5,
-        propertyId: 3,
-        title: 'Reunión familiar',
-        startDateTime,
-        endDateTime,
-        attendees: 10
-      })).rejects.toThrow('Existen reservas que se solapan con el horario solicitado');
+      expect(result).toEqual(mockCreatedArea);
     });
   });
-  
-  describe('updateReservationStatus', () => {
-    it('debe actualizar el estado de una reserva correctamente', async () => {
-      // Configurar mocks
-      const mockReservation = [{ 
-        id: 10, 
-        commonAreaId: 1,
-        userId: 5,
-        propertyId: 3,
-        title: 'Reunión familiar',
-        commonAreaName: 'Salón Comunal',
-        startDateTime: '2025-06-02T10:00:00Z',
-        endDateTime: '2025-06-02T12:00:00Z',
-        status: 'PENDING'
-      }];
-      const mockUpdatedReservation = [{ 
-        id: 10, 
-        commonAreaId: 1,
-        userId: 5,
-        propertyId: 3,
-        title: 'Reunión familiar',
-        commonAreaName: 'Salón Comunal',
-        startDateTime: '2025-06-02T10:00:00Z',
-        endDateTime: '2025-06-02T12:00:00Z',
-        status: 'APPROVED',
-        approvedById: 1,
-        approvedAt: '2025-06-01T12:00:00Z'
-      }];
-      const mockNotification = [{ id: 2, reservationId: 10, userId: 5 }];
-      
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce(mockReservation)
-        .mockResolvedValueOnce(mockUpdatedReservation)
-        .mockResolvedValueOnce(mockNotification);
-      
-      // Ejecutar método
-      const result = await service.updateReservationStatus({
-        reservationId: 10,
-        status: 'APPROVED',
-        adminId: 1
-      });
-      
-      // Verificar resultados
-      expect(result).toBeDefined();
-      expect(result.id).toBe(10);
-      expect(result.status).toBe('APPROVED');
-      expect(result.approvedById).toBe(1);
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(3);
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[1][0]).toContain('UPDATE');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[1][0]).toContain('"status" = \'APPROVED\'');
-    });
-    
-    it('debe lanzar error si la transición de estado no está permitida', async () => {
-      // Configurar mocks
-      const mockReservation = [{ 
-        id: 10, 
-        commonAreaId: 1,
-        userId: 5,
-        propertyId: 3,
-        title: 'Reunión familiar',
-        commonAreaName: 'Salón Comunal',
-        startDateTime: '2025-06-02T10:00:00Z',
-        endDateTime: '2025-06-02T12:00:00Z',
-        status: 'CANCELLED'
-      }];
-      
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce(mockReservation);
-      
-      // Verificar que se lanza el error
-      await expect(service.updateReservationStatus({
-        reservationId: 10,
-        status: 'APPROVED'
-      })).rejects.toThrow('No se puede cambiar el estado de CANCELLED a APPROVED');
-    });
-  });
-  
-  describe('getUserNotifications', () => {
-    it('debe obtener las notificaciones de un usuario con paginación', async () => {
-      // Configurar mocks
-      const mockTotalCount = [{ count: '2' }];
-      const mockNotifications = [
-        { 
-          id: 1, 
-          reservationId: 10, 
-          userId: 5, 
-          type: 'reservation_confirmed', 
-          message: 'Tu reserva ha sido confirmada',
-          isRead: false,
-          sentAt: '2025-06-01T10:00:00Z',
-          reservationTitle: 'Reunión familiar',
-          startDateTime: '2025-06-02T10:00:00Z',
-          commonAreaName: 'Salón Comunal'
+
+  describe('checkAvailability', () => {
+    it('should check availability for a common area', async () => {
+      const mockArea = {
+        id: 1,
+        name: 'Salón Comunal',
+        isActive: true,
+        availabilityConfig: {
+          mondayStart: '08:00',
+          mondayEnd: '20:00'
         },
-        { 
-          id: 2, 
-          reservationId: 11, 
-          userId: 5, 
-          type: 'reservation_pending', 
-          message: 'Tu reserva está pendiente de aprobación',
-          isRead: true,
-          sentAt: '2025-06-01T09:00:00Z',
-          readAt: '2025-06-01T09:05:00Z',
-          reservationTitle: 'Fiesta de cumpleaños',
-          startDateTime: '2025-06-05T15:00:00Z',
-          commonAreaName: 'Terraza'
+        reservationRules: []
+      };
+
+      const mockReservations = [
+        {
+          id: 1,
+          commonAreaId: 1,
+          startDateTime: new Date('2025-06-01T10:00:00Z'),
+          endDateTime: new Date('2025-06-01T12:00:00Z'),
+          status: ReservationStatus.APPROVED
         }
       ];
+
+      prisma.commonArea.findUnique.mockResolvedValue(mockArea);
+      prisma.reservation.findMany.mockResolvedValue(mockReservations);
+
+      const startDate = new Date('2025-06-01T00:00:00Z');
+      const endDate = new Date('2025-06-02T00:00:00Z');
+
+      const result = await reservationService.checkAvailability(1, startDate, endDate);
       
-      mockPrisma.$queryRawUnsafe
-        .mockResolvedValueOnce(mockTotalCount)
-        .mockResolvedValueOnce(mockNotifications);
-      
-      // Ejecutar método
-      const result = await service.getUserNotifications(5, 1, 10);
-      
-      // Verificar resultados
-      expect(result.total).toBe(2);
-      expect(result.notifications).toHaveLength(2);
-      expect(result.notifications[0].type).toBe('reservation_confirmed');
-      expect(result.notifications[1].type).toBe('reservation_pending');
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(2);
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('COUNT(*)');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('"userId" = 5');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[1][0]).toContain('ORDER BY n."sentAt" DESC');
+      expect(prisma.commonArea.findUnique).toHaveBeenCalled();
+      expect(prisma.reservation.findMany).toHaveBeenCalled();
+      expect(result).toHaveProperty('commonArea', mockArea);
+      expect(result).toHaveProperty('occupiedSlots');
+      expect(result.occupiedSlots.length).toBe(1);
+    });
+
+    it('should throw an error if common area is not found', async () => {
+      prisma.commonArea.findUnique.mockResolvedValue(null);
+
+      const startDate = new Date('2025-06-01T00:00:00Z');
+      const endDate = new Date('2025-06-02T00:00:00Z');
+
+      await expect(reservationService.checkAvailability(999, startDate, endDate))
+        .rejects.toThrow('Área común no encontrada');
     });
   });
-  
-  describe('markNotificationAsRead', () => {
-    it('debe marcar una notificación como leída', async () => {
-      // Configurar mocks
-      const mockUpdatedNotification = [{ 
-        id: 1, 
-        reservationId: 10, 
-        userId: 5, 
-        isRead: true,
-        readAt: '2025-06-01T12:00:00Z'
-      }];
+
+  describe('createReservation', () => {
+    it('should create a new reservation when area is available', async () => {
+      // Mock data
+      const mockReservationData = {
+        commonAreaId: 1,
+        userId: 1,
+        propertyId: 1,
+        title: 'Reunión familiar',
+        startDateTime: new Date('2025-06-01T14:00:00Z'),
+        endDateTime: new Date('2025-06-01T16:00:00Z')
+      };
+
+      const mockArea = {
+        id: 1,
+        name: 'Salón Comunal',
+        requiresApproval: false
+      };
+
+      const mockCreatedReservation = {
+        id: 1,
+        ...mockReservationData,
+        status: ReservationStatus.APPROVED,
+        attendees: 1,
+        requiresPayment: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Setup mocks
+      prisma.commonArea.findUnique.mockResolvedValue(mockArea);
+      prisma.reservation.findMany.mockResolvedValue([]);
+      prisma.reservation.create.mockResolvedValue(mockCreatedReservation);
+      prisma.reservationNotification.create.mockResolvedValue({});
+
+      // Execute
+      const result = await reservationService.createReservation(mockReservationData);
       
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce(mockUpdatedNotification);
-      
-      // Ejecutar método
-      const result = await service.markNotificationAsRead(1, 5);
-      
-      // Verificar resultados
-      expect(result).toBeDefined();
-      expect(result.id).toBe(1);
-      expect(result.isRead).toBe(true);
-      expect(result.readAt).toBeDefined();
-      
-      // Verificar que se llamó a queryRawUnsafe con los parámetros correctos
-      expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(1);
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('UPDATE');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('"isRead" = true');
-      expect(mockPrisma.$queryRawUnsafe.mock.calls[0][0]).toContain('"id" = 1 AND "userId" = 5');
+      // Verify
+      expect(prisma.reservation.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          ...mockReservationData,
+          status: ReservationStatus.APPROVED
+        })
+      });
+      expect(prisma.reservationNotification.create).toHaveBeenCalled();
+      expect(result).toEqual(mockCreatedReservation);
     });
-    
-    it('debe lanzar error si la notificación no existe o no pertenece al usuario', async () => {
-      // Configurar mock para devolver array vacío
-      mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([]);
+
+    it('should create a pending reservation when area requires approval', async () => {
+      // Mock data
+      const mockReservationData = {
+        commonAreaId: 1,
+        userId: 1,
+        propertyId: 1,
+        title: 'Reunión familiar',
+        startDateTime: new Date('2025-06-01T14:00:00Z'),
+        endDateTime: new Date('2025-06-01T16:00:00Z')
+      };
+
+      const mockArea = {
+        id: 1,
+        name: 'Salón Comunal',
+        requiresApproval: true
+      };
+
+      const mockCreatedReservation = {
+        id: 1,
+        ...mockReservationData,
+        status: ReservationStatus.PENDING,
+        attendees: 1,
+        requiresPayment: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Setup mocks
+      prisma.commonArea.findUnique.mockResolvedValue(mockArea);
+      prisma.reservation.findMany.mockResolvedValue([]);
+      prisma.reservation.create.mockResolvedValue(mockCreatedReservation);
+      prisma.reservationNotification.create.mockResolvedValue({});
+
+      // Execute
+      const result = await reservationService.createReservation(mockReservationData);
       
-      // Verificar que se lanza el error
-      await expect(service.markNotificationAsRead(999, 5)).rejects.toThrow('La notificación con ID 999 no existe o no pertenece al usuario 5');
+      // Verify
+      expect(prisma.reservation.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          ...mockReservationData,
+          status: ReservationStatus.PENDING
+        })
+      });
+      expect(result).toEqual(mockCreatedReservation);
+    });
+
+    it('should throw an error when there is a conflict with existing reservations', async () => {
+      // Mock data
+      const mockReservationData = {
+        commonAreaId: 1,
+        userId: 1,
+        propertyId: 1,
+        title: 'Reunión familiar',
+        startDateTime: new Date('2025-06-01T14:00:00Z'),
+        endDateTime: new Date('2025-06-01T16:00:00Z')
+      };
+
+      const mockArea = {
+        id: 1,
+        name: 'Salón Comunal',
+        requiresApproval: false
+      };
+
+      const mockExistingReservations = [
+        {
+          id: 1,
+          commonAreaId: 1,
+          startDateTime: new Date('2025-06-01T15:00:00Z'),
+          endDateTime: new Date('2025-06-01T17:00:00Z'),
+          status: ReservationStatus.APPROVED,
+          reservationId: 1
+        }
+      ];
+
+      // Setup mocks
+      prisma.commonArea.findUnique.mockResolvedValue(mockArea);
+      prisma.reservation.findMany.mockResolvedValue(mockExistingReservations);
+
+      // Execute & Verify
+      await expect(reservationService.createReservation(mockReservationData))
+        .rejects.toThrow('El horario solicitado no está disponible');
+    });
+  });
+
+  describe('cancelReservation', () => {
+    it('should cancel a reservation', async () => {
+      // Mock data
+      const mockReservation = {
+        id: 1,
+        userId: 1,
+        commonAreaId: 1,
+        status: ReservationStatus.APPROVED,
+        startDateTime: new Date('2025-06-10T14:00:00Z'), // Future date
+        endDateTime: new Date('2025-06-10T16:00:00Z'),
+        commonArea: {
+          name: 'Salón Comunal'
+        }
+      };
+
+      const mockRules = [
+        {
+          allowCancellation: true,
+          cancellationHours: 24
+        }
+      ];
+
+      const mockCancelledReservation = {
+        ...mockReservation,
+        status: ReservationStatus.CANCELLED,
+        cancellationReason: 'Cancelada por el usuario',
+        cancelledAt: expect.any(Date)
+      };
+
+      // Setup mocks
+      prisma.reservation.findUnique.mockResolvedValue(mockReservation);
+      prisma.reservationRule.findMany.mockResolvedValue(mockRules);
+      prisma.reservation.update.mockResolvedValue(mockCancelledReservation);
+      prisma.reservationNotification.create.mockResolvedValue({});
+
+      // Execute
+      const result = await reservationService.cancelReservation(
+        1,
+        'Cancelada por el usuario',
+        1
+      );
+      
+      // Verify
+      expect(prisma.reservation.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: expect.objectContaining({
+          status: ReservationStatus.CANCELLED,
+          cancellationReason: 'Cancelada por el usuario',
+          cancelledAt: expect.any(Date)
+        })
+      });
+      expect(result).toEqual(mockCancelledReservation);
+    });
+
+    it('should throw an error when user is not the owner', async () => {
+      // Mock data
+      const mockReservation = {
+        id: 1,
+        userId: 1, // Owner is user 1
+        commonAreaId: 1,
+        status: ReservationStatus.APPROVED,
+        startDateTime: new Date('2025-06-10T14:00:00Z'),
+        endDateTime: new Date('2025-06-10T16:00:00Z')
+      };
+
+      // Setup mocks
+      prisma.reservation.findUnique.mockResolvedValue(mockReservation);
+
+      // Execute & Verify - User 2 tries to cancel
+      await expect(reservationService.cancelReservation(1, 'Cancelada', 2))
+        .rejects.toThrow('Solo el propietario puede cancelar la reserva');
+    });
+
+    it('should throw an error when cancellation is not allowed', async () => {
+      // Mock data
+      const mockReservation = {
+        id: 1,
+        userId: 1,
+        commonAreaId: 1,
+        status: ReservationStatus.APPROVED,
+        startDateTime: new Date('2025-06-10T14:00:00Z'),
+        endDateTime: new Date('2025-06-10T16:00:00Z')
+      };
+
+      const mockRules = [
+        {
+          allowCancellation: false
+        }
+      ];
+
+      // Setup mocks
+      prisma.reservation.findUnique.mockResolvedValue(mockReservation);
+      prisma.reservationRule.findMany.mockResolvedValue(mockRules);
+
+      // Execute & Verify
+      await expect(reservationService.cancelReservation(1, 'Cancelada', 1))
+        .rejects.toThrow('Las cancelaciones no están permitidas para esta área común');
+    });
+  });
+
+  describe('getUserNotifications', () => {
+    it('should return user notifications', async () => {
+      // Mock data
+      const mockNotifications = [
+        {
+          id: 1,
+          userId: 1,
+          type: 'confirmation',
+          message: 'Su reserva ha sido confirmada',
+          isRead: false,
+          sentAt: new Date()
+        },
+        {
+          id: 2,
+          userId: 1,
+          type: 'reminder',
+          message: 'Recordatorio de su reserva mañana',
+          isRead: true,
+          sentAt: new Date()
+        }
+      ];
+
+      // Setup mocks
+      prisma.reservationNotification.findMany.mockResolvedValue(mockNotifications);
+
+      // Execute
+      const result = await reservationService.getUserNotifications(1);
+      
+      // Verify
+      expect(prisma.reservationNotification.findMany).toHaveBeenCalledWith({
+        where: {
+          userId: 1
+        },
+        orderBy: {
+          sentAt: 'desc'
+        }
+      });
+      expect(result).toEqual(mockNotifications);
+    });
+
+    it('should apply filters when provided', async () => {
+      // Mock data
+      const mockNotifications = [
+        {
+          id: 1,
+          userId: 1,
+          type: 'confirmation',
+          message: 'Su reserva ha sido confirmada',
+          isRead: false,
+          sentAt: new Date()
+        }
+      ];
+
+      // Setup mocks
+      prisma.reservationNotification.findMany.mockResolvedValue(mockNotifications);
+
+      // Execute
+      const result = await reservationService.getUserNotifications(1, {
+        isRead: false,
+        type: 'confirmation'
+      });
+      
+      // Verify
+      expect(prisma.reservationNotification.findMany).toHaveBeenCalledWith({
+        where: {
+          userId: 1,
+          isRead: false,
+          type: 'confirmation'
+        },
+        orderBy: {
+          sentAt: 'desc'
+        }
+      });
+      expect(result).toEqual(mockNotifications);
     });
   });
 });

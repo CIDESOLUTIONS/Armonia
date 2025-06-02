@@ -1,0 +1,398 @@
+// Actualización del esquema Prisma para incluir las ampliaciones del modelo de visitantes
+
+// Definición del datasource
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  schemas    = ["armonia", "tenant"]
+}
+
+// Definición del generator
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+// Modelos para el esquema principal "armonia"
+model ResidentialComplex {
+  id          Int      @id @default(autoincrement())
+  name        String
+  schemaName  String   @unique  // Nombre del schema en la DB
+  totalUnits  Int
+  adminEmail  String
+  adminName   String
+  adminPhone  String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?  @default("Colombia")
+  propertyTypes Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+  @@schema("armonia")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  name        String?
+  password    String
+  role        String   // 'ADMIN', 'COMPLEX_ADMIN', 'RESIDENT', 'STAFF'
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  complexId   Int?
+  complex     ResidentialComplex? @relation(fields: [complexId], references: [id])
+  @@schema("armonia")
+}
+
+model Prospect {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  phone       String?
+  complexName String
+  units       Int
+  message     String?
+  createdAt   DateTime @default(now())
+  contacted   Boolean  @default(false)
+  @@schema("armonia")
+}
+
+// Los siguientes modelos se usarán como referencia para crear 
+// las tablas en cada esquema de tenant de manera dinámica
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  budget      Float
+  startDate   DateTime
+  endDate     DateTime?
+  status      String    // 'PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'
+  progress    Float     // Porcentaje de progreso (0-100)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@schema("tenant")
+}
+
+model Payment {
+  id              Int       @id @default(autoincrement())
+  residentId      Int       // ID del residente asociado
+  amount          Float     // Monto del pago
+  concept         String    // Concepto del pago (cuota ordinaria, extraordinaria, etc.)
+  dueDate         DateTime  // Fecha de vencimiento
+  paymentDate     DateTime? // Fecha de pago (null si está pendiente)
+  status          String    // 'PENDING', 'PAID', 'OVERDUE', 'CANCELLED'
+  paymentMethod   String?   // Método de pago utilizado
+  reference       String?   // Referencia o número de transacción
+  receiptUrl      String?   // URL del comprobante de pago
+  notes           String?   // Notas adicionales
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+model CommonArea {
+  id              Int       @id @default(autoincrement())
+  name            String    // Nombre del área común
+  description     String?   // Descripción del área
+  capacity        Int       // Capacidad máxima de personas
+  location        String?   // Ubicación dentro del conjunto
+  rules           String?   // Reglas de uso
+  imageUrl        String?   // URL de la imagen del área
+  isActive        Boolean   @default(true) // Si está disponible para reservas
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  reservations    Reservation[] // Relación con las reservas
+  
+  @@schema("tenant")
+}
+
+model Reservation {
+  id              Int       @id @default(autoincrement())
+  residentId      Int       // ID del residente que hace la reserva
+  areaId          Int       // ID del área común reservada
+  area            CommonArea @relation(fields: [areaId], references: [id])
+  startTime       DateTime  // Hora de inicio de la reserva
+  endTime         DateTime  // Hora de fin de la reserva
+  attendees       Int       // Número de asistentes
+  purpose         String?   // Propósito de la reserva
+  status          String    // 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'
+  approvedBy      Int?      // ID del administrador que aprobó la reserva
+  notes           String?   // Notas adicionales
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+model PQR {
+  id              Int       @id @default(autoincrement())
+  residentId      Int       // ID del residente que crea la solicitud
+  title           String    // Título de la solicitud
+  description     String    // Descripción detallada
+  category        String    // 'PETITION', 'COMPLAINT', 'CLAIM', 'SUGGESTION'
+  priority        String    // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+  status          String    // 'SUBMITTED', 'IN_REVIEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'
+  assignedTo      Int?      // ID del administrador asignado
+  resolvedAt      DateTime? // Fecha de resolución
+  attachments     Json?     // URLs de archivos adjuntos
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  responses       PQRResponse[] // Relación con las respuestas
+  
+  @@schema("tenant")
+}
+
+model PQRResponse {
+  id              Int       @id @default(autoincrement())
+  pqrId           Int       // ID de la solicitud PQR
+  pqr             PQR       @relation(fields: [pqrId], references: [id])
+  authorId        Int       // ID del usuario que responde
+  content         String    // Contenido de la respuesta
+  attachments     Json?     // URLs de archivos adjuntos
+  createdAt       DateTime  @default(now())
+  
+  @@schema("tenant")
+}
+
+// Enumeraciones para el sistema de visitantes
+enum DocumentType {
+  CC      // Cédula de Ciudadanía
+  CE      // Cédula de Extranjería
+  PASSPORT // Pasaporte
+  OTHER   // Otro tipo de documento
+  
+  @@schema("tenant")
+}
+
+enum VisitorStatus {
+  ACTIVE   // Visitante actualmente en las instalaciones
+  DEPARTED // Visitante que ya salió
+  
+  @@schema("tenant")
+}
+
+enum AccessPassType {
+  SINGLE_USE // Pase de un solo uso
+  TEMPORARY  // Pase temporal con validez limitada
+  RECURRENT  // Pase recurrente (ej: servicios de limpieza)
+  
+  @@schema("tenant")
+}
+
+enum AccessPassStatus {
+  ACTIVE  // Pase activo y válido
+  USED    // Pase ya utilizado (para single_use)
+  EXPIRED // Pase expirado
+  REVOKED // Pase revocado por administración
+  
+  @@schema("tenant")
+}
+
+enum AccessAction {
+  ENTRY  // Registro de entrada
+  EXIT   // Registro de salida
+  DENIED // Acceso denegado
+  
+  @@schema("tenant")
+}
+
+// Modelo actualizado para Visitantes
+model Visitor {
+  id              Int       @id @default(autoincrement())
+  name            String    // Nombre del visitante
+  documentType    DocumentType // Tipo de documento
+  documentNumber  String    // Número de documento
+  destination     String    // Destino dentro del conjunto (ej: "Apartamento 101")
+  residentName    String?   // Nombre del residente que visita
+  entryTime       DateTime  // Hora de entrada
+  exitTime        DateTime? // Hora de salida (null si aún no ha salido)
+  plate           String?   // Placa del vehículo (si aplica)
+  photoUrl        String?   // URL de la foto del visitante
+  status          VisitorStatus // Estado del visitante
+  notes           String?   // Notas adicionales
+  
+  // Nuevos campos
+  preRegisterId   Int?      // ID del pre-registro (si aplica)
+  preRegister     PreRegisteredVisitor? @relation(fields: [preRegisterId], references: [id])
+  accessPassId    Int?      // ID del pase de acceso utilizado
+  accessPass      AccessPass? @relation(fields: [accessPassId], references: [id])
+  purpose         String?   // Propósito de la visita
+  company         String?   // Empresa a la que representa (si aplica)
+  temperature     Float?    // Temperatura registrada (para protocolos de salud)
+  belongings      Json?     // Registro de pertenencias (ej: equipos, paquetes)
+  signature       String?   // URL de la firma digital (si se requiere)
+  registeredBy    Int       // ID del usuario que registró al visitante
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  accessLogs      AccessLog[] // Relación con los registros de acceso
+  
+  @@index([documentType, documentNumber]) // Búsqueda rápida por documento
+  @@index([status]) // Filtrado por estado
+  @@index([entryTime]) // Búsqueda por fecha de entrada
+  @@index([destination]) // Búsqueda por destino
+  @@index([preRegisterId]) // Relación con pre-registro
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para Pre-registro de Visitantes
+model PreRegisteredVisitor {
+  id              Int       @id @default(autoincrement())
+  name            String    // Nombre del visitante
+  documentType    DocumentType? // Tipo de documento (opcional en pre-registro)
+  documentNumber  String?   // Número de documento (opcional en pre-registro)
+  residentId      Int       // ID del residente que autoriza
+  unitId          Int       // ID de la unidad de destino
+  expectedDate    DateTime  // Fecha esperada de visita
+  validFrom       DateTime  // Inicio de validez del pre-registro
+  validUntil      DateTime  // Fin de validez del pre-registro
+  purpose         String?   // Propósito de la visita
+  isRecurrent     Boolean   @default(false) // Si es un visitante recurrente
+  recurrenceRule  String?   // Regla de recurrencia (ej: "WEEKLY:MON,WED,FRI")
+  accessCode      String    // Código único para acceso (QR/alfanumérico)
+  status          String    // 'PENDING', 'ACTIVE', 'USED', 'EXPIRED', 'CANCELLED'
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  visitors        Visitor[] // Relación con visitantes registrados
+  accessPasses    AccessPass[] // Relación con pases de acceso
+  
+  @@index([residentId]) // Búsqueda por residente
+  @@index([status]) // Filtrado por estado
+  @@index([validFrom, validUntil]) // Búsqueda por rango de fechas
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para Pases de Acceso
+model AccessPass {
+  id              Int       @id @default(autoincrement())
+  code            String    @unique // Código único del pase
+  qrUrl           String    // URL de la imagen QR generada
+  type            AccessPassType // Tipo de pase
+  validFrom       DateTime  // Inicio de validez
+  validUntil      DateTime  // Fin de validez
+  usageCount      Int       @default(0) // Número de veces utilizado
+  maxUsages       Int       @default(1) // Máximo de usos permitidos
+  status          AccessPassStatus // Estado del pase
+  
+  preRegisterId   Int?      // ID del pre-registro (si aplica)
+  preRegister     PreRegisteredVisitor? @relation(fields: [preRegisterId], references: [id])
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  visitors        Visitor[] // Relación con visitantes que usaron el pase
+  accessLogs      AccessLog[] // Relación con registros de acceso
+  
+  @@index([code]) // Búsqueda rápida por código
+  @@index([status]) // Filtrado por estado
+  @@index([validFrom, validUntil]) // Búsqueda por rango de fechas
+  @@index([preRegisterId]) // Relación con pre-registro
+  
+  @@schema("tenant")
+}
+
+// Nuevo modelo para Bitácora de Accesos
+model AccessLog {
+  id              Int       @id @default(autoincrement())
+  action          AccessAction // Tipo de acción (entrada, salida, denegado)
+  timestamp       DateTime  @default(now()) // Momento del registro
+  location        String    // Punto de acceso (ej: "Entrada principal")
+  notes           String?   // Notas adicionales
+  registeredBy    Int       // ID del usuario que registró el acceso
+  
+  visitorId       Int?      // ID del visitante (si aplica)
+  visitor         Visitor?  @relation(fields: [visitorId], references: [id])
+  
+  accessPassId    Int?      // ID del pase de acceso (si aplica)
+  accessPass      AccessPass? @relation(fields: [accessPassId], references: [id])
+  
+  @@index([action]) // Filtrado por tipo de acción
+  @@index([timestamp]) // Búsqueda por fecha/hora
+  @@index([visitorId]) // Relación con visitante
+  @@index([accessPassId]) // Relación con pase de acceso
+  
+  @@schema("tenant")
+}
+
+// Resto de modelos existentes...
+model Resident {
+  id              Int       @id @default(autoincrement())
+  userId          Int       // ID del usuario asociado
+  unit            String    // Unidad habitacional (ej: "Apartamento 101")
+  residentType    String    // 'OWNER', 'TENANT', 'FAMILY_MEMBER'
+  documentType    String    // Tipo de documento
+  documentNumber  String    // Número de documento
+  phone           String?   // Teléfono de contacto
+  emergencyContact String?  // Contacto de emergencia
+  vehicles        Json?     // Información de vehículos
+  moveInDate      DateTime? // Fecha de mudanza
+  moveOutDate     DateTime? // Fecha de salida (para inquilinos)
+  isActive        Boolean   @default(true) // Si el residente está activo
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para Paquetes y Correspondencia
+model Package {
+  id              Int       @id @default(autoincrement())
+  type            String    // 'PACKAGE', 'MAIL', 'DOCUMENT'
+  trackingNumber  String?   // Número de seguimiento (si aplica)
+  courier         String?   // Empresa de mensajería (si aplica)
+  destination     String    // Destino dentro del conjunto (ej: "Apartamento 101")
+  residentName    String    // Nombre del residente destinatario
+  receivedAt      DateTime  // Fecha y hora de recepción
+  deliveredAt     DateTime? // Fecha y hora de entrega al destinatario
+  receivedBy      String?   // Nombre de quien recibió el paquete
+  notes           String?   // Notas adicionales
+  photoUrl        String?   // URL de la foto del paquete
+  status          String    // 'PENDING', 'DELIVERED', 'RETURNED'
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@schema("tenant")
+}
+
+// Modelo para Incidentes
+model Incident {
+  id              Int       @id @default(autoincrement())
+  title           String    // Título del incidente
+  description     String    // Descripción detallada
+  category        String    // 'SECURITY', 'MAINTENANCE', 'EMERGENCY', 'OTHER'
+  priority        String    // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+  location        String    // Ubicación del incidente
+  reportedAt      DateTime  // Fecha y hora del reporte
+  reportedBy      String    // Nombre de quien reporta
+  assignedTo      String?   // Nombre de quien está a cargo
+  resolvedAt      DateTime? // Fecha y hora de resolución
+  status          String    // 'REPORTED', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'
+  attachments     Json?     // URLs de archivos adjuntos
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  updates         IncidentUpdate[] // Relación con las actualizaciones
+  
+  @@schema("tenant")
+}
+
+// Modelo para Actualizaciones de Incidentes
+model IncidentUpdate {
+  id              Int       @id @default(autoincrement())
+  incidentId      Int       // ID del incidente
+  incident        Incident  @relation(fields: [incidentId], references: [id])
+  content         String    // Contenido de la actualización
+  author          String    // Autor de la actualización
+  timestamp       DateTime  @default(now()) // Fecha y hora de la actualización
+  attachments     Json?     // URLs de archivos adjuntos
+  
+  @@schema("tenant")
+}
+
+// Resto de modelos existentes...
