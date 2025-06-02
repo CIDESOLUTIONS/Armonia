@@ -1,0 +1,114 @@
+// Esquema Prisma para la integración con cámaras IP
+// Parte del sistema Armonía - Fase 3
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Camera {
+  id                Int       @id @default(autoincrement())
+  name              String
+  description       String?
+  manufacturer      String?
+  model             String?
+  serialNumber      String?
+  firmwareVersion   String?
+  ipAddress         String
+  port              Int       @default(554)
+  username          String?
+  password          String?   // Almacenado cifrado
+  rtspUrl           String?
+  onvifUrl          String?
+  httpUrl           String?
+  isActive          Boolean   @default(true)
+  status            String    @default("UNKNOWN") // ONLINE, OFFLINE, UNKNOWN
+  lastStatusCheck   DateTime?
+  location          String?
+  zone              Zone?     @relation(fields: [zoneId], references: [id])
+  zoneId            Int?
+  ptzEnabled        Boolean   @default(false)
+  recordingEnabled  Boolean   @default(false)
+  motionDetection   Boolean   @default(false)
+  streamSettings    Json?     // Configuración de resolución, FPS, etc.
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  createdBy         User?     @relation("CameraCreator", fields: [createdById], references: [id])
+  createdById       Int?
+  recordings        Recording[]
+  snapshots         Snapshot[]
+  cameraPermissions CameraPermission[]
+}
+
+model Zone {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  isPublic    Boolean   @default(false) // Si es true, todos los residentes pueden ver
+  cameras     Camera[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Recording {
+  id          Int       @id @default(autoincrement())
+  camera      Camera    @relation(fields: [cameraId], references: [id])
+  cameraId    Int
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?      // En segundos
+  fileSize    Int?      // En bytes
+  filePath    String
+  thumbnailPath String?
+  triggerType String    // SCHEDULED, MOTION, MANUAL
+  status      String    // RECORDING, COMPLETED, FAILED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Snapshot {
+  id          Int       @id @default(autoincrement())
+  camera      Camera    @relation(fields: [cameraId], references: [id])
+  cameraId    Int
+  timestamp   DateTime
+  filePath    String
+  takenBy     User?     @relation(fields: [takenById], references: [id])
+  takenById   Int?
+  description String?
+  createdAt   DateTime  @default(now())
+}
+
+model CameraPermission {
+  id          Int       @id @default(autoincrement())
+  camera      Camera    @relation(fields: [cameraId], references: [id])
+  cameraId    Int
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  canView     Boolean   @default(true)
+  canControl  Boolean   @default(false)
+  canRecord   Boolean   @default(false)
+  startTime   DateTime? // Hora de inicio de permiso (opcional)
+  endTime     DateTime? // Hora de fin de permiso (opcional)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   User?     @relation("PermissionCreator", fields: [createdById], references: [id])
+  createdById Int?
+
+  @@unique([cameraId, userId])
+}
+
+// Referencias a modelos existentes
+model User {
+  id                  Int       @id @default(autoincrement())
+  // Campos existentes...
+  
+  // Nuevas relaciones para cámaras
+  createdCameras      Camera[]  @relation("CameraCreator")
+  takenSnapshots      Snapshot[]
+  cameraPermissions   CameraPermission[]
+  createdPermissions  CameraPermission[] @relation("PermissionCreator")
+}
