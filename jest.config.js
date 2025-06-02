@@ -1,22 +1,30 @@
-// jest.config.js
 module.exports = {
-  testEnvironment: 'jsdom',
+  preset: 'ts-jest',
+  testEnvironment: 'node',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js'
+    '^../../lib/(.*)$': '<rootDir>/src/lib/$1',
+    '^../../lib/logging/(.*)$': '<rootDir>/src/lib/logging/$1',
+    '^../../lib/prisma$': '<rootDir>/src/lib/prisma'
   },
-  transform: {
-    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest'
-  },
-  transformIgnorePatterns: [
-    '/node_modules/(?!(lucide-react|@radix-ui|@headlessui|next|@next|react-big-calendar)/)'
+  testMatch: [
+    '**/__tests__/**/*.test.[jt]s?(x)',
+    '**/?(*.)+(spec|test).[jt]s?(x)'
   ],
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/mocks/**',
+    '!src/types/**'
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70
+    }
+  },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testPathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/.next/'
-  ],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  verbose: true
-}
+  moduleDirectories: ['node_modules', 'src']
+};
