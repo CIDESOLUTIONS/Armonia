@@ -1,0 +1,206 @@
+// Esquema Prisma para el sistema de monitoreo y pruebas avanzadas
+// Este esquema implementa los modelos definidos en el análisis
+
+// Esquema para el sistema de monitoreo
+model MonitoringConfig {
+  id                Int       @id @default(autoincrement())
+  tenantId          String    // ID del tenant
+  name              String
+  description       String?
+  isActive          Boolean   @default(true)
+  monitoringType    String    // INFRASTRUCTURE, APPLICATION, USER_EXPERIENCE
+  checkInterval     Int       // En segundos
+  targetResource    String    // URL, servicio, recurso a monitorear
+  parameters        Json?     // Parámetros específicos para el tipo de monitoreo
+  alertThresholds   Json      // Umbrales para disparar alertas
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  alerts            Alert[]
+  checkResults      MonitoringResult[]
+
+  @@index([tenantId])
+}
+
+model MonitoringResult {
+  id                Int       @id @default(autoincrement())
+  configId          Int
+  config            MonitoringConfig @relation(fields: [configId], references: [id])
+  timestamp         DateTime  @default(now())
+  status            String    // SUCCESS, WARNING, ERROR, CRITICAL
+  responseTime      Int?      // En milisegundos
+  value             Float?    // Valor medido
+  details           Json?     // Detalles adicionales del resultado
+  errorMessage      String?
+
+  @@index([configId, timestamp])
+}
+
+model Alert {
+  id                Int       @id @default(autoincrement())
+  configId          Int
+  config            MonitoringConfig @relation(fields: [configId], references: [id])
+  timestamp         DateTime  @default(now())
+  severity          String    // INFO, WARNING, ERROR, CRITICAL
+  message           String
+  details           Json?
+  status            String    // ACTIVE, ACKNOWLEDGED, RESOLVED
+  acknowledgedBy    User?     @relation("AlertAcknowledger", fields: [acknowledgedById], references: [id])
+  acknowledgedById  Int?
+  acknowledgedAt    DateTime?
+  resolvedAt        DateTime?
+  notificationsSent NotificationLog[]
+
+  @@index([configId, status])
+  @@index([timestamp])
+}
+
+model NotificationLog {
+  id                Int       @id @default(autoincrement())
+  alertId           Int
+  alert             Alert     @relation(fields: [alertId], references: [id])
+  channel           String    // EMAIL, SMS, WEBHOOK
+  recipient         String
+  sentAt            DateTime  @default(now())
+  status            String    // SENT, FAILED
+  errorMessage      String?
+
+  @@index([alertId])
+}
+
+model Dashboard {
+  id                Int       @id @default(autoincrement())
+  tenantId          String    // ID del tenant
+  name              String
+  description       String?
+  layout            Json      // Configuración del layout
+  isPublic          Boolean   @default(false)
+  createdBy         User?     @relation(fields: [createdById], references: [id])
+  createdById       Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  widgets           DashboardWidget[]
+
+  @@index([tenantId])
+}
+
+model DashboardWidget {
+  id                Int       @id @default(autoincrement())
+  dashboardId       Int
+  dashboard         Dashboard @relation(fields: [dashboardId], references: [id])
+  title             String
+  type              String    // CHART, GAUGE, TABLE, STATUS
+  dataSource        String    // Fuente de datos para el widget
+  query             String    // Consulta para obtener datos
+  position          Json      // Posición en el dashboard
+  size              Json      // Tamaño del widget
+  options           Json?     // Opciones de configuración
+
+  @@index([dashboardId])
+}
+
+// Esquema para el sistema de pruebas avanzadas
+model TestSuite {
+  id                Int       @id @default(autoincrement())
+  tenantId          String    // ID del tenant
+  name              String
+  description       String?
+  type              String    // UNIT, INTEGRATION, E2E, PERFORMANCE, SECURITY
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  testCases         TestCase[]
+  testRuns          TestRun[]
+
+  @@index([tenantId])
+}
+
+model TestCase {
+  id                Int       @id @default(autoincrement())
+  suiteId           Int
+  suite             TestSuite @relation(fields: [suiteId], references: [id])
+  name              String
+  description       String?
+  priority          String    // LOW, MEDIUM, HIGH, CRITICAL
+  automated         Boolean   @default(true)
+  testData          Json?     // Datos para la prueba
+  expectedResults   Json?     // Resultados esperados
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  testResults       TestResult[]
+
+  @@index([suiteId])
+}
+
+model TestRun {
+  id                Int       @id @default(autoincrement())
+  suiteId           Int
+  suite             TestSuite @relation(fields: [suiteId], references: [id])
+  startTime         DateTime  @default(now())
+  endTime           DateTime?
+  status            String    // RUNNING, COMPLETED, FAILED, ABORTED
+  triggeredBy       User?     @relation(fields: [triggeredById], references: [id])
+  triggeredById     Int?
+  environment       String    // DEV, TEST, STAGING, PRODUCTION
+  buildVersion      String?
+  results           TestResult[]
+  codeCoverage      CodeCoverage[]
+
+  @@index([suiteId, startTime])
+}
+
+model TestResult {
+  id                Int       @id @default(autoincrement())
+  runId             Int
+  run               TestRun   @relation(fields: [runId], references: [id])
+  testCaseId        Int
+  testCase          TestCase  @relation(fields: [testCaseId], references: [id])
+  status            String    // PASSED, FAILED, SKIPPED, ERROR
+  executionTime     Int       // En milisegundos
+  errorMessage      String?
+  stackTrace        String?
+  screenshots       String[]  // URLs o rutas a capturas de pantalla
+  logs              String?   // Logs de la ejecución
+  metadata          Json?     // Metadatos adicionales
+  createdAt         DateTime  @default(now())
+  performanceResults PerformanceTestResult[]
+
+  @@index([runId])
+  @@index([testCaseId])
+}
+
+model PerformanceTestResult {
+  id                Int       @id @default(autoincrement())
+  testResultId      Int
+  testResult        TestResult @relation(fields: [testResultId], references: [id])
+  virtualUsers      Int       // Número de usuarios virtuales
+  totalRequests     Int
+  successfulRequests Int
+  failedRequests    Int
+  avgResponseTime   Float     // En milisegundos
+  p95ResponseTime   Float     // Percentil 95 de tiempo de respuesta
+  p99ResponseTime   Float     // Percentil 99 de tiempo de respuesta
+  minResponseTime   Float
+  maxResponseTime   Float
+  requestsPerSecond Float
+  bytesTransferred  Int
+  cpuUsage          Float?    // Uso de CPU durante la prueba
+  memoryUsage       Float?    // Uso de memoria durante la prueba
+  detailedResults   Json      // Resultados detallados por endpoint
+
+  @@index([testResultId])
+}
+
+model CodeCoverage {
+  id                Int       @id @default(autoincrement())
+  testRunId         Int
+  testRun           TestRun   @relation(fields: [testRunId], references: [id])
+  lineCoverage      Float     // Porcentaje de cobertura de líneas
+  branchCoverage    Float     // Porcentaje de cobertura de ramas
+  functionCoverage  Float     // Porcentaje de cobertura de funciones
+  statementCoverage Float     // Porcentaje de cobertura de declaraciones
+  uncoveredLines    Json?     // Líneas no cubiertas por módulo
+  reportUrl         String?   // URL al informe detallado
+  createdAt         DateTime  @default(now())
+
+  @@index([testRunId])
+}
