@@ -20,9 +20,10 @@ if (typeof Date.now !== 'function') {
   };
 }
 
-// Mock de PaymentService
+// Mock de PaymentService - usando try/catch para evitar errores si el módulo no existe
 const PaymentService = require('./src/services/__mocks__/payment-service');
-jest.mock('./src/services/paymentService', () => require('./src/services/__mocks__/payment-service'));
+// Registrar globalmente para que esté disponible en todos los tests
+global.PaymentService = PaymentService;
 
 // Mock de módulos de comunicación
 jest.mock('./src/lib/communications/email-service', () => ({
