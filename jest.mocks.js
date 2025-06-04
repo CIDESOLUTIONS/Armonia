@@ -78,7 +78,5 @@ jest.mock('./src/lib/prisma', () => ({
   })
 }));
 
-// Configuración global para pruebas
-beforeEach(() => {
-  jest.clearAllMocks();
-});
+// Nota: Los hooks como beforeEach se han movido a jest.setup.js
+console.log('Mocks globales cargados correctamente');
