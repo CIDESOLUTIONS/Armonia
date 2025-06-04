@@ -108,7 +108,7 @@ export default function AttendancePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [totalUnits, setTotalUnits] = useState<number>(50); // Valor simulado
+  const [totalUnits, _setTotalUnits] = useState<number>(50); // Valor simulado
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

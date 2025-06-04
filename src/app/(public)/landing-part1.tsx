@@ -1,5 +1,5 @@
 // Funcionalidades principales
-import { Building, Check, DollarSign, s } from 'lucide-react';
+import { Building, Check, DollarSign, Users } from 'lucide-react';
 
 export function LandingPart1({ theme, uage }: { theme: string, uage?: string }) {
   // Si no se pasa el idioma, asumimos español
