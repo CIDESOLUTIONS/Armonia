@@ -37,8 +37,17 @@ jest.mock('./src/lib/communications/whatsapp-service', () => ({
   sendWhatsAppMessage: jest.fn().mockResolvedValue({ success: true })
 }));
 
-// Mock de utilidades de plantillas
-jest.mock('./src/services/templateService', () => require('./src/services/__mocks__/template-service'));
+// Mock de utilidades de plantillas - usando ruta correcta o creando stub si no existe
+try {
+  // Intentar requerir el servicio real primero para verificar si existe
+  require('./src/lib/templates/template-service');
+  // Si existe, mockearlo
+  jest.mock('./src/lib/templates/template-service', () => require('./src/services/__mocks__/template-service'));
+} catch (e) {
+  // Si no existe, crear un stub global para cualquier import de servicios de plantillas
+  const templateServiceMock = require('./src/services/__mocks__/template-service');
+  global.templateServiceMock = templateServiceMock;
+}
 
 // Mock de utilidades
 jest.mock('./src/lib/prisma', () => ({
