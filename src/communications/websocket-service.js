@@ -1,112 +1,190 @@
 /**
  * Servicio de WebSocket para comunicación en tiempo real
+ * Adaptado a CommonJS para compatibilidad con Jest
  */
 
-class WebSocketService {
-  constructor() {
-    this.connections = new Map();
-    this.handlers = new Map();
-  }
+const WebSocket = require('ws');
+const { ServerLogger } = require('../lib/logging/server-logger');
 
-  /**
-   * Inicializa la conexión WebSocket
-   * @param {string} userId - ID del usuario
-   * @param {string} sessionId - ID de la sesión
-   * @returns {Promise<boolean>} - Resultado de la inicialización
-   */
-  async initialize(userId, sessionId) {
-    try {
-      console.log(`Inicializando WebSocket para usuario ${userId} con sesión ${sessionId}`);
-      this.connections.set(userId, {
-        sessionId,
-        connected: true,
-        lastActivity: new Date()
+const logger = new ServerLogger('WebSocketService');
+
+// Almacenamiento de conexiones activas
+const activeConnections = new Map();
+
+/**
+ * Inicializa el servidor WebSocket
+ * @param {Object} server - Servidor HTTP/HTTPS
+ */
+function initializeWebSocketServer(server) {
+  try {
+    const wss = new WebSocket.Server({ server });
+    
+    wss.on('connection', (ws, req) => {
+      const clientId = req.headers['x-client-id'] || generateClientId();
+      const schemaName = req.headers['x-schema-name'] || 'default';
+      
+      // Registrar conexión
+      if (!activeConnections.has(schemaName)) {
+        activeConnections.set(schemaName, new Map());
+      }
+      
+      activeConnections.get(schemaName).set(clientId, ws);
+      
+      logger.info(`Cliente WebSocket conectado: ${clientId} (Schema: ${schemaName})`);
+      
+      // Enviar confirmación de conexión
+      ws.send(JSON.stringify({
+        type: 'CONNECTION_ESTABLISHED',
+        clientId,
+        timestamp: new Date().toISOString()
+      }));
+      
+      // Manejar mensajes entrantes
+      ws.on('message', (message) => {
+        try {
+          const parsedMessage = JSON.parse(message);
+          logger.debug(`Mensaje recibido de ${clientId}: ${JSON.stringify(parsedMessage)}`);
+          
+          // Procesar mensaje según su tipo
+          switch (parsedMessage.type) {
+            case 'PING':
+              ws.send(JSON.stringify({
+                type: 'PONG',
+                timestamp: new Date().toISOString()
+              }));
+              break;
+              
+            case 'SUBSCRIBE':
+              // Lógica de suscripción a canales
+              break;
+              
+            default:
+              logger.warn(`Tipo de mensaje no reconocido: ${parsedMessage.type}`);
+          }
+        } catch (error) {
+          logger.error(`Error al procesar mensaje WebSocket: ${error.message}`);
+        }
       });
-      return true;
-    } catch (error) {
-      console.error('Error al inicializar WebSocket:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Envía un mensaje a través de WebSocket
-   * @param {string} userId - ID del usuario destinatario
-   * @param {string} type - Tipo de mensaje
-   * @param {object} data - Datos del mensaje
-   * @returns {Promise<boolean>} - Resultado del envío
-   */
-  async sendMessage(userId, type, data) {
-    try {
-      const connection = this.connections.get(userId);
-      if (!connection || !connection.connected) {
-        console.warn(`No hay conexión activa para el usuario ${userId}`);
-        return false;
-      }
-
-      console.log(`Enviando mensaje tipo ${type} a usuario ${userId}`);
-      // Simulación de envío de mensaje
-      return true;
-    } catch (error) {
-      console.error('Error al enviar mensaje WebSocket:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Envía una notificación a múltiples usuarios
-   * @param {string[]} userIds - IDs de los usuarios destinatarios
-   * @param {string} type - Tipo de notificación
-   * @param {object} data - Datos de la notificación
-   * @returns {Promise<{success: number, failed: number}>} - Resultado del envío
-   */
-  async broadcastNotification(userIds, type, data) {
-    let success = 0;
-    let failed = 0;
-
-    for (const userId of userIds) {
-      const result = await this.sendMessage(userId, type, data);
-      if (result) {
-        success++;
-      } else {
-        failed++;
-      }
-    }
-
-    return { success, failed };
-  }
-
-  /**
-   * Registra un manejador para un tipo de mensaje
-   * @param {string} type - Tipo de mensaje
-   * @param {Function} handler - Función manejadora
-   */
-  registerHandler(type, handler) {
-    this.handlers.set(type, handler);
-  }
-
-  /**
-   * Cierra la conexión WebSocket
-   * @param {string} userId - ID del usuario
-   * @returns {boolean} - Resultado del cierre
-   */
-  disconnect(userId) {
-    try {
-      const connection = this.connections.get(userId);
-      if (!connection) {
-        return false;
-      }
-
-      connection.connected = false;
-      this.connections.set(userId, connection);
-      return true;
-    } catch (error) {
-      console.error('Error al desconectar WebSocket:', error);
-      return false;
-    }
+      
+      // Manejar desconexión
+      ws.on('close', () => {
+        if (activeConnections.has(schemaName)) {
+          activeConnections.get(schemaName).delete(clientId);
+        }
+        logger.info(`Cliente WebSocket desconectado: ${clientId}`);
+      });
+      
+      // Manejar errores
+      ws.on('error', (error) => {
+        logger.error(`Error en conexión WebSocket (${clientId}): ${error.message}`);
+      });
+    });
+    
+    logger.info('Servidor WebSocket inicializado correctamente');
+    return wss;
+  } catch (error) {
+    logger.error(`Error al inicializar servidor WebSocket: ${error.message}`);
+    throw error;
   }
 }
 
-// Exportar instancia singleton
-const websocketService = new WebSocketService();
-export default websocketService;
+/**
+ * Envía una notificación a un cliente específico
+ * @param {string} schemaName - Nombre del esquema
+ * @param {string} clientId - ID del cliente
+ * @param {Object} data - Datos a enviar
+ * @returns {boolean} - Éxito de la operación
+ */
+function sendToClient(schemaName, clientId, data) {
+  try {
+    if (!activeConnections.has(schemaName) || !activeConnections.get(schemaName).has(clientId)) {
+      logger.warn(`Cliente no encontrado: ${clientId} (Schema: ${schemaName})`);
+      return false;
+    }
+    
+    const ws = activeConnections.get(schemaName).get(clientId);
+    
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        ...data,
+        timestamp: new Date().toISOString()
+      }));
+      logger.debug(`Mensaje enviado a cliente ${clientId}: ${JSON.stringify(data)}`);
+      return true;
+    } else {
+      logger.warn(`Conexión no disponible para cliente ${clientId}`);
+      return false;
+    }
+  } catch (error) {
+    logger.error(`Error al enviar mensaje a cliente ${clientId}: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Envía una notificación a todos los clientes de un esquema
+ * @param {string} schemaName - Nombre del esquema
+ * @param {Object} data - Datos a enviar
+ * @returns {number} - Número de clientes notificados
+ */
+function broadcastToSchema(schemaName, data) {
+  try {
+    if (!activeConnections.has(schemaName)) {
+      logger.warn(`No hay clientes conectados para el schema: ${schemaName}`);
+      return 0;
+    }
+    
+    let notifiedCount = 0;
+    
+    activeConnections.get(schemaName).forEach((ws, clientId) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          ...data,
+          timestamp: new Date().toISOString()
+        }));
+        notifiedCount++;
+      }
+    });
+    
+    logger.info(`Broadcast enviado a ${notifiedCount} clientes en schema ${schemaName}`);
+    return notifiedCount;
+  } catch (error) {
+    logger.error(`Error en broadcast a schema ${schemaName}: ${error.message}`);
+    return 0;
+  }
+}
+
+/**
+ * Genera un ID de cliente único
+ * @returns {string} - ID generado
+ */
+function generateClientId() {
+  return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Obtiene estadísticas de conexiones activas
+ * @returns {Object} - Estadísticas
+ */
+function getConnectionStats() {
+  const stats = {
+    totalConnections: 0,
+    bySchema: {}
+  };
+  
+  activeConnections.forEach((clients, schema) => {
+    const count = clients.size;
+    stats.totalConnections += count;
+    stats.bySchema[schema] = count;
+  });
+  
+  return stats;
+}
+
+// Exportar funciones usando CommonJS para compatibilidad con Jest
+module.exports = {
+  initializeWebSocketServer,
+  sendToClient,
+  broadcastToSchema,
+  getConnectionStats
+};

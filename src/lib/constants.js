@@ -3,7 +3,7 @@
  */
 
 // Roles de usuario
-export const USER_ROLES = {
+const USER_ROLES = {
   ADMIN: 'ADMIN',
   COMPLEX_ADMIN: 'COMPLEX_ADMIN',
   RESIDENT: 'RESIDENT',
@@ -12,7 +12,7 @@ export const USER_ROLES = {
 };
 
 // Estados de PQR
-export const PQR_STATUS = {
+const PQR_STATUS = {
   OPEN: 'OPEN',
   IN_PROGRESS: 'IN_PROGRESS',
   RESOLVED: 'RESOLVED',
@@ -21,7 +21,7 @@ export const PQR_STATUS = {
 };
 
 // Prioridades de PQR
-export const PQR_PRIORITY = {
+const PQR_PRIORITY = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
   HIGH: 'HIGH',
@@ -29,7 +29,7 @@ export const PQR_PRIORITY = {
 };
 
 // Estados de asamblea
-export const ASSEMBLY_STATUS = {
+const ASSEMBLY_STATUS = {
   SCHEDULED: 'SCHEDULED',
   IN_PROGRESS: 'IN_PROGRESS',
   COMPLETED: 'COMPLETED',
@@ -37,7 +37,7 @@ export const ASSEMBLY_STATUS = {
 };
 
 // Tipos de notificación
-export const NOTIFICATION_TYPES = {
+const NOTIFICATION_TYPES = {
   PQR: 'PQR',
   ASSEMBLY: 'ASSEMBLY',
   PAYMENT: 'PAYMENT',
@@ -46,20 +46,20 @@ export const NOTIFICATION_TYPES = {
 };
 
 // Configuración de JWT
-export const JWT_CONFIG = {
+const JWT_CONFIG = {
   SECRET: process.env.JWT_SECRET || 'armonia-secret-key',
   EXPIRES_IN: '24h'
 };
 
 // Configuración de paginación
-export const PAGINATION = {
+const PAGINATION = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 10,
   MAX_LIMIT: 100
 };
 
 // Configuración de seguridad
-export const SECURITY = {
+const SECURITY = {
   PASSWORD_MIN_LENGTH: 8,
   PASSWORD_REQUIRES_UPPERCASE: true,
   PASSWORD_REQUIRES_NUMBER: true,
@@ -69,7 +69,7 @@ export const SECURITY = {
 };
 
 // Configuración de correo electrónico
-export const EMAIL = {
+const EMAIL = {
   FROM: 'notificaciones@armonia.com',
   SUBJECTS: {
     WELCOME: 'Bienvenido a Armonía',
@@ -80,14 +80,29 @@ export const EMAIL = {
 };
 
 // Configuración de archivos
-export const FILES = {
+const FILES = {
   MAX_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_TYPES: ['image/jpeg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
 };
 
 // Configuración de API
-export const API = {
+const API = {
   VERSION: 'v1',
   RATE_LIMIT: 100, // peticiones por minuto
   TIMEOUT: 30000 // 30 segundos
+};
+
+// Exportar todas las constantes usando CommonJS para compatibilidad con Jest
+module.exports = {
+  USER_ROLES,
+  PQR_STATUS,
+  PQR_PRIORITY,
+  ASSEMBLY_STATUS,
+  NOTIFICATION_TYPES,
+  JWT_CONFIG,
+  PAGINATION,
+  SECURITY,
+  EMAIL,
+  FILES,
+  API
 };
