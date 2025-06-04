@@ -1,553 +1,499 @@
 /**
- * Servicio para la integración con sistemas biométricos
+ * @fileoverview Servicio de autenticación biométrica para el proyecto Armonía
  * 
- * Este servicio proporciona funcionalidades para la integración con diferentes
- * tipos de dispositivos biométricos, incluyendo lectores de huella dactilar,
- * reconocimiento facial y otros métodos de autenticación biométrica.
+ * Este servicio proporciona una interfaz unificada para diferentes tipos de autenticación
+ * biométrica, incluyendo huellas dactilares, reconocimiento facial y voz, utilizando
+ * el estándar WebAuthn (FIDO2) para la autenticación web.
+ * 
+ * @module biometric-service
+ * @requires @simplewebauthn/server
+ * @requires @simplewebauthn/browser
+ * @requires crypto-js
+ * @requires ../utils/encryption
  */
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const crypto = require('crypto');
-const logger = require('../logging/server-logger');
+const { 
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
+} = require('@simplewebauthn/server');
+
+const { encrypt, decrypt } = require('../utils/encryption');
+const CryptoJS = require('crypto-js');
+
+// Configuración base para WebAuthn
+const rpName = 'Armonía';
+const rpID = process.env.NODE_ENV === 'production' 
+  ? process.env.WEBAUTHN_RP_ID 
+  : 'localhost';
+
+const origin = process.env.NODE_ENV === 'production'
+  ? `https://${process.env.WEBAUTHN_RP_ID}`
+  : `http://localhost:3000`;
 
 /**
- * Clase que implementa la integración con sistemas biométricos
+ * Servicio para gestión de autenticación biométrica
  */
 class BiometricService {
   /**
-   * Constructor del servicio biométrico
+   * Crea una instancia del servicio biométrico
+   * @param {Object} options - Opciones de configuración
+   * @param {Object} options.db - Instancia de la base de datos (Prisma)
+   * @param {Object} options.logger - Instancia del logger
+   * @param {Object} options.notificationService - Servicio de notificaciones
    */
-  constructor() {
-    this.supportedDevices = {
-      FINGERPRINT: ['ZKTeco', 'DigitalPersona', 'Suprema'],
-      FACIAL: ['FaceID', 'RealSense', 'NeoFace'],
-      IRIS: ['IrisID', 'EyeLock', 'IriTech']
-    };
+  constructor({ db, logger, notificationService }) {
+    this.db = db;
+    this.logger = logger;
+    this.notificationService = notificationService;
     
-    this.deviceConnectors = {};
-    this.initializeConnectors();
-    
-    logger.info('BiometricService initialized');
+    // Verificar dependencias requeridas
+    if (!db) throw new Error('BiometricService requiere una instancia de base de datos');
+    if (!logger) this.logger = console;
   }
-  
+
   /**
-   * Inicializa los conectores para los dispositivos soportados
-   * @private
+   * Genera opciones para el registro de una nueva credencial biométrica
+   * @param {Object} user - Usuario para el que se registrará la credencial
+   * @param {string} deviceName - Nombre descriptivo del dispositivo
+   * @param {string} [biometricType='fingerprint'] - Tipo de biometría (fingerprint, face, voice)
+   * @returns {Promise<Object>} Opciones de registro para el cliente
    */
-  initializeConnectors() {
-    // En un entorno real, aquí se cargarían dinámicamente los conectores
-    // para los diferentes dispositivos biométricos soportados
-    
-    // Mock de conectores para desarrollo
-    Object.keys(this.supportedDevices).forEach(type => {
-      this.supportedDevices[type].forEach(brand => {
-        this.deviceConnectors[`${brand}_${type}`] = {
-          connect: async () => true,
-          disconnect: async () => true,
-          capture: async () => this.mockBiometricCapture(type),
-          verify: async (template, sample) => this.mockBiometricVerification(template, sample),
-          identify: async (sample, templates) => this.mockBiometricIdentification(sample, templates)
-        };
-      });
-    });
-  }
-  
-  /**
-   * Simula la captura de datos biométricos
-   * @param {string} type - Tipo de biometría (FINGERPRINT, FACIAL, IRIS)
-   * @returns {Object} Datos biométricos simulados
-   * @private
-   */
-  mockBiometricCapture(type) {
-    // Generar datos simulados según el tipo de biometría
-    const timestamp = Date.now();
-    const randomData = crypto.randomBytes(64).toString('hex');
-    
-    return {
-      type,
-      timestamp,
-      quality: Math.floor(Math.random() * 30) + 70, // 70-100
-      template: `${type}_TEMPLATE_${randomData}`,
-      raw: `${type}_RAW_${randomData}`
-    };
-  }
-  
-  /**
-   * Simula la verificación biométrica (1:1)
-   * @param {string} template - Plantilla biométrica almacenada
-   * @param {string} sample - Muestra biométrica capturada
-   * @returns {Object} Resultado de la verificación
-   * @private
-   */
-  mockBiometricVerification(template, sample) {
-    // En un entorno real, aquí se compararía la muestra con la plantilla
-    // usando algoritmos específicos para cada tipo de biometría
-    
-    // Simulación simple para desarrollo
-    const sampleType = sample.type || 'UNKNOWN';
-    const templateType = template.includes('FINGERPRINT') ? 'FINGERPRINT' : 
-                        template.includes('FACIAL') ? 'FACIAL' : 
-                        template.includes('IRIS') ? 'IRIS' : 'UNKNOWN';
-    
-    // Si los tipos coinciden, alta probabilidad de match
-    const isTypeMatch = sampleType === templateType;
-    const baseScore = isTypeMatch ? 80 : 20;
-    const randomFactor = Math.floor(Math.random() * 20);
-    const score = baseScore + randomFactor;
-    
-    return {
-      match: score >= 70,
-      score,
-      confidence: score / 100,
-      timestamp: Date.now()
-    };
-  }
-  
-  /**
-   * Simula la identificación biométrica (1:N)
-   * @param {Object} sample - Muestra biométrica capturada
-   * @param {Array} templates - Lista de plantillas biométricas
-   * @returns {Object} Resultado de la identificación
-   * @private
-   */
-  mockBiometricIdentification(sample, templates) {
-    // En un entorno real, aquí se compararía la muestra con múltiples plantillas
-    
-    // Simulación simple para desarrollo
-    const results = templates.map((template, index) => {
-      const verification = this.mockBiometricVerification(template, sample);
-      return {
-        templateId: index,
-        ...verification
-      };
-    });
-    
-    // Ordenar por score descendente
-    results.sort((a, b) => b.score - a.score);
-    
-    return {
-      identified: results.length > 0 && results[0].match,
-      bestMatch: results.length > 0 ? results[0] : null,
-      candidates: results.filter(r => r.match),
-      timestamp: Date.now()
-    };
-  }
-  
-  /**
-   * Registra datos biométricos para un usuario
-   * @param {number} userId - ID del usuario
-   * @param {string} biometricType - Tipo de biometría (FINGERPRINT, FACIAL, IRIS)
-   * @param {Object} deviceInfo - Información del dispositivo utilizado
-   * @returns {Promise<Object>} Resultado del registro
-   */
-  async registerBiometric(userId, biometricType, deviceInfo) {
+  async generateRegistrationOptions(user, deviceName, biometricType = 'fingerprint') {
     try {
-      logger.info(`Registering ${biometricType} biometric for user ${userId}`);
-      
-      // Validar tipo de biometría
-      if (!Object.keys(this.supportedDevices).includes(biometricType)) {
-        throw new Error(`Unsupported biometric type: ${biometricType}`);
+      // Verificar que el usuario existe
+      if (!user || !user.id) {
+        throw new Error('Usuario inválido para registro biométrico');
       }
+
+      // Obtener credenciales existentes para excluirlas
+      const existingCredentials = await this.db.biometricCredential.findMany({
+        where: { userId: user.id }
+      });
+
+      const excludeCredentials = existingCredentials.map(cred => ({
+        id: Buffer.from(cred.credentialId, 'base64'),
+        type: 'public-key',
+        transports: cred.transports || ['internal']
+      }));
+
+      // Generar ID de desafío único y almacenarlo temporalmente
+      const challenge = CryptoJS.lib.WordArray.random(32).toString();
+      const encryptedChallenge = encrypt(challenge);
       
-      // Validar dispositivo
-      const deviceBrand = deviceInfo.brand || 'Unknown';
-      const deviceModel = deviceInfo.model || 'Unknown';
-      const connectorKey = `${deviceBrand}_${biometricType}`;
-      
-      if (!this.deviceConnectors[connectorKey]) {
-        throw new Error(`Unsupported device: ${deviceBrand} for ${biometricType}`);
-      }
-      
-      // Conectar con el dispositivo
-      await this.deviceConnectors[connectorKey].connect();
-      
-      // Capturar datos biométricos
-      const biometricData = await this.deviceConnectors[connectorKey].capture();
-      
-      // Desconectar dispositivo
-      await this.deviceConnectors[connectorKey].disconnect();
-      
-      // Encriptar plantilla biométrica antes de almacenar
-      const encryptedTemplate = this.encryptBiometricTemplate(biometricData.template);
-      
-      // Guardar en base de datos
-      const biometricRecord = await prisma.userBiometrics.create({
+      // Guardar el desafío en la base de datos para verificación posterior
+      await this.db.biometricChallenge.create({
         data: {
-          userId,
+          userId: user.id,
+          challenge: encryptedChallenge,
+          deviceName,
           biometricType,
-          template: encryptedTemplate,
-          quality: biometricData.quality,
-          deviceBrand,
-          deviceModel,
-          active: true,
-          createdAt: new Date()
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutos de validez
         }
       });
-      
-      logger.info(`Successfully registered ${biometricType} for user ${userId}`);
-      
-      return {
-        success: true,
-        biometricId: biometricRecord.id,
-        quality: biometricData.quality,
-        timestamp: biometricData.timestamp
-      };
+
+      // Generar opciones según el estándar WebAuthn
+      const options = generateRegistrationOptions({
+        rpName,
+        rpID,
+        userID: user.id.toString(),
+        userName: user.email,
+        userDisplayName: user.name || user.email,
+        attestationType: 'none',
+        excludeCredentials,
+        authenticatorSelection: {
+          userVerification: 'preferred',
+          residentKey: 'preferred',
+          requireResidentKey: false,
+          authenticatorAttachment: 'platform' // Para biometría integrada en dispositivo
+        },
+        challenge: Buffer.from(challenge, 'hex')
+      });
+
+      return options;
     } catch (error) {
-      logger.error(`Error registering biometric: ${error.message}`, { error, userId, biometricType });
-      return {
-        success: false,
-        error: error.message
-      };
+      this.logger.error('Error al generar opciones de registro biométrico:', error);
+      throw new Error(`Error al generar opciones de registro biométrico: ${error.message}`);
     }
   }
-  
+
   /**
-   * Verifica la identidad de un usuario mediante biometría
-   * @param {number} userId - ID del usuario a verificar
-   * @param {string} biometricType - Tipo de biometría a utilizar
-   * @param {Object} deviceInfo - Información del dispositivo
+   * Verifica y registra una nueva credencial biométrica
+   * @param {Object} user - Usuario para el que se registra la credencial
+   * @param {Object} credential - Credencial generada por el cliente
+   * @param {string} deviceName - Nombre descriptivo del dispositivo
+   * @returns {Promise<Object>} Resultado de la verificación y registro
+   */
+  async verifyAndSaveRegistration(user, credential, deviceName) {
+    try {
+      // Buscar el desafío pendiente más reciente para este usuario
+      const challengeRecord = await this.db.biometricChallenge.findFirst({
+        where: {
+          userId: user.id,
+          deviceName,
+          expiresAt: { gt: new Date() }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (!challengeRecord) {
+        throw new Error('No se encontró un desafío válido para este registro');
+      }
+
+      // Desencriptar el desafío almacenado
+      const expectedChallenge = decrypt(challengeRecord.challenge);
+
+      // Verificar la respuesta de registro según WebAuthn
+      const verification = await verifyRegistrationResponse({
+        response: credential,
+        expectedChallenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID
+      });
+
+      if (!verification.verified) {
+        throw new Error('La verificación de la credencial biométrica falló');
+      }
+
+      // Extraer información de la credencial verificada
+      const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+
+      // Guardar la credencial en la base de datos
+      const newCredential = await this.db.biometricCredential.create({
+        data: {
+          userId: user.id,
+          credentialId: credentialID.toString('base64'),
+          publicKey: credentialPublicKey.toString('base64'),
+          counter,
+          deviceName,
+          biometricType: challengeRecord.biometricType,
+          transports: credential.response.transports || ['internal'],
+          lastUsed: new Date()
+        }
+      });
+
+      // Eliminar el desafío utilizado
+      await this.db.biometricChallenge.delete({
+        where: { id: challengeRecord.id }
+      });
+
+      // Notificar al usuario sobre el nuevo registro biométrico
+      if (this.notificationService) {
+        await this.notificationService.sendNotification({
+          userId: user.id,
+          type: 'SECURITY',
+          title: 'Nuevo acceso biométrico registrado',
+          message: `Se ha registrado un nuevo acceso biométrico para el dispositivo: ${deviceName}`,
+          channels: ['email', 'push']
+        });
+      }
+
+      return {
+        success: true,
+        credential: {
+          id: newCredential.id,
+          deviceName: newCredential.deviceName,
+          biometricType: newCredential.biometricType,
+          createdAt: newCredential.createdAt
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error al verificar y guardar registro biométrico:', error);
+      throw new Error(`Error al verificar y guardar registro biométrico: ${error.message}`);
+    }
+  }
+
+  /**
+   * Genera opciones para autenticación con credencial biométrica existente
+   * @param {Object} user - Usuario que intenta autenticarse
+   * @returns {Promise<Object>} Opciones de autenticación para el cliente
+   */
+  async generateAuthenticationOptions(user) {
+    try {
+      // Verificar que el usuario existe
+      if (!user || !user.id) {
+        throw new Error('Usuario inválido para autenticación biométrica');
+      }
+
+      // Obtener credenciales existentes para este usuario
+      const existingCredentials = await this.db.biometricCredential.findMany({
+        where: { userId: user.id, active: true }
+      });
+
+      if (existingCredentials.length === 0) {
+        throw new Error('No hay credenciales biométricas registradas para este usuario');
+      }
+
+      // Generar ID de desafío único y almacenarlo temporalmente
+      const challenge = CryptoJS.lib.WordArray.random(32).toString();
+      const encryptedChallenge = encrypt(challenge);
+      
+      // Guardar el desafío en la base de datos para verificación posterior
+      await this.db.biometricChallenge.create({
+        data: {
+          userId: user.id,
+          challenge: encryptedChallenge,
+          biometricType: 'authentication',
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutos de validez
+        }
+      });
+
+      // Preparar lista de credenciales permitidas
+      const allowCredentials = existingCredentials.map(cred => ({
+        id: Buffer.from(cred.credentialId, 'base64'),
+        type: 'public-key',
+        transports: cred.transports || ['internal']
+      }));
+
+      // Generar opciones según el estándar WebAuthn
+      const options = generateAuthenticationOptions({
+        rpID,
+        allowCredentials,
+        userVerification: 'preferred',
+        challenge: Buffer.from(challenge, 'hex')
+      });
+
+      return options;
+    } catch (error) {
+      this.logger.error('Error al generar opciones de autenticación biométrica:', error);
+      throw new Error(`Error al generar opciones de autenticación biométrica: ${error.message}`);
+    }
+  }
+
+  /**
+   * Verifica una autenticación biométrica
+   * @param {Object} user - Usuario que intenta autenticarse
+   * @param {Object} credential - Credencial proporcionada por el cliente
    * @returns {Promise<Object>} Resultado de la verificación
    */
-  async verifyUser(userId, biometricType, deviceInfo) {
+  async verifyAuthentication(user, credential) {
     try {
-      logger.info(`Verifying user ${userId} using ${biometricType}`);
-      
-      // Validar tipo de biometría
-      if (!Object.keys(this.supportedDevices).includes(biometricType)) {
-        throw new Error(`Unsupported biometric type: ${biometricType}`);
-      }
-      
-      // Obtener plantilla biométrica del usuario
-      const userBiometric = await prisma.userBiometrics.findFirst({
+      // Buscar el desafío pendiente más reciente para este usuario
+      const challengeRecord = await this.db.biometricChallenge.findFirst({
         where: {
-          userId,
-          biometricType,
-          active: true
+          userId: user.id,
+          biometricType: 'authentication',
+          expiresAt: { gt: new Date() }
         },
-        orderBy: {
-          createdAt: 'desc'
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (!challengeRecord) {
+        throw new Error('No se encontró un desafío válido para esta autenticación');
+      }
+
+      // Desencriptar el desafío almacenado
+      const expectedChallenge = decrypt(challengeRecord.challenge);
+
+      // Buscar la credencial específica utilizada
+      const credentialId = credential.id.toString('base64');
+      const existingCredential = await this.db.biometricCredential.findFirst({
+        where: {
+          userId: user.id,
+          credentialId,
+          active: true
         }
       });
-      
-      if (!userBiometric) {
-        return {
-          success: false,
-          verified: false,
-          error: `No active ${biometricType} record found for user ${userId}`
-        };
+
+      if (!existingCredential) {
+        throw new Error('Credencial biométrica no encontrada o inactiva');
       }
-      
-      // Validar dispositivo
-      const deviceBrand = deviceInfo.brand || 'Unknown';
-      const connectorKey = `${deviceBrand}_${biometricType}`;
-      
-      if (!this.deviceConnectors[connectorKey]) {
-        throw new Error(`Unsupported device: ${deviceBrand} for ${biometricType}`);
-      }
-      
-      // Conectar con el dispositivo
-      await this.deviceConnectors[connectorKey].connect();
-      
-      // Capturar datos biométricos
-      const biometricSample = await this.deviceConnectors[connectorKey].capture();
-      
-      // Desconectar dispositivo
-      await this.deviceConnectors[connectorKey].disconnect();
-      
-      // Desencriptar plantilla almacenada
-      const decryptedTemplate = this.decryptBiometricTemplate(userBiometric.template);
-      
-      // Verificar coincidencia
-      const verificationResult = await this.deviceConnectors[connectorKey].verify(
-        decryptedTemplate,
-        biometricSample
-      );
-      
-      // Registrar intento de verificación
-      await prisma.biometricVerificationLog.create({
-        data: {
-          userId,
-          biometricId: userBiometric.id,
-          biometricType,
-          success: verificationResult.match,
-          score: verificationResult.score,
-          deviceBrand,
-          deviceModel: deviceInfo.model || 'Unknown',
-          ipAddress: deviceInfo.ipAddress || '',
-          createdAt: new Date()
+
+      // Verificar la respuesta de autenticación según WebAuthn
+      const verification = await verifyAuthenticationResponse({
+        response: credential,
+        expectedChallenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
+        authenticator: {
+          credentialID: Buffer.from(existingCredential.credentialId, 'base64'),
+          credentialPublicKey: Buffer.from(existingCredential.publicKey, 'base64'),
+          counter: existingCredential.counter
         }
       });
-      
-      logger.info(`User ${userId} verification result: ${verificationResult.match ? 'SUCCESS' : 'FAILED'}`);
-      
-      return {
-        success: true,
-        verified: verificationResult.match,
-        score: verificationResult.score,
-        confidence: verificationResult.confidence,
-        timestamp: verificationResult.timestamp
-      };
-    } catch (error) {
-      logger.error(`Error verifying user: ${error.message}`, { error, userId, biometricType });
-      return {
-        success: false,
-        verified: false,
-        error: error.message
-      };
-    }
-  }
-  
-  /**
-   * Identifica a un usuario mediante biometría (búsqueda 1:N)
-   * @param {string} biometricType - Tipo de biometría a utilizar
-   * @param {Object} deviceInfo - Información del dispositivo
-   * @param {Array} userGroupIds - IDs de grupos de usuarios para limitar la búsqueda (opcional)
-   * @returns {Promise<Object>} Resultado de la identificación
-   */
-  async identifyUser(biometricType, deviceInfo, userGroupIds = []) {
-    try {
-      logger.info(`Identifying user using ${biometricType}`);
-      
-      // Validar tipo de biometría
-      if (!Object.keys(this.supportedDevices).includes(biometricType)) {
-        throw new Error(`Unsupported biometric type: ${biometricType}`);
-      }
-      
-      // Validar dispositivo
-      const deviceBrand = deviceInfo.brand || 'Unknown';
-      const connectorKey = `${deviceBrand}_${biometricType}`;
-      
-      if (!this.deviceConnectors[connectorKey]) {
-        throw new Error(`Unsupported device: ${deviceBrand} for ${biometricType}`);
-      }
-      
-      // Construir query para obtener plantillas biométricas
-      let query = {
-        where: {
-          biometricType,
-          active: true
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
-        }
-      };
-      
-      // Si se especifican grupos, filtrar por usuarios en esos grupos
-      if (userGroupIds && userGroupIds.length > 0) {
-        query.where.user = {
-          userGroups: {
-            some: {
-              groupId: {
-                in: userGroupIds
-              }
-            }
-          }
-        };
-      }
-      
-      // Obtener plantillas biométricas
-      const biometricRecords = await prisma.userBiometrics.findMany(query);
-      
-      if (biometricRecords.length === 0) {
-        return {
-          success: true,
-          identified: false,
-          message: 'No biometric records found for identification'
-        };
-      }
-      
-      // Conectar con el dispositivo
-      await this.deviceConnectors[connectorKey].connect();
-      
-      // Capturar datos biométricos
-      const biometricSample = await this.deviceConnectors[connectorKey].capture();
-      
-      // Desconectar dispositivo
-      await this.deviceConnectors[connectorKey].disconnect();
-      
-      // Preparar plantillas para identificación
-      const templates = biometricRecords.map(record => ({
-        id: record.id,
-        userId: record.userId,
-        template: this.decryptBiometricTemplate(record.template),
-        user: record.user
-      }));
-      
-      // Realizar identificación
-      const identificationResult = await this.deviceConnectors[connectorKey].identify(
-        biometricSample,
-        templates.map(t => t.template)
-      );
-      
-      // Si se identificó un usuario, obtener sus datos
-      let identifiedUser = null;
-      if (identificationResult.identified && identificationResult.bestMatch) {
-        const matchIndex = identificationResult.bestMatch.templateId;
-        identifiedUser = templates[matchIndex].user;
-        
-        // Registrar identificación exitosa
-        await prisma.biometricIdentificationLog.create({
+
+      if (!verification.verified) {
+        // Registrar intento fallido
+        await this.db.biometricAuthLog.create({
           data: {
-            userId: identifiedUser.id,
-            biometricId: templates[matchIndex].id,
-            biometricType,
-            success: true,
-            score: identificationResult.bestMatch.score,
-            deviceBrand,
-            deviceModel: deviceInfo.model || 'Unknown',
-            ipAddress: deviceInfo.ipAddress || '',
-            createdAt: new Date()
-          }
-        });
-      } else {
-        // Registrar identificación fallida
-        await prisma.biometricIdentificationLog.create({
-          data: {
-            userId: null,
-            biometricId: null,
-            biometricType,
+            userId: user.id,
+            credentialId: existingCredential.id,
             success: false,
-            score: identificationResult.bestMatch?.score || 0,
-            deviceBrand,
-            deviceModel: deviceInfo.model || 'Unknown',
-            ipAddress: deviceInfo.ipAddress || '',
-            createdAt: new Date()
+            ipAddress: credential.ipAddress || null,
+            userAgent: credential.userAgent || null
           }
         });
+        
+        throw new Error('La verificación de la autenticación biométrica falló');
       }
-      
-      logger.info(`Identification result: ${identificationResult.identified ? 'SUCCESS' : 'FAILED'}`);
-      
-      return {
-        success: true,
-        identified: identificationResult.identified,
-        user: identifiedUser,
-        score: identificationResult.bestMatch?.score || 0,
-        confidence: identificationResult.bestMatch?.confidence || 0,
-        timestamp: identificationResult.timestamp
-      };
-    } catch (error) {
-      logger.error(`Error identifying user: ${error.message}`, { error, biometricType });
-      return {
-        success: false,
-        identified: false,
-        error: error.message
-      };
-    }
-  }
-  
-  /**
-   * Desactiva un registro biométrico
-   * @param {number} biometricId - ID del registro biométrico
-   * @returns {Promise<Object>} Resultado de la operación
-   */
-  async deactivateBiometric(biometricId) {
-    try {
-      logger.info(`Deactivating biometric record ${biometricId}`);
-      
-      const updatedRecord = await prisma.userBiometrics.update({
-        where: { id: biometricId },
-        data: { active: false }
+
+      // Actualizar el contador de la credencial
+      await this.db.biometricCredential.update({
+        where: { id: existingCredential.id },
+        data: {
+          counter: verification.authenticationInfo.newCounter,
+          lastUsed: new Date()
+        }
       });
-      
+
+      // Eliminar el desafío utilizado
+      await this.db.biometricChallenge.delete({
+        where: { id: challengeRecord.id }
+      });
+
+      // Registrar autenticación exitosa
+      await this.db.biometricAuthLog.create({
+        data: {
+          userId: user.id,
+          credentialId: existingCredential.id,
+          success: true,
+          ipAddress: credential.ipAddress || null,
+          userAgent: credential.userAgent || null
+        }
+      });
+
       return {
         success: true,
-        biometricId: updatedRecord.id
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name
+        },
+        credential: {
+          id: existingCredential.id,
+          deviceName: existingCredential.deviceName,
+          biometricType: existingCredential.biometricType
+        }
       };
     } catch (error) {
-      logger.error(`Error deactivating biometric: ${error.message}`, { error, biometricId });
-      return {
-        success: false,
-        error: error.message
-      };
+      this.logger.error('Error al verificar autenticación biométrica:', error);
+      throw new Error(`Error al verificar autenticación biométrica: ${error.message}`);
     }
   }
-  
+
   /**
-   * Obtiene los registros biométricos de un usuario
-   * @param {number} userId - ID del usuario
-   * @returns {Promise<Array>} Lista de registros biométricos
+   * Obtiene todas las credenciales biométricas de un usuario
+   * @param {string} userId - ID del usuario
+   * @returns {Promise<Array>} Lista de credenciales
    */
-  async getUserBiometrics(userId) {
+  async getUserCredentials(userId) {
     try {
-      logger.info(`Getting biometric records for user ${userId}`);
-      
-      const biometricRecords = await prisma.userBiometrics.findMany({
+      const credentials = await this.db.biometricCredential.findMany({
         where: { userId },
+        select: {
+          id: true,
+          deviceName: true,
+          biometricType: true,
+          active: true,
+          createdAt: true,
+          lastUsed: true
+        },
         orderBy: { createdAt: 'desc' }
       });
       
-      // Eliminar datos sensibles antes de devolver
-      return biometricRecords.map(record => ({
-        id: record.id,
-        biometricType: record.biometricType,
-        quality: record.quality,
-        deviceBrand: record.deviceBrand,
-        deviceModel: record.deviceModel,
-        active: record.active,
-        createdAt: record.createdAt
-      }));
+      return credentials;
     } catch (error) {
-      logger.error(`Error getting user biometrics: ${error.message}`, { error, userId });
-      throw error;
+      this.logger.error('Error al obtener credenciales biométricas del usuario:', error);
+      throw new Error(`Error al obtener credenciales biométricas: ${error.message}`);
     }
   }
-  
+
   /**
-   * Encripta una plantilla biométrica
-   * @param {string} template - Plantilla biométrica
-   * @returns {string} Plantilla encriptada
-   * @private
+   * Desactiva una credencial biométrica
+   * @param {string} credentialId - ID de la credencial a desactivar
+   * @param {string} userId - ID del usuario propietario (para verificación)
+   * @returns {Promise<Object>} Resultado de la operación
    */
-  encryptBiometricTemplate(template) {
-    // En un entorno real, aquí se implementaría encriptación robusta
-    // Para desarrollo, usamos una simulación simple
-    const key = process.env.BIOMETRIC_ENCRYPTION_KEY || 'default-encryption-key';
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key.padEnd(32).slice(0, 32)), iv);
-    
-    let encrypted = cipher.update(template);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
-    
-    return iv.toString('hex') + ':' + encrypted.toString('hex');
+  async deactivateCredential(credentialId, userId) {
+    try {
+      // Verificar que la credencial pertenece al usuario
+      const credential = await this.db.biometricCredential.findFirst({
+        where: { id: credentialId, userId }
+      });
+
+      if (!credential) {
+        throw new Error('Credencial no encontrada o no pertenece al usuario');
+      }
+
+      // Desactivar la credencial
+      await this.db.biometricCredential.update({
+        where: { id: credentialId },
+        data: { active: false }
+      });
+
+      // Notificar al usuario sobre la desactivación
+      if (this.notificationService) {
+        await this.notificationService.sendNotification({
+          userId,
+          type: 'SECURITY',
+          title: 'Acceso biométrico desactivado',
+          message: `Se ha desactivado el acceso biométrico para el dispositivo: ${credential.deviceName}`,
+          channels: ['email', 'push']
+        });
+      }
+
+      return { success: true, message: 'Credencial desactivada correctamente' };
+    } catch (error) {
+      this.logger.error('Error al desactivar credencial biométrica:', error);
+      throw new Error(`Error al desactivar credencial biométrica: ${error.message}`);
+    }
   }
-  
+
   /**
-   * Desencripta una plantilla biométrica
-   * @param {string} encryptedTemplate - Plantilla encriptada
-   * @returns {string} Plantilla original
-   * @private
+   * Obtiene el historial de autenticaciones biométricas de un usuario
+   * @param {string} userId - ID del usuario
+   * @param {Object} options - Opciones de paginación y filtrado
+   * @returns {Promise<Array>} Historial de autenticaciones
    */
-  decryptBiometricTemplate(encryptedTemplate) {
-    // En un entorno real, aquí se implementaría desencriptación robusta
-    // Para desarrollo, usamos una simulación simple
-    const key = process.env.BIOMETRIC_ENCRYPTION_KEY || 'default-encryption-key';
-    const textParts = encryptedTemplate.split(':');
-    const iv = Buffer.from(textParts[0], 'hex');
-    const encryptedText = Buffer.from(textParts[1], 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key.padEnd(32).slice(0, 32)), iv);
+  async getAuthenticationHistory(userId, options = {}) {
+    const { limit = 20, offset = 0, onlySuccessful = false } = options;
     
-    let decrypted = decipher.update(encryptedText);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-    
-    return decrypted.toString();
+    try {
+      const where = { userId };
+      if (onlySuccessful) {
+        where.success = true;
+      }
+      
+      const history = await this.db.biometricAuthLog.findMany({
+        where,
+        include: {
+          credential: {
+            select: {
+              deviceName: true,
+              biometricType: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset
+      });
+      
+      return history;
+    } catch (error) {
+      this.logger.error('Error al obtener historial de autenticaciones biométricas:', error);
+      throw new Error(`Error al obtener historial de autenticaciones: ${error.message}`);
+    }
   }
-  
+
   /**
-   * Obtiene los dispositivos biométricos soportados
-   * @returns {Object} Dispositivos soportados por tipo
+   * Verifica si un usuario tiene credenciales biométricas activas
+   * @param {string} userId - ID del usuario
+   * @returns {Promise<boolean>} True si el usuario tiene credenciales activas
    */
-  getSupportedDevices() {
-    return this.supportedDevices;
+  async hasBiometricCredentials(userId) {
+    try {
+      const count = await this.db.biometricCredential.count({
+        where: { userId, active: true }
+      });
+      
+      return count > 0;
+    } catch (error) {
+      this.logger.error('Error al verificar credenciales biométricas del usuario:', error);
+      throw new Error(`Error al verificar credenciales biométricas: ${error.message}`);
+    }
   }
 }
 
-// Exportar instancia del servicio
-module.exports = new BiometricService();
+module.exports = BiometricService;
