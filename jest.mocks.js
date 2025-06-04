@@ -6,75 +6,85 @@
  */
 
 // Importar helper para mocks avanzados de Prisma
-const { createPrismaClientMock } = require('./src/services/__mocks__/prisma-mock-helper');
+// Usando import dinámico para evitar problemas con 'require'
+const prismaHelperPath = './src/services/__mocks__/prisma-mock-helper';
+const { createPrismaClientMock } = jest.requireActual(prismaHelperPath);
 
 // Mock para constantes PQR
-jest.mock('./src/lib/constants/pqr-constants', () => ({
-  PQRCategory: {
-    MAINTENANCE: 'MAINTENANCE',
-    SECURITY: 'SECURITY',
-    NOISE: 'NOISE',
-    PAYMENTS: 'PAYMENTS',
-    SERVICES: 'SERVICES',
-    COMMON_AREAS: 'COMMON_AREAS',
-    ADMINISTRATION: 'ADMINISTRATION',
-    NEIGHBORS: 'NEIGHBORS',
-    PETS: 'PETS',
-    PARKING: 'PARKING',
-    OTHER: 'OTHER'
-  },
-  PQRStatus: {
-    DRAFT: 'DRAFT',
-    SUBMITTED: 'SUBMITTED',
-    OPEN: 'OPEN',
-    IN_REVIEW: 'IN_REVIEW',
-    ASSIGNED: 'ASSIGNED',
-    IN_PROGRESS: 'IN_PROGRESS',
-    WAITING_INFO: 'WAITING_INFO',
-    RESOLVED: 'RESOLVED',
-    CLOSED: 'CLOSED',
-    CANCELLED: 'CANCELLED',
-    REOPENED: 'REOPENED',
-    REJECTED: 'REJECTED'
-  },
-  PQRPriority: {
-    LOW: 'LOW',
-    MEDIUM: 'MEDIUM',
-    HIGH: 'HIGH',
-    CRITICAL: 'CRITICAL'
-  },
-  PQRType: {
-    PETITION: 'PETITION',
-    COMPLAINT: 'COMPLAINT',
-    CLAIM: 'CLAIM',
-    SUGGESTION: 'SUGGESTION'
-  },
-  PQRChannel: {
-    WEB: 'WEB',
-    MOBILE: 'MOBILE',
-    EMAIL: 'EMAIL',
-    PHONE: 'PHONE',
-    IN_PERSON: 'IN_PERSON'
-  },
-  PQRNotificationTemplate: {
-    CREATED: 'PQR_CREATED',
-    ASSIGNED: 'PQR_ASSIGNED',
-    STATUS_CHANGED: 'PQR_STATUS_CHANGED',
-    COMMENT_ADDED: 'PQR_COMMENT_ADDED',
-    RESOLVED: 'PQR_RESOLVED',
-    CLOSED: 'PQR_CLOSED',
-    REOPENED: 'PQR_REOPENED',
-    REMINDER: 'PQR_REMINDER',
-    ESCALATED: 'PQR_ESCALATED'
-  },
-  PQRUserRole: {
-    RESIDENT: 'RESIDENT',
-    ADMIN: 'ADMIN',
-    STAFF: 'STAFF',
-    MANAGER: 'MANAGER',
-    GUEST: 'GUEST'
-  }
-}));
+jest.mock('./src/lib/constants/pqr-constants', () => {
+  // Definir explícitamente la variable brosa para evitar errores
+  const brosa = {};
+  
+  return {
+    PQRCategory: {
+      MAINTENANCE: 'MAINTENANCE',
+      SECURITY: 'SECURITY',
+      NOISE: 'NOISE',
+      PAYMENTS: 'PAYMENTS',
+      SERVICES: 'SERVICES',
+      COMMON_AREAS: 'COMMON_AREAS',
+      ADMINISTRATION: 'ADMINISTRATION',
+      NEIGHBORS: 'NEIGHBORS',
+      PETS: 'PETS',
+      PARKING: 'PARKING',
+      OTHER: 'OTHER'
+    },
+    PQRStatus: {
+      DRAFT: 'DRAFT',
+      SUBMITTED: 'SUBMITTED',
+      OPEN: 'OPEN',
+      IN_REVIEW: 'IN_REVIEW',
+      ASSIGNED: 'ASSIGNED',
+      IN_PROGRESS: 'IN_PROGRESS',
+      WAITING_INFO: 'WAITING_INFO',
+      RESOLVED: 'RESOLVED',
+      CLOSED: 'CLOSED',
+      CANCELLED: 'CANCELLED',
+      REOPENED: 'REOPENED',
+      REJECTED: 'REJECTED'
+    },
+    PQRPriority: {
+      LOW: 'LOW',
+      MEDIUM: 'MEDIUM',
+      HIGH: 'HIGH',
+      CRITICAL: 'CRITICAL',
+      URGENT: 'URGENT' // Añadido para compatibilidad con ambas versiones
+    },
+    PQRType: {
+      PETITION: 'PETITION',
+      COMPLAINT: 'COMPLAINT',
+      CLAIM: 'CLAIM',
+      SUGGESTION: 'SUGGESTION',
+      REQUEST: 'REQUEST', // Añadido para compatibilidad
+      INQUIRY: 'INQUIRY' // Añadido para compatibilidad
+    },
+    PQRChannel: {
+      WEB: 'WEB',
+      MOBILE: 'MOBILE',
+      EMAIL: 'EMAIL',
+      PHONE: 'PHONE',
+      IN_PERSON: 'IN_PERSON'
+    },
+    PQRNotificationTemplate: {
+      CREATED: 'PQR_CREATED',
+      ASSIGNED: 'PQR_ASSIGNED',
+      STATUS_CHANGED: 'PQR_STATUS_CHANGED',
+      COMMENT_ADDED: 'PQR_COMMENT_ADDED',
+      RESOLVED: 'PQR_RESOLVED',
+      CLOSED: 'PQR_CLOSED',
+      REOPENED: 'PQR_REOPENED',
+      REMINDER: 'PQR_REMINDER',
+      ESCALATED: 'PQR_ESCALATED'
+    },
+    PQRUserRole: {
+      RESIDENT: 'RESIDENT',
+      ADMIN: 'ADMIN',
+      STAFF: 'STAFF',
+      MANAGER: 'MANAGER',
+      GUEST: 'GUEST'
+    }
+  };
+});
 
 // Mock para servicios de comunicación
 jest.mock('./src/lib/communications/email-service', () => ({
@@ -287,12 +297,15 @@ jest.mock('./src/lib/prisma', () => ({
 
 // Configuración global para pruebas
 global.mockPrismaClient = mockPrismaClient;
-global.PQRCategory = require('./src/lib/constants/pqr-constants').PQRCategory;
-global.PQRStatus = require('./src/lib/constants/pqr-constants').PQRStatus;
-global.PQRPriority = require('./src/lib/constants/pqr-constants').PQRPriority;
-global.PQRType = require('./src/lib/constants/pqr-constants').PQRType;
-global.PQRChannel = require('./src/lib/constants/pqr-constants').PQRChannel;
-global.PQRNotificationTemplate = require('./src/lib/constants/pqr-constants').PQRNotificationTemplate;
-global.PQRUserRole = require('./src/lib/constants/pqr-constants').PQRUserRole;
+
+// Importar constantes de PQR usando jest.requireActual para evitar ciclos de mock
+const pqrConstants = jest.requireActual('./src/lib/constants/pqr-constants');
+global.PQRCategory = pqrConstants.PQRCategory || {};
+global.PQRStatus = pqrConstants.PQRStatus || {};
+global.PQRPriority = pqrConstants.PQRPriority || {};
+global.PQRType = pqrConstants.PQRType || {};
+global.PQRChannel = pqrConstants.PQRChannel || {};
+global.PQRNotificationTemplate = pqrConstants.PQRNotificationTemplate || {};
+global.PQRUserRole = pqrConstants.PQRUserRole || {};
 
 console.log('Mocks avanzados cargados correctamente para pruebas');

@@ -4,14 +4,24 @@
  */
 
 // Importar configuración de Prisma mock extendido
-require('./src/services/__mocks__/jest-prisma-setup');
+// Usando jest.requireActual para evitar problemas con 'require'
+const prismaMockSetup = jest.requireActual('./src/services/__mocks__/jest-prisma-setup');
 
-// Importar mocks de enums y constantes
-const { PQRCategory, PQRStatus, PQRPriority } = require('./src/services/__mocks__/pqr-constants');
-const { VisitStatus, VisitType } = require('./src/services/__mocks__/intercom-constants');
+// Importar mocks de enums y constantes usando jest.requireActual
+const pqrConstants = jest.requireActual('./src/services/__mocks__/pqr-constants');
+const intercomConstants = jest.requireActual('./src/services/__mocks__/intercom-constants');
+
+// Definir explícitamente las variables para evitar errores
+const PQRCategory = pqrConstants.PQRCategory || {};
+const PQRStatus = pqrConstants.PQRStatus || {};
+const PQRPriority = pqrConstants.PQRPriority || {};
+const VisitStatus = intercomConstants.VisitStatus || {};
+const VisitType = intercomConstants.VisitType || {};
 
 // Importar utilidades de fecha
-const { restoreDateNow, mockDateNow } = require('./src/services/__mocks__/date-utils');
+const dateUtils = jest.requireActual('./src/services/__mocks__/date-utils');
+const restoreDateNow = dateUtils.restoreDateNow;
+const mockDateNow = dateUtils.mockDateNow;
 
 // Asegurar que Date.now sea una función
 if (typeof Date.now !== 'function') {
@@ -20,8 +30,8 @@ if (typeof Date.now !== 'function') {
   };
 }
 
-// Mock de PaymentService - usando try/catch para evitar errores si el módulo no existe
-const PaymentService = require('./src/services/__mocks__/payment-service');
+// Mock de PaymentService - usando jest.requireActual para evitar errores
+const PaymentService = jest.requireActual('./src/services/__mocks__/payment-service');
 // Registrar globalmente para que esté disponible en todos los tests
 global.PaymentService = PaymentService;
 
@@ -42,16 +52,19 @@ jest.mock('./src/lib/communications/whatsapp-service', () => ({
   sendWhatsAppMessage: jest.fn().mockResolvedValue({ success: true })
 }));
 
-// Mock de utilidades de plantillas - usando ruta correcta o creando stub si no existe
+// Mock de utilidades de plantillas - usando try/catch para evitar errores
+const templateServiceMock = jest.requireActual('./src/services/__mocks__/template-service');
+global.templateServiceMock = templateServiceMock;
+
+// Condicionar el mock de template-service para evitar errores si no existe
 try {
-  // Intentar requerir el servicio real primero para verificar si existe
-  require('./src/lib/templates/template-service');
+  // Verificar si el módulo existe antes de mockearlo
+  jest.requireActual('./src/lib/templates/template-service');
   // Si existe, mockearlo
-  jest.mock('./src/lib/templates/template-service', () => require('./src/services/__mocks__/template-service'));
+  jest.mock('./src/lib/templates/template-service', () => templateServiceMock);
 } catch (e) {
-  // Si no existe, crear un stub global para cualquier import de servicios de plantillas
-  const templateServiceMock = require('./src/services/__mocks__/template-service');
-  global.templateServiceMock = templateServiceMock;
+  // Si no existe, no hacer nada y evitar el error
+  console.log('Módulo template-service no encontrado, se usa mock global');
 }
 
 // Mock de utilidades
@@ -119,5 +132,7 @@ beforeEach(() => {
 
 afterEach(() => {
   // Restaurar Date.now original después de cada prueba
-  restoreDateNow();
+  if (typeof restoreDateNow === 'function') {
+    restoreDateNow();
+  }
 });
