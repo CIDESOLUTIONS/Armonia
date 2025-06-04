@@ -1,283 +1,174 @@
 /**
- * Mock del servicio para la asignación inteligente y priorización de solicitudes PQR
+ * Mock del servicio para asignación de PQRs
  * 
- * Este archivo proporciona un mock del servicio de asignación de PQR para pruebas
+ * Este archivo proporciona un mock completo del servicio de asignación de PQRs
+ * para ser utilizado en pruebas unitarias y de integración.
  */
 
-// Importar constantes desde nuestro archivo local en lugar de @prisma/client
 import { PQRCategory, PQRPriority } from '../lib/constants/pqr-constants';
 
-// Interfaz para datos de entrada de PQR
-export interface PQRInputData {
-  type: string;
-  title: string;
-  description: string;
-  category?: string;
-  priority?: string;
-  userId: number;
-  userName: string;
-  userRole: string;
-  unitId?: number;
-  unitNumber?: string;
-  complexId: number;
-  attachments?: any[];
-}
-
-// Interfaz para resultado de asignación
-export interface AssignmentResult {
-  category: string;
-  subcategory?: string;
-  priority: string;
-  assignedToId?: number;
-  assignedToName?: string;
-  assignedToRole?: string;
-  assignedTeamId?: number;
-  dueDate?: Date;
-  tags?: string[];
-}
-
 /**
- * Clase principal del servicio de asignación de PQR (Mock)
+ * Servicio mock para la asignación de PQRs
  */
-export class PQRAssignmentService {
-  private schema: string;
-
-  constructor(schema: string) {
-    this.schema = schema;
-  }
-
+class PQRAssignmentServiceMock {
   /**
-   * Procesa un nuevo PQR para su categorización, priorización y asignación
+   * Asigna un PQR a un especialista o equipo basado en la categoría y prioridad
+   * @param pqrId ID del PQR a asignar
+   * @param category Categoría del PQR
+   * @param subcategory Subcategoría del PQR (opcional)
+   * @param priority Prioridad del PQR
+   * @returns Información de la asignación
    */
-  async processPQR(pqrData: PQRInputData): Promise<AssignmentResult> {
-    try {
-      // 1. Categorizar la solicitud
-      const categorization = await this.categorize(pqrData);
-      
-      // 2. Determinar la prioridad
-      const prioritization = await this.prioritize(pqrData, categorization.category);
-      
-      // 3. Asignar a equipo o persona responsable
-      const assignment = await this.assign(pqrData, categorization.category, prioritization.priority);
-      
-      // 4. Calcular fecha límite según SLA
-      const dueDate = await this.calculateDueDate(categorization.category, prioritization.priority);
-      
-      // 5. Generar etiquetas para clasificación
-      const tags = await this.generateTags(pqrData, categorization.category);
-      
-      // Combinar resultados
-      return {
-        ...categorization,
-        ...prioritization,
-        ...assignment,
-        dueDate,
-        tags
-      };
-    } catch (error) {
-      console.error('Error en procesamiento de PQR:', error);
-      // En caso de error, devolver valores predeterminados
-      return {
-        category: pqrData.category || PQRCategory.OTHER,
-        priority: pqrData.priority || PQRPriority.MEDIUM
-      };
+  async assignPQR(pqrId: number, category: string, subcategory: string | null, priority: string) {
+    // Simular tiempo de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Determinar fecha de vencimiento basada en la prioridad
+    const dueDate = new Date();
+    switch (priority) {
+      case PQRPriority.LOW:
+        dueDate.setDate(dueDate.getDate() + 7); // 7 días
+        break;
+      case PQRPriority.MEDIUM:
+        dueDate.setDate(dueDate.getDate() + 3); // 3 días
+        break;
+      case PQRPriority.HIGH:
+        dueDate.setDate(dueDate.getDate() + 1); // 1 día
+        break;
+      case PQRPriority.CRITICAL:
+        dueDate.setHours(dueDate.getHours() + 4); // 4 horas
+        break;
+      default:
+        dueDate.setDate(dueDate.getDate() + 5); // 5 días por defecto
     }
+    
+    // Determinar equipo asignado basado en la categoría
+    let assignedTeamId = 1; // Equipo general por defecto
+    
+    if (category === PQRCategory.MAINTENANCE) {
+      assignedTeamId = 2; // Equipo de mantenimiento
+    } else if (category === PQRCategory.SECURITY) {
+      assignedTeamId = 3; // Equipo de seguridad
+    } else if (category === PQRCategory.SERVICES) {
+      assignedTeamId = 4; // Equipo de servicios
+    }
+    
+    // Retornar resultado de la asignación
+    return {
+      pqrId,
+      category,
+      subcategory,
+      priority,
+      assignedTeamId,
+      dueDate,
+      assignedAt: new Date()
+    };
   }
-
+  
   /**
-   * Categoriza automáticamente un PQR basado en su contenido
+   * Encuentra un especialista adecuado para un PQR basado en criterios específicos
+   * @param category Categoría del PQR
+   * @param specialization Especialización requerida
+   * @param priority Prioridad del PQR
+   * @returns Información del especialista asignado
    */
-  private async categorize(pqrData: PQRInputData): Promise<{ category: string, subcategory?: string }> {
-    // Si ya viene con categoría, respetarla
-    if (pqrData.category) {
-      return { category: pqrData.category };
-    }
-
-    try {
-      // Texto combinado para análisis
-      const combinedText = `${pqrData.title} ${pqrData.description}`.toLowerCase();
-
-      // Análisis básico de texto
-      if (combinedText.match(/manten|repar|arregl|da[ñn]|fuga|goter|luz|bombill|ascensor/i)) {
-        return { 
-          category: PQRCategory.MAINTENANCE,
-          subcategory: 'Plomería'
-        };
-      } else if (combinedText.match(/segur|vigilan|robo|alarm|cctv|c[aá]mara|intru|sospech/i)) {
-        return { 
-          category: PQRCategory.SECURITY,
-          subcategory: 'Videovigilancia'
-        };
-      } else if (combinedText.match(/admin|documento|certific|paz y salvo|contrato|reglamento/i)) {
-        return { 
-          category: PQRCategory.ADMINISTRATION,
-          subcategory: 'Documentos'
-        };
-      } else if (combinedText.match(/pag|cuota|factur|cobr|recib|mora|descuent|financ/i)) {
-        return { 
-          category: PQRCategory.PAYMENTS,
-          subcategory: 'Facturas'
-        };
+  async findSpecialist(category: string, specialization: string, priority: string) {
+    // Simular tiempo de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Determinar especialista basado en los criterios
+    let specialistId = 1;
+    let specialistName = "Técnico General";
+    
+    if (category === PQRCategory.MAINTENANCE) {
+      if (specialization === 'Plomería') {
+        specialistId = 2;
+        specialistName = "Juan Pérez - Plomero";
+      } else if (specialization === 'Electricidad') {
+        specialistId = 3;
+        specialistName = "Carlos Rodríguez - Electricista";
       }
-
-      // Categoría por defecto si no hay coincidencias
-      return { category: PQRCategory.OTHER };
-    } catch (error) {
-      console.error('Error en categorización de PQR:', error);
-      return { category: PQRCategory.OTHER };
+    } else if (category === PQRCategory.SECURITY) {
+      specialistId = 4;
+      specialistName = "Ana Gómez - Seguridad";
     }
+    
+    // Ajustar disponibilidad basada en prioridad
+    const availability = priority === PQRPriority.CRITICAL || priority === PQRPriority.HIGH ? 
+      'Inmediata' : 'Programada';
+    
+    // Retornar información del especialista
+    return {
+      specialistId,
+      specialistName,
+      category,
+      specialization,
+      availability,
+      assignmentPriority: priority
+    };
   }
-
+  
   /**
-   * Determina la prioridad de un PQR
+   * Reasigna un PQR a otro equipo o especialista
+   * @param pqrId ID del PQR a reasignar
+   * @param newTeamId ID del nuevo equipo
+   * @param reason Razón de la reasignación
+   * @returns Información de la reasignación
    */
-  private async prioritize(pqrData: PQRInputData, category: string): Promise<{ priority: string }> {
-    // Si ya viene con prioridad, respetarla
-    if (pqrData.priority) {
-      return { priority: pqrData.priority };
-    }
-
-    try {
-      // Texto combinado para análisis
-      const combinedText = `${pqrData.title} ${pqrData.description}`.toLowerCase();
-
-      // Palabras clave para prioridades
-      const urgentKeywords = [
-        'urgente', 'emergencia', 'inmediato', 'grave', 'peligro',
-        'fuga', 'incendio', 'inundación', 'corto circuito', 'seguridad'
-      ];
-      
-      const highKeywords = [
-        'importante', 'pronto', 'rápido', 'afecta', 'impide',
-        'no funciona', 'dañado', 'roto', 'bloqueado'
-      ];
-      
-      const lowKeywords = [
-        'sugerencia', 'cuando pueda', 'mejora', 'idea', 'propuesta',
-        'considerar', 'evaluar', 'futuro'
-      ];
-
-      // Verificar coincidencias con palabras clave de prioridad
-      if (urgentKeywords.some(keyword => combinedText.includes(keyword))) {
-        return { priority: PQRPriority.CRITICAL };
-      } else if (highKeywords.some(keyword => combinedText.includes(keyword))) {
-        return { priority: PQRPriority.HIGH };
-      } else if (lowKeywords.some(keyword => combinedText.includes(keyword))) {
-        return { priority: PQRPriority.LOW };
-      }
-
-      // Prioridad por categoría
-      switch (category) {
-        case PQRCategory.SECURITY:
-          return { priority: PQRPriority.HIGH };
-        case PQRCategory.MAINTENANCE:
-          return { priority: PQRPriority.MEDIUM };
-        default:
-          return { priority: PQRPriority.MEDIUM };
-      }
-    } catch (error) {
-      console.error('Error en priorización de PQR:', error);
-      return { priority: PQRPriority.MEDIUM };
-    }
+  async reassignPQR(pqrId: number, newTeamId: number, reason: string) {
+    // Simular tiempo de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Retornar resultado de la reasignación
+    return {
+      pqrId,
+      previousTeamId: 1, // Valor simulado
+      newTeamId,
+      reason,
+      reassignedAt: new Date()
+    };
   }
-
+  
   /**
-   * Asigna un PQR a un equipo o persona responsable
+   * Calcula la carga de trabajo actual de los equipos
+   * @returns Información de carga de trabajo por equipo
    */
-  private async assign(
-    pqrData: PQRInputData, 
-    category: string, 
-    priority: string
-  ): Promise<{ 
-    assignedToId?: number, 
-    assignedToName?: string, 
-    assignedToRole?: string,
-    assignedTeamId?: number 
-  }> {
-    try {
-      // Asignación basada en categoría
-      switch (category) {
-        case PQRCategory.MAINTENANCE:
-          return {
-            assignedTeamId: 1,
-            assignedToName: 'Equipo de Mantenimiento'
-          };
-        case PQRCategory.SECURITY:
-          return {
-            assignedTeamId: 2,
-            assignedToName: 'Equipo de Seguridad'
-          };
-        case PQRCategory.ADMINISTRATION:
-          return {
-            assignedTeamId: 3,
-            assignedToName: 'Equipo Administrativo'
-          };
-        default:
-          return {
-            assignedTeamId: 4,
-            assignedToName: 'Administración General'
-          };
-      }
-    } catch (error) {
-      console.error('Error en asignación de PQR:', error);
-      return {};
-    }
+  async getTeamWorkload() {
+    // Simular tiempo de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Retornar carga de trabajo simulada
+    return [
+      { teamId: 1, teamName: "Equipo General", assignedPQRs: 5, completedToday: 2 },
+      { teamId: 2, teamName: "Equipo Mantenimiento", assignedPQRs: 8, completedToday: 3 },
+      { teamId: 3, teamName: "Equipo Seguridad", assignedPQRs: 3, completedToday: 1 },
+      { teamId: 4, teamName: "Equipo Servicios", assignedPQRs: 4, completedToday: 2 }
+    ];
   }
-
+  
   /**
-   * Calcula la fecha límite según SLA y prioridad
+   * Verifica si un PQR requiere escalamiento basado en su estado actual
+   * @param pqrId ID del PQR a verificar
+   * @param currentStatus Estado actual del PQR
+   * @param daysOpen Días que lleva abierto el PQR
+   * @returns Información sobre si requiere escalamiento
    */
-  private async calculateDueDate(category: string, priority: string): Promise<Date | undefined> {
-    try {
-      // Fechas límite basadas en prioridad
-      const now = new Date();
-      switch (priority) {
-        case PQRPriority.CRITICAL:
-          return new Date(now.getTime() + 4 * 60 * 60000); // 4 horas
-        case PQRPriority.HIGH:
-          return new Date(now.getTime() + 24 * 60 * 60000); // 24 horas
-        case PQRPriority.MEDIUM:
-          return new Date(now.getTime() + 3 * 24 * 60 * 60000); // 3 días
-        case PQRPriority.LOW:
-          return new Date(now.getTime() + 7 * 24 * 60 * 60000); // 7 días
-        default:
-          return new Date(now.getTime() + 5 * 24 * 60 * 60000); // 5 días
-      }
-    } catch (error) {
-      console.error('Error al calcular fecha límite:', error);
-      return new Date(new Date().getTime() + 5 * 24 * 60 * 60000); // 5 días por defecto
-    }
-  }
-
-  /**
-   * Genera etiquetas para clasificación adicional
-   */
-  private async generateTags(pqrData: PQRInputData, category: string): Promise<string[]> {
-    try {
-      const tags = [category];
-      
-      // Añadir etiquetas basadas en el texto
-      const combinedText = `${pqrData.title} ${pqrData.description}`.toLowerCase();
-      
-      if (combinedText.match(/urgent|emergencia|inmediato/i)) {
-        tags.push('URGENTE');
-      }
-      
-      if (combinedText.match(/reincidente|nuevamente|otra vez|vuelve a ocurrir/i)) {
-        tags.push('REINCIDENTE');
-      }
-      
-      if (combinedText.match(/vecino|comunidad|todos|general/i)) {
-        tags.push('COMUNITARIO');
-      }
-      
-      return tags;
-    } catch (error) {
-      console.error('Error al generar etiquetas:', error);
-      return [category];
-    }
+  async checkEscalationNeeded(pqrId: number, currentStatus: string, daysOpen: number) {
+    // Simular tiempo de procesamiento
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Determinar si requiere escalamiento
+    const needsEscalation = daysOpen > 5 && currentStatus !== 'RESOLVED' && currentStatus !== 'CLOSED';
+    
+    // Retornar resultado
+    return {
+      pqrId,
+      needsEscalation,
+      recommendedAction: needsEscalation ? 'ESCALATE_TO_MANAGER' : 'CONTINUE_NORMAL',
+      reason: needsEscalation ? `PQR abierto por ${daysOpen} días sin resolver` : 'Dentro de parámetros normales'
+    };
   }
 }
 
-// Exportar el servicio
-export default PQRAssignmentService;
+// Exportar instancia del servicio mock
+export default new PQRAssignmentServiceMock();
