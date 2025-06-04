@@ -6,14 +6,15 @@ import { ROUTES } from '@/constants/routes';
 // Planes y sección de contacto
 export function LandingPart3({ 
   theme, 
-  uage,
+  currency,
+  language,
 }: { 
   theme: string,
-  : string,
-  uage?: string,
+  currency: string,
+  language?: string,
 }) {
   // Si no se pasa el idioma, asumimos español
-  const currentLanguage = uage || "Español";
+  const currentLanguage = language || "Español";
   
   // Textos localizados
   const texts = {
@@ -107,7 +108,7 @@ export function LandingPart3({
               </div>
               <h3 className="text-xl font-bold mb-2 text-gray-900">{t.standardPlan}</h3>
               <div className="text-4xl font-bold mb-4 text-gray-900">
-                ${=== "Dólares" ? "25" : "95000"}<span className="text-base font-normal">/mes</span>
+                ${currency === "Dólares" ? "25" : "95000"}<span className="text-base font-normal">/mes</span>
               </div>
               <p className="text-gray-600 mb-6">{t.standardDesc}</p>
               
@@ -141,7 +142,7 @@ export function LandingPart3({
             <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all">
               <h3 className="text-xl font-bold mb-2 text-gray-900">{t.premiumPlan}</h3>
               <div className="text-4xl font-bold mb-4 text-gray-900">
-                ${=== "Dólares" ? "50" : "190000"}<span className="text-base font-normal">/mes</span>
+                ${currency === "Dólares" ? "50" : "190000"}<span className="text-base font-normal">/mes</span>
               </div>
               <p className="text-gray-600 mb-6">{t.premiumDesc}</p>
               

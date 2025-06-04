@@ -8,7 +8,7 @@ export default function PublicLayout({
 }: {
   children: ReactNode;
 }) {
-  const handleLanguageChange = (: string) => {};
+  const handleLanguageChange = (language: string) => {};
   const handleThemeChange = (theme: string) => {};
   const handleCurrencyChange = (currency: string) => {};
 

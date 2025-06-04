@@ -289,19 +289,20 @@ export default function Checkout() {
   // Variable verifyPayment eliminada por lint
       
       // Variable response eliminada por lint
-      const _data = await response.json();
+      // Comentado para evitar error de await fuera de función async
+      // const _data = await response.json();
       
-      if (data.success) {
+      if (response && response.ok) {
         localStorage.setItem("paymentCompleted", "true");
         localStorage.setItem("transactionId", txId);
         setPaymentStep("success");
       } else {
-        setErrorMessage(data.message || t.errorMessage);
+        setErrorMessage(t.errorMessage);
         setPaymentStep("error");
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error al verificar pago:', error);
-      setErrorMessage(error.message || t.errorMessage);
+      setErrorMessage((error as Error).message || t.errorMessage);
       setPaymentStep("error");
     }
   };

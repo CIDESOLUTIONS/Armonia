@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
  * Endpoint para descubrir cámaras en la red
  * POST /api/cameras/discover
  */
-export async function POST(req: NextRequest, { params }: { params: { action: string } }) {
+export async function handleDiscoverAction(req: NextRequest, { params }: { params: { action: string } }) {
   // Verificar que la acción es discover
   if (params.action !== 'discover') {
     return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });

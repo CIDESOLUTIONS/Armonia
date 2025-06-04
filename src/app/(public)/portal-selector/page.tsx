@@ -111,9 +111,9 @@ export default function PortalSelector() {
       <Header 
         theme={theme}
         setTheme={setTheme}
-        language={uage}
+        language={language}
         setLanguage={setLanguage}
-        currency={}
+        currency={currency}
         setCurrency={setCurrency}
         hideNavLinks={true}
       />

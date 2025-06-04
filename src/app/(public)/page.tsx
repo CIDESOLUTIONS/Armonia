@@ -53,7 +53,7 @@ export default function LandingPage() {
   // Efecto para aplicar el idioma seleccionado
   useEffect(() => {
     // Aquí se podrían cargar textos según el idioma seleccionado
-    document.documentElement.= uage === "Español" ? "es" : "en";
+    document.documentElement.lang = language === "Español" ? "es" : "en";
   }, [language]);
 
   // Efecto para aplicar el tema seleccionado
@@ -76,9 +76,9 @@ export default function LandingPage() {
       <Header 
         theme={theme}
         setTheme={setTheme}
-        language={uage}
+        language={language}
         setLanguage={setLanguage}
-        currency={}
+        currency={currency}
         setCurrency={setCurrency}
       />
 
@@ -182,8 +182,8 @@ export default function LandingPage() {
         
         <LandingPart3 
           theme={theme} 
-          currency={}
-          language={uage}
+          currency={currency}
+          language={language}
         />
         
         {/* Sección de contacto */}

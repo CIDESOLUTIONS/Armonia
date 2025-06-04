@@ -15,9 +15,9 @@ export default function ResidentLayout({ children }: { children: React.ReactNode
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
-  const [language, _setLanguageUnused] = useState("Español");
-  const [_theme, _setTheme] = useState("Claro");
-  const [_currency, _setCurrency] = useState("Pesos");
+  const [language, setLanguage] = useState("Español");
+  const [theme, setTheme] = useState("Claro");
+  const [currency, setCurrency] = useState("Pesos");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   useEffect(() => {
@@ -82,9 +82,9 @@ export default function ResidentLayout({ children }: { children: React.ReactNode
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       <div className={`fixed z-20 h-full ${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
         <ResidentSidebar
-          language={uage}
+          language={language}
           theme={theme}
-          currency={}
+          currency={currency}
           residentName={residentName || 'Residente'}
           complexName={complexName}
           logout={handleLogout}
@@ -96,9 +96,9 @@ export default function ResidentLayout({ children }: { children: React.ReactNode
         <Header
           theme={theme}
           setTheme={setTheme}
-          language={uage}
+          language={language}
           setLanguage={setLanguage}
-          currency={}
+          currency={currency}
           setCurrency={setCurrency}
           logout={handleLogout}
           isLoggedIn={isLoggedIn}
