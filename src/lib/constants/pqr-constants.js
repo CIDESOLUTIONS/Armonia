@@ -1,33 +1,47 @@
 /**
- * Constantes para el módulo PQR de la aplicación Armonía
- * Define categorías, estados, prioridades y otros valores constantes
+ * Constantes para el módulo PQR (Peticiones, Quejas y Reclamos)
  * Adaptado a CommonJS para compatibilidad con Jest
  */
 
-// Categorías de PQR
+/**
+ * Categorías de PQR
+ * @enum {string}
+ */
 const PQRCategory = {
   MAINTENANCE: 'MAINTENANCE',
   SECURITY: 'SECURITY',
   NOISE: 'NOISE',
-  COMMON_AREAS: 'COMMON_AREAS',
   PAYMENTS: 'PAYMENTS',
   SERVICES: 'SERVICES',
-  ADMINISTRATIVE: 'ADMINISTRATIVE',
+  COMMON_AREAS: 'COMMON_AREAS',
+  ADMINISTRATION: 'ADMINISTRATION',
+  NEIGHBORS: 'NEIGHBORS',
+  PETS: 'PETS',
+  PARKING: 'PARKING',
   OTHER: 'OTHER'
 };
 
-// Estados de PQR
+/**
+ * Estados de PQR
+ * @enum {string}
+ */
 const PQRStatus = {
-  OPEN: 'OPEN',
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  IN_REVIEW: 'IN_REVIEW',
   ASSIGNED: 'ASSIGNED',
   IN_PROGRESS: 'IN_PROGRESS',
-  PENDING_INFO: 'PENDING_INFO',
+  WAITING_INFO: 'WAITING_INFO',
   RESOLVED: 'RESOLVED',
   CLOSED: 'CLOSED',
-  CANCELLED: 'CANCELLED'
+  CANCELLED: 'CANCELLED',
+  REJECTED: 'REJECTED'
 };
 
-// Prioridades de PQR
+/**
+ * Prioridades de PQR
+ * @enum {string}
+ */
 const PQRPriority = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
@@ -35,81 +49,104 @@ const PQRPriority = {
   CRITICAL: 'CRITICAL'
 };
 
-// Tipos de PQR
+/**
+ * Tipos de PQR
+ * @enum {string}
+ */
 const PQRType = {
+  PETITION: 'PETITION',
   COMPLAINT: 'COMPLAINT',
   CLAIM: 'CLAIM',
-  REQUEST: 'REQUEST',
-  SUGGESTION: 'SUGGESTION',
-  INQUIRY: 'INQUIRY'
+  SUGGESTION: 'SUGGESTION'
 };
 
-// Tipos de archivos permitidos para PQR
-const PQRAllowedFileTypes = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/plain'
-];
-
-// Tamaño máximo de archivos para PQR (en bytes)
-const PQRMaxFileSize = 5 * 1024 * 1024; // 5MB
-
-// Límites de caracteres para campos de PQR
-const PQRCharacterLimits = {
-  TITLE: 100,
-  DESCRIPTION: 2000,
-  COMMENT: 1000
+/**
+ * Canales de comunicación para PQR
+ * @enum {string}
+ */
+const PQRChannel = {
+  WEB: 'WEB',
+  MOBILE: 'MOBILE',
+  EMAIL: 'EMAIL',
+  PHONE: 'PHONE',
+  IN_PERSON: 'IN_PERSON',
+  OTHER: 'OTHER'
 };
 
-// Tiempos de respuesta objetivo por prioridad (en horas)
-const PQRResponseTimes = {
-  LOW: 72,
-  MEDIUM: 48,
-  HIGH: 24,
-  CRITICAL: 4
+/**
+ * Plantillas de notificación para PQR
+ * @enum {string}
+ */
+const PQRNotificationTemplate = {
+  CREATED: 'PQR_CREATED',
+  ASSIGNED: 'PQR_ASSIGNED',
+  STATUS_CHANGED: 'PQR_STATUS_CHANGED',
+  COMMENT_ADDED: 'PQR_COMMENT_ADDED',
+  RESOLVED: 'PQR_RESOLVED',
+  CLOSED: 'PQR_CLOSED',
+  REOPENED: 'PQR_REOPENED',
+  REMINDER: 'PQR_REMINDER',
+  ESCALATED: 'PQR_ESCALATED'
 };
 
-// Plantillas de notificación para PQR
-const PQRNotificationTemplates = {
-  CREATED: {
-    TITLE: 'Nueva PQR: {{title}}',
-    BODY: 'Se ha creado una nueva PQR con ID #{{id}}. {{description}}'
-  },
-  ASSIGNED: {
-    TITLE: 'PQR #{{id}} asignada',
-    BODY: 'La PQR "{{title}}" ha sido asignada a {{assignee}}.'
-  },
-  STATUS_CHANGED: {
-    TITLE: 'Actualización de PQR #{{id}}',
-    BODY: 'La PQR "{{title}}" ha cambiado de estado a {{status}}.'
-  },
-  COMMENT_ADDED: {
-    TITLE: 'Nuevo comentario en PQR #{{id}}',
-    BODY: '{{author}} ha comentado en la PQR "{{title}}": {{comment}}'
-  },
-  RESOLVED: {
-    TITLE: 'PQR #{{id}} resuelta',
-    BODY: 'La PQR "{{title}}" ha sido marcada como resuelta.'
-  },
-  CLOSED: {
-    TITLE: 'PQR #{{id}} cerrada',
-    BODY: 'La PQR "{{title}}" ha sido cerrada.'
-  }
+/**
+ * Roles de usuario para PQR
+ * @enum {string}
+ */
+const PQRUserRole = {
+  REQUESTER: 'REQUESTER',
+  ASSIGNEE: 'ASSIGNEE',
+  SUPERVISOR: 'SUPERVISOR',
+  ADMIN: 'ADMIN',
+  VIEWER: 'VIEWER'
 };
 
-// Exportar todas las constantes usando CommonJS para compatibilidad con Jest
+/**
+ * Configuración de tiempos para PQR (en horas)
+ * @type {Object}
+ */
+const PQRTimeConfig = {
+  RESPONSE_TIME: {
+    LOW: 72,
+    MEDIUM: 48,
+    HIGH: 24,
+    CRITICAL: 4
+  },
+  RESOLUTION_TIME: {
+    LOW: 240,
+    MEDIUM: 120,
+    HIGH: 72,
+    CRITICAL: 24
+  },
+  REMINDER_BEFORE_DUE: 24,
+  ESCALATION_AFTER_DUE: 24
+};
+
+/**
+ * Configuración de asignación automática para PQR
+ * @type {Object}
+ */
+const PQRAssignmentConfig = {
+  ENABLED: true,
+  CATEGORIES: {
+    MAINTENANCE: 'maintenance_team',
+    SECURITY: 'security_team',
+    PAYMENTS: 'finance_team',
+    DEFAULT: 'admin_team'
+  },
+  LOAD_BALANCING: true,
+  MAX_ASSIGNMENTS_PER_USER: 10
+};
+
+// Exportar constantes usando CommonJS para compatibilidad con Jest
 module.exports = {
   PQRCategory,
   PQRStatus,
   PQRPriority,
   PQRType,
-  PQRAllowedFileTypes,
-  PQRMaxFileSize,
-  PQRCharacterLimits,
-  PQRResponseTimes,
-  PQRNotificationTemplates
+  PQRChannel,
+  PQRNotificationTemplate,
+  PQRUserRole,
+  PQRTimeConfig,
+  PQRAssignmentConfig
 };
