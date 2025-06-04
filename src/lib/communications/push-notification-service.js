@@ -9,38 +9,42 @@ const { ServerLogger } = require('../logging/server-logger');
 const logger = new ServerLogger('PushNotificationService');
 
 /**
- * Envía una notificación push a un dispositivo específico
+ * Envía una notificación push a un dispositivo
  * @param {Object} options - Opciones de la notificación
  * @param {string} options.deviceToken - Token del dispositivo destinatario
  * @param {string} options.title - Título de la notificación
  * @param {string} options.body - Cuerpo de la notificación
  * @param {Object} options.data - Datos adicionales para la notificación (opcional)
- * @param {string} options.icon - URL del icono (opcional)
  * @param {string} options.sound - Sonido a reproducir (opcional)
- * @param {string} options.clickAction - Acción al hacer clic (opcional)
+ * @param {number} options.badge - Número de badge para iOS (opcional)
+ * @param {string} options.channel - Canal de notificación para Android (opcional)
  * @returns {Promise<Object>} - Resultado del envío
  */
 async function sendPushNotification(options) {
   try {
-    if (!options || !options.deviceToken || !options.title || !options.body) {
-      throw new Error('Datos de notificación push incompletos');
+    if (!options || !options.deviceToken) {
+      throw new Error('Se requiere un token de dispositivo para enviar notificación push');
     }
     
-    logger.info(`Enviando notificación push a dispositivo: ${options.deviceToken}`);
+    if (!options.title || !options.body) {
+      throw new Error('Se requieren título y cuerpo para la notificación push');
+    }
     
-    // En una implementación real, aquí se integraría con Firebase Cloud Messaging (FCM)
-    // o algún otro servicio de notificaciones push como OneSignal, etc.
+    // En una implementación real, aquí se integraría con Firebase Cloud Messaging,
+    // Apple Push Notification Service, u otro proveedor de notificaciones push
     
-    // Simulación de envío exitoso para desarrollo y pruebas
-    const result = {
+    // Mock de envío de notificación push
+    logger.info(`[MOCK] Enviando notificación push a dispositivo ${options.deviceToken}: ${options.title}`);
+    
+    // Simular tiempo de respuesta del servicio externo
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    return {
       success: true,
       messageId: `mock_push_${Date.now()}`,
       deviceToken: options.deviceToken,
       timestamp: new Date().toISOString()
     };
-    
-    logger.info(`Notificación push enviada correctamente: ${result.messageId}`);
-    return result;
   } catch (error) {
     logger.error(`Error al enviar notificación push: ${error.message}`);
     return {
@@ -59,24 +63,24 @@ async function sendPushNotification(options) {
 async function sendMulticastPushNotification(deviceTokens, notification) {
   try {
     if (!deviceTokens || !Array.isArray(deviceTokens) || deviceTokens.length === 0) {
-      throw new Error('Se requiere al menos un token de dispositivo');
+      throw new Error('Se requiere al menos un token de dispositivo para envío multicast');
     }
     
     if (!notification || !notification.title || !notification.body) {
-      throw new Error('Datos de notificación push incompletos');
+      throw new Error('Se requieren título y cuerpo para la notificación push');
     }
     
-    logger.info(`Enviando notificación push a ${deviceTokens.length} dispositivos`);
+    logger.info(`[MOCK] Enviando notificación push multicast a ${deviceTokens.length} dispositivos: ${notification.title}`);
     
     const results = {
       success: true,
       total: deviceTokens.length,
-      sent: 0,
+      successful: 0,
       failed: 0,
-      results: []
+      responses: []
     };
     
-    // Enviar a cada dispositivo
+    // Procesar cada token
     for (const token of deviceTokens) {
       try {
         const result = await sendPushNotification({
@@ -84,31 +88,30 @@ async function sendMulticastPushNotification(deviceTokens, notification) {
           ...notification
         });
         
-        results.results.push({
+        results.responses.push({
           deviceToken: token,
           success: result.success,
-          messageId: result.messageId
+          messageId: result.messageId,
+          error: result.error
         });
         
         if (result.success) {
-          results.sent++;
+          results.successful++;
         } else {
           results.failed++;
         }
-      } catch (deviceError) {
-        logger.error(`Error al enviar a dispositivo ${token}: ${deviceError.message}`);
+      } catch (tokenError) {
         results.failed++;
-        results.results.push({
+        results.responses.push({
           deviceToken: token,
           success: false,
-          error: deviceError.message
+          error: tokenError.message
         });
       }
     }
     
-    results.success = results.sent > 0;
+    results.success = results.successful > 0;
     
-    logger.info(`Notificación push enviada a ${results.sent}/${results.total} dispositivos`);
     return results;
   } catch (error) {
     logger.error(`Error al enviar notificación push multicast: ${error.message}`);
@@ -116,47 +119,8 @@ async function sendMulticastPushNotification(deviceTokens, notification) {
       success: false,
       error: error.message,
       total: deviceTokens ? deviceTokens.length : 0,
-      sent: 0,
+      successful: 0,
       failed: deviceTokens ? deviceTokens.length : 0
-    };
-  }
-}
-
-/**
- * Envía una notificación push por tema
- * @param {string} topic - Tema al que enviar la notificación
- * @param {Object} notification - Datos de la notificación
- * @returns {Promise<Object>} - Resultado del envío
- */
-async function sendTopicPushNotification(topic, notification) {
-  try {
-    if (!topic) {
-      throw new Error('Se requiere un tema para la notificación');
-    }
-    
-    if (!notification || !notification.title || !notification.body) {
-      throw new Error('Datos de notificación push incompletos');
-    }
-    
-    logger.info(`Enviando notificación push al tema: ${topic}`);
-    
-    // En una implementación real, aquí se enviaría a FCM o similar
-    
-    // Simulación de envío exitoso para desarrollo y pruebas
-    const result = {
-      success: true,
-      messageId: `mock_topic_push_${Date.now()}`,
-      topic,
-      timestamp: new Date().toISOString()
-    };
-    
-    logger.info(`Notificación push a tema enviada correctamente: ${result.messageId}`);
-    return result;
-  } catch (error) {
-    logger.error(`Error al enviar notificación push a tema: ${error.message}`);
-    return {
-      success: false,
-      error: error.message
     };
   }
 }
@@ -164,13 +128,13 @@ async function sendTopicPushNotification(topic, notification) {
 /**
  * Envía una notificación push de PQR
  * @param {Object} pqr - Datos de la PQR
- * @param {string} deviceToken - Token del dispositivo
+ * @param {Object} user - Datos del usuario
  * @param {string} action - Acción realizada (created, updated, resolved, etc.)
  * @returns {Promise<Object>} - Resultado del envío
  */
-async function sendPQRPushNotification(pqr, deviceToken, action) {
+async function sendPQRPushNotification(pqr, user, action) {
   try {
-    if (!pqr || !deviceToken) {
+    if (!pqr || !user || !user.deviceToken) {
       throw new Error('Datos incompletos para notificación push de PQR');
     }
     
@@ -178,41 +142,43 @@ async function sendPQRPushNotification(pqr, deviceToken, action) {
     
     switch (action) {
       case 'created':
-        title = `Nueva PQR: ${pqr.title}`;
-        body = `Se ha creado una nueva PQR con ID #${pqr.id}`;
+        title = 'Nueva PQR registrada';
+        body = `Su PQR "${pqr.title}" ha sido registrada correctamente.`;
         break;
         
       case 'updated':
-        title = `Actualización de PQR #${pqr.id}`;
-        body = `La PQR "${pqr.title}" ha sido actualizada. Estado: ${pqr.status}`;
+        title = 'PQR actualizada';
+        body = `Su PQR "${pqr.title}" ha sido actualizada. Estado: ${pqr.status}`;
         break;
         
       case 'resolved':
-        title = `PQR #${pqr.id} resuelta`;
-        body = `La PQR "${pqr.title}" ha sido marcada como resuelta`;
+        title = 'PQR resuelta';
+        body = `Su PQR "${pqr.title}" ha sido marcada como resuelta.`;
         break;
         
       case 'closed':
-        title = `PQR #${pqr.id} cerrada`;
-        body = `La PQR "${pqr.title}" ha sido cerrada`;
+        title = 'PQR cerrada';
+        body = `Su PQR "${pqr.title}" ha sido cerrada.`;
         break;
         
       default:
-        title = `Actualización de PQR #${pqr.id}`;
-        body = `La PQR "${pqr.title}" ha sido actualizada`;
+        title = 'Actualización de PQR';
+        body = `Su PQR "${pqr.title}" ha sido actualizada.`;
     }
     
     return await sendPushNotification({
-      deviceToken,
+      deviceToken: user.deviceToken,
       title,
       body,
       data: {
         type: 'PQR',
         pqrId: pqr.id,
-        action,
-        status: pqr.status
+        status: pqr.status,
+        action
       },
-      clickAction: 'OPEN_PQR_DETAIL'
+      sound: 'default',
+      badge: 1,
+      channel: 'pqr_notifications'
     });
   } catch (error) {
     logger.error(`Error al enviar notificación push de PQR: ${error.message}`);
@@ -226,13 +192,13 @@ async function sendPQRPushNotification(pqr, deviceToken, action) {
 /**
  * Envía una notificación push de asamblea
  * @param {Object} assembly - Datos de la asamblea
- * @param {string} deviceToken - Token del dispositivo
+ * @param {Object} user - Datos del usuario
  * @param {string} action - Acción realizada (scheduled, reminder, started, etc.)
  * @returns {Promise<Object>} - Resultado del envío
  */
-async function sendAssemblyPushNotification(assembly, deviceToken, action) {
+async function sendAssemblyPushNotification(assembly, user, action) {
   try {
-    if (!assembly || !deviceToken) {
+    if (!assembly || !user || !user.deviceToken) {
       throw new Error('Datos incompletos para notificación push de asamblea');
     }
     
@@ -242,41 +208,43 @@ async function sendAssemblyPushNotification(assembly, deviceToken, action) {
     
     switch (action) {
       case 'scheduled':
-        title = `Nueva asamblea: ${assembly.title}`;
-        body = `Se ha programado una nueva asamblea para el ${formattedDate}`;
+        title = 'Nueva asamblea programada';
+        body = `Se ha programado la asamblea "${assembly.title}" para el ${formattedDate}.`;
         break;
         
       case 'reminder':
-        title = `Recordatorio: ${assembly.title}`;
-        body = `La asamblea "${assembly.title}" se realizará mañana ${formattedDate}`;
+        title = 'Recordatorio de asamblea';
+        body = `La asamblea "${assembly.title}" se realizará mañana ${formattedDate}.`;
         break;
         
       case 'started':
-        title = `Asamblea iniciada: ${assembly.title}`;
-        body = `La asamblea "${assembly.title}" ha comenzado`;
+        title = 'Asamblea iniciada';
+        body = `La asamblea "${assembly.title}" ha comenzado. Puede unirse ahora.`;
         break;
         
       case 'ended':
-        title = `Asamblea finalizada: ${assembly.title}`;
-        body = `La asamblea "${assembly.title}" ha finalizado`;
+        title = 'Asamblea finalizada';
+        body = `La asamblea "${assembly.title}" ha finalizado. Gracias por su participación.`;
         break;
         
       default:
-        title = `Actualización de asamblea: ${assembly.title}`;
-        body = `La asamblea "${assembly.title}" ha sido actualizada`;
+        title = 'Actualización de asamblea';
+        body = `La asamblea "${assembly.title}" ha sido actualizada.`;
     }
     
     return await sendPushNotification({
-      deviceToken,
+      deviceToken: user.deviceToken,
       title,
       body,
       data: {
         type: 'ASSEMBLY',
         assemblyId: assembly.id,
-        action,
-        date: assembly.date
+        status: assembly.status,
+        action
       },
-      clickAction: 'OPEN_ASSEMBLY_DETAIL'
+      sound: 'default',
+      badge: 1,
+      channel: 'assembly_notifications'
     });
   } catch (error) {
     logger.error(`Error al enviar notificación push de asamblea: ${error.message}`);
@@ -288,33 +256,58 @@ async function sendAssemblyPushNotification(assembly, deviceToken, action) {
 }
 
 /**
- * Suscribe un dispositivo a un tema
- * @param {string} deviceToken - Token del dispositivo
- * @param {string} topic - Tema al que suscribirse
- * @returns {Promise<Object>} - Resultado de la suscripción
+ * Envía una notificación push de pago
+ * @param {Object} payment - Datos del pago
+ * @param {Object} user - Datos del usuario
+ * @param {string} action - Acción realizada (received, confirmed, rejected, etc.)
+ * @returns {Promise<Object>} - Resultado del envío
  */
-async function subscribeToTopic(deviceToken, topic) {
+async function sendPaymentPushNotification(payment, user, action) {
   try {
-    if (!deviceToken || !topic) {
-      throw new Error('Se requieren token de dispositivo y tema para suscripción');
+    if (!payment || !user || !user.deviceToken) {
+      throw new Error('Datos incompletos para notificación push de pago');
     }
     
-    logger.info(`Suscribiendo dispositivo ${deviceToken} al tema ${topic}`);
+    let title, body;
+    const amount = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(payment.amount);
     
-    // En una implementación real, aquí se integraría con FCM o similar
+    switch (action) {
+      case 'received':
+        title = 'Pago recibido';
+        body = `Se ha recibido su pago por ${amount}. Referencia: ${payment.reference}`;
+        break;
+        
+      case 'confirmed':
+        title = 'Pago confirmado';
+        body = `Su pago por ${amount} ha sido confirmado. Referencia: ${payment.reference}`;
+        break;
+        
+      case 'rejected':
+        title = 'Pago rechazado';
+        body = `Su pago por ${amount} ha sido rechazado. Motivo: ${payment.rejectionReason || 'No especificado'}`;
+        break;
+        
+      default:
+        title = 'Actualización de pago';
+        body = `El estado de su pago por ${amount} ha sido actualizado a ${payment.status}.`;
+    }
     
-    // Simulación de suscripción exitosa para desarrollo y pruebas
-    const result = {
-      success: true,
-      deviceToken,
-      topic,
-      timestamp: new Date().toISOString()
-    };
-    
-    logger.info(`Dispositivo suscrito correctamente al tema ${topic}`);
-    return result;
+    return await sendPushNotification({
+      deviceToken: user.deviceToken,
+      title,
+      body,
+      data: {
+        type: 'PAYMENT',
+        paymentId: payment.id,
+        status: payment.status,
+        action
+      },
+      sound: 'default',
+      badge: 1,
+      channel: 'payment_notifications'
+    });
   } catch (error) {
-    logger.error(`Error al suscribir dispositivo a tema: ${error.message}`);
+    logger.error(`Error al enviar notificación push de pago: ${error.message}`);
     return {
       success: false,
       error: error.message
@@ -323,33 +316,61 @@ async function subscribeToTopic(deviceToken, topic) {
 }
 
 /**
- * Cancela la suscripción de un dispositivo a un tema
+ * Registra un token de dispositivo para un usuario
+ * @param {string} userId - ID del usuario
  * @param {string} deviceToken - Token del dispositivo
- * @param {string} topic - Tema del que cancelar suscripción
- * @returns {Promise<Object>} - Resultado de la cancelación
+ * @param {Object} deviceInfo - Información del dispositivo (opcional)
+ * @returns {Promise<Object>} - Resultado del registro
  */
-async function unsubscribeFromTopic(deviceToken, topic) {
+async function registerDeviceToken(userId, deviceToken, deviceInfo = {}) {
   try {
-    if (!deviceToken || !topic) {
-      throw new Error('Se requieren token de dispositivo y tema para cancelar suscripción');
+    if (!userId || !deviceToken) {
+      throw new Error('Se requieren ID de usuario y token de dispositivo para registro');
     }
     
-    logger.info(`Cancelando suscripción de dispositivo ${deviceToken} al tema ${topic}`);
+    // En una implementación real, aquí se guardaría el token en la base de datos
     
-    // En una implementación real, aquí se integraría con FCM o similar
+    logger.info(`[MOCK] Registrado token de dispositivo para usuario ${userId}: ${deviceToken}`);
     
-    // Simulación de cancelación exitosa para desarrollo y pruebas
-    const result = {
+    return {
       success: true,
+      userId,
       deviceToken,
-      topic,
       timestamp: new Date().toISOString()
     };
-    
-    logger.info(`Suscripción cancelada correctamente del tema ${topic}`);
-    return result;
   } catch (error) {
-    logger.error(`Error al cancelar suscripción de dispositivo a tema: ${error.message}`);
+    logger.error(`Error al registrar token de dispositivo: ${error.message}`);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Elimina un token de dispositivo
+ * @param {string} userId - ID del usuario
+ * @param {string} deviceToken - Token del dispositivo
+ * @returns {Promise<Object>} - Resultado de la eliminación
+ */
+async function unregisterDeviceToken(userId, deviceToken) {
+  try {
+    if (!userId || !deviceToken) {
+      throw new Error('Se requieren ID de usuario y token de dispositivo para eliminación');
+    }
+    
+    // En una implementación real, aquí se eliminaría el token de la base de datos
+    
+    logger.info(`[MOCK] Eliminado token de dispositivo para usuario ${userId}: ${deviceToken}`);
+    
+    return {
+      success: true,
+      userId,
+      deviceToken,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    logger.error(`Error al eliminar token de dispositivo: ${error.message}`);
     return {
       success: false,
       error: error.message
@@ -361,9 +382,9 @@ async function unsubscribeFromTopic(deviceToken, topic) {
 module.exports = {
   sendPushNotification,
   sendMulticastPushNotification,
-  sendTopicPushNotification,
   sendPQRPushNotification,
   sendAssemblyPushNotification,
-  subscribeToTopic,
-  unsubscribeFromTopic
+  sendPaymentPushNotification,
+  registerDeviceToken,
+  unregisterDeviceToken
 };
