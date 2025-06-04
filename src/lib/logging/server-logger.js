@@ -1,86 +1,46 @@
 /**
- * Módulo de registro de servidor
- * Adaptado a CommonJS para compatibilidad con Jest
+ * Mock de ServerLogger para pruebas unitarias y de integración
+ * Proporciona funcionalidades de logging sin dependencias externas
  */
 
 class ServerLogger {
-  /**
-   * Constructor del logger
-   * @param {string} module - Nombre del módulo que utiliza el logger
-   */
-  constructor(module) {
-    this.module = module;
-    this.logLevel = process.env.LOG_LEVEL || 'info';
-    
-    // Niveles de log y sus valores numéricos
-    this.levels = {
-      error: 0,
-      warn: 1,
-      info: 2,
-      debug: 3
-    };
+  constructor(moduleName) {
+    this.moduleName = moduleName || 'Unknown';
   }
 
-  /**
-   * Determina si un nivel de log debe ser registrado
-   * @param {string} level - Nivel de log a verificar
-   * @returns {boolean} - Si debe registrarse o no
-   */
-  shouldLog(level) {
-    return this.levels[level] <= this.levels[this.logLevel];
+  info(message, ...args) {
+    console.log(`[INFO][${this.moduleName}] ${message}`, ...args);
   }
 
-  /**
-   * Formatea un mensaje de log
-   * @param {string} level - Nivel de log
-   * @param {string} message - Mensaje a formatear
-   * @returns {string} - Mensaje formateado
-   */
-  formatMessage(level, message) {
-    const timestamp = new Date().toISOString();
-    return `[${timestamp}] [${level.toUpperCase()}] [${this.module}] ${message}`;
+  error(message, ...args) {
+    console.error(`[ERROR][${this.moduleName}] ${message}`, ...args);
   }
 
-  /**
-   * Registra un mensaje de error
-   * @param {string} message - Mensaje a registrar
-   */
-  error(message) {
-    if (this.shouldLog('error')) {
-      console.error(this.formatMessage('error', message));
-    }
+  warn(message, ...args) {
+    console.warn(`[WARN][${this.moduleName}] ${message}`, ...args);
   }
 
-  /**
-   * Registra un mensaje de advertencia
-   * @param {string} message - Mensaje a registrar
-   */
-  warn(message) {
-    if (this.shouldLog('warn')) {
-      console.warn(this.formatMessage('warn', message));
-    }
-  }
-
-  /**
-   * Registra un mensaje informativo
-   * @param {string} message - Mensaje a registrar
-   */
-  info(message) {
-    if (this.shouldLog('info')) {
-      console.info(this.formatMessage('info', message));
-    }
-  }
-
-  /**
-   * Registra un mensaje de depuración
-   * @param {string} message - Mensaje a registrar
-   */
-  debug(message) {
-    if (this.shouldLog('debug')) {
-      console.debug(this.formatMessage('debug', message));
-    }
+  debug(message, ...args) {
+    console.debug(`[DEBUG][${this.moduleName}] ${message}`, ...args);
   }
 }
+
+// Métodos estáticos para uso sin instancia
+ServerLogger.info = function(message, ...args) {
+  console.log(`[INFO][Global] ${message}`, ...args);
+};
+
+ServerLogger.error = function(message, ...args) {
+  console.error(`[ERROR][Global] ${message}`, ...args);
+};
+
+ServerLogger.warn = function(message, ...args) {
+  console.warn(`[WARN][Global] ${message}`, ...args);
+};
+
+ServerLogger.debug = function(message, ...args) {
+  console.debug(`[DEBUG][Global] ${message}`, ...args);
+};
 
 // Exportar la clase usando CommonJS para compatibilidad con Jest
 module.exports = {
