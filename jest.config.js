@@ -4,9 +4,20 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^../../lib/(.*)$': '<rootDir>/src/lib/$1',
+    '^../../lib/constants$': '<rootDir>/src/lib/constants.js',
     '^../../lib/logging/(.*)$': '<rootDir>/src/lib/logging/$1',
-    '^../../lib/prisma$': '<rootDir>/src/lib/prisma'
+    '^../../lib/prisma$': '<rootDir>/src/lib/prisma',
+    '^../../communications/(.*)$': '<rootDir>/src/communications/$1',
+    '^../../communications/websocket-service$': '<rootDir>/src/communications/websocket-service.js',
+    '^../../communications/integrations/(.*)$': '<rootDir>/src/communications/integrations/$1',
+    '^next/server$': '<rootDir>/node_modules/next/server.js'
   },
+  moduleDirectories: ['node_modules', 'src'],
+  modulePaths: ['<rootDir>/src'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/e2e/'
+  ],
   testMatch: [
     '**/__tests__/**/*.test.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)'

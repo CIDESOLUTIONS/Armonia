@@ -29,7 +29,13 @@ export class PQRService {
         }
       }
       
-      // Variable response eliminada por lint
+      // Restaurada la variable response
+      const response = await fetch(`${endpoint}${queryString}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -46,7 +52,13 @@ export class PQRService {
   // Obtener estadísticas de PQRs
   static async getPQRStats(complexId: number) {
     try {
-      // Variable response eliminada por lint
+      // Restaurada la variable response
+      const response = await fetch(`/api/pqr/stats/${complexId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -68,7 +80,18 @@ export class PQRService {
   // Crear una nueva PQR
   static async createPQR(data: unknown, user: unknown) {
     try {
-      // Variable response eliminada por lint
+      // Restaurada la variable response
+      const response = await fetch('/api/pqr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          userId: user.id,
+          complexId: user.complexId
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -85,7 +108,17 @@ export class PQRService {
   // Actualizar el estado de una PQR
   static async updatePQRStatus(id: number, status: string, user: unknown) {
     try {
-      // Variable response eliminada por lint
+      // Restaurada la variable response
+      const response = await fetch(`/api/pqr/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status,
+          userId: user.id
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -102,7 +135,17 @@ export class PQRService {
   // Añadir un comentario a una PQR
   static async addComment(pqrId: number, comment: string, user: unknown) {
     try {
-      // Variable response eliminada por lint
+      // Restaurada la variable response
+      const response = await fetch(`/api/pqr/${pqrId}/comment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          comment,
+          userId: user.id
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -119,7 +162,13 @@ export class PQRService {
   // Obtener detalle de una PQR
   static async getPQRDetail(id: number) {
     try {
-      // Variable response eliminada por lint
+      // Restaurada la variable response
+      const response = await fetch(`/api/pqr/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -136,7 +185,16 @@ export class PQRService {
   // Asignar responsable a una PQR
   static async assignResponsible(id: number, userId: number) {
     try {
-      // Variable response eliminada por lint
+      // Restaurada la variable response
+      const response = await fetch(`/api/pqr/${id}/assign`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
