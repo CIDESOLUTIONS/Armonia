@@ -20,6 +20,10 @@ if (typeof Date.now !== 'function') {
   };
 }
 
+// Mock de PaymentService
+const PaymentService = require('./src/services/__mocks__/payment-service');
+jest.mock('./src/services/paymentService', () => require('./src/services/__mocks__/payment-service'));
+
 // Mock de módulos de comunicación
 jest.mock('./src/lib/communications/email-service', () => ({
   sendEmail: jest.fn().mockResolvedValue({ success: true })
@@ -74,6 +78,32 @@ jest.mock('./src/lib/prisma', () => ({
         userId: 1,
         channels: JSON.stringify(['EMAIL', 'WHATSAPP']),
         pqrStatusUpdates: true
+      })
+    },
+    visitor: {
+      findUnique: jest.fn().mockResolvedValue({
+        id: 1,
+        name: 'Visitante Test',
+        documentType: 'CC',
+        documentNumber: '123456789',
+        phone: '3001234567'
+      }),
+      create: jest.fn().mockResolvedValue({
+        id: 2,
+        name: 'Nuevo Visitante',
+        documentType: 'CC',
+        documentNumber: '987654321',
+        phone: '3007654321'
+      })
+    },
+    visit: {
+      create: jest.fn().mockResolvedValue({
+        id: 1,
+        visitorId: 1,
+        unitId: 101,
+        purpose: 'Visita social',
+        status: 'PENDING',
+        createdAt: new Date()
       })
     }
   }),
