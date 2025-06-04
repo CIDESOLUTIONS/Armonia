@@ -5,11 +5,12 @@
  * incluyendo cambios de estado, recordatorios y encuestas de satisfacción.
  */
 
-import { PrismaClient, PQRStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { getSchemaFromRequest } from '../../lib/prisma';
 import { sendEmail } from '../../lib/communications/email-service';
 import { sendPushNotification } from '../../lib/communications/push-notification-service';
 import { sendSMS } from '../../lib/communications/sms-service';
+import { PQRStatus, PQRNotificationTemplate } from '../../lib/constants/pqr-constants';
 
 /**
  * Clase que implementa el servicio de notificaciones para PQRs
@@ -17,6 +18,7 @@ import { sendSMS } from '../../lib/communications/sms-service';
 export class PQRNotificationService {
   private prisma: PrismaClient;
   private schema: string;
+  private notificationTemplates: Record<string, { subject: string, content: string }>;
 
   /**
    * Constructor del servicio
@@ -25,6 +27,34 @@ export class PQRNotificationService {
   constructor(schema: string = 'public') {
     this.schema = schema;
     this.prisma = getSchemaFromRequest(schema);
+    
+    // Inicializar plantillas de notificación predeterminadas
+    this.notificationTemplates = {
+      'STATUS_CHANGE_ASSIGNED': {
+        subject: 'PQR {{ticketNumber}} asignado',
+        content: '<p>Hola {{recipientName}},</p><p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido asignado.</p>'
+      },
+      'STATUS_CHANGE_IN_PROGRESS': {
+        subject: 'PQR {{ticketNumber}} en progreso',
+        content: '<p>Hola {{recipientName}},</p><p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> está siendo atendido.</p>'
+      },
+      'STATUS_CHANGE_RESOLVED': {
+        subject: 'PQR {{ticketNumber}} resuelto',
+        content: '<p>Hola {{recipientName}},</p><p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido resuelto.</p>'
+      },
+      'STATUS_CHANGE_CLOSED': {
+        subject: 'PQR {{ticketNumber}} cerrado',
+        content: '<p>Hola {{recipientName}},</p><p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido cerrado.</p>'
+      },
+      'STATUS_CHANGE_REOPENED': {
+        subject: 'PQR {{ticketNumber}} reabierto',
+        content: '<p>Hola {{recipientName}},</p><p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido reabierto.</p>'
+      },
+      'DEFAULT': {
+        subject: 'Actualización de PQR {{ticketNumber}}',
+        content: '<p>Hola {{recipientName}},</p><p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido actualizado.</p>'
+      }
+    };
   }
 
   /**
@@ -391,104 +421,52 @@ export class PQRNotificationService {
       }
 
       // Usar plantilla predeterminada según el estado
-      let subject = '';
-      let content = '';
-
+      let templateKey = 'DEFAULT';
+      
       switch (newStatus) {
         case PQRStatus.ASSIGNED:
-          subject = 'PQR {{ticketNumber}} asignado';
-          content = `
-            <p>Hola {{recipientName}},</p>
-            <p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido asignado.</p>
-            <p>Estado anterior: {{previousStatus}}</p>
-            <p>Estado actual: {{status}}</p>
-            <p>Fecha límite: {{dueDate}}</p>
-            {{#if comment}}<p>Comentario: {{comment}}</p>{{/if}}
-          `;
+          templateKey = 'STATUS_CHANGE_ASSIGNED';
           break;
         case PQRStatus.IN_PROGRESS:
-          subject = 'PQR {{ticketNumber}} en progreso';
-          content = `
-            <p>Hola {{recipientName}},</p>
-            <p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> está siendo atendido.</p>
-            <p>Estado anterior: {{previousStatus}}</p>
-            <p>Estado actual: {{status}}</p>
-            <p>Fecha límite: {{dueDate}}</p>
-            {{#if comment}}<p>Comentario: {{comment}}</p>{{/if}}
-          `;
+          templateKey = 'STATUS_CHANGE_IN_PROGRESS';
           break;
         case PQRStatus.RESOLVED:
-          subject = 'PQR {{ticketNumber}} resuelto';
-          content = `
-            <p>Hola {{recipientName}},</p>
-            <p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido resuelto.</p>
-            <p>Estado anterior: {{previousStatus}}</p>
-            <p>Estado actual: {{status}}</p>
-            {{#if comment}}<p>Resolución: {{comment}}</p>{{/if}}
-          `;
+          templateKey = 'STATUS_CHANGE_RESOLVED';
           break;
         case PQRStatus.CLOSED:
-          subject = 'PQR {{ticketNumber}} cerrado';
-          content = `
-            <p>Hola {{recipientName}},</p>
-            <p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido cerrado.</p>
-            <p>Estado anterior: {{previousStatus}}</p>
-            <p>Estado actual: {{status}}</p>
-            {{#if comment}}<p>Comentario: {{comment}}</p>{{/if}}
-          `;
+          templateKey = 'STATUS_CHANGE_CLOSED';
           break;
         case PQRStatus.REOPENED:
-          subject = 'PQR {{ticketNumber}} reabierto';
-          content = `
-            <p>Hola {{recipientName}},</p>
-            <p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido reabierto.</p>
-            <p>Estado anterior: {{previousStatus}}</p>
-            <p>Estado actual: {{status}}</p>
-            {{#if comment}}<p>Motivo: {{comment}}</p>{{/if}}
-          `;
+          templateKey = 'STATUS_CHANGE_REOPENED';
           break;
-        default:
-          subject = 'Actualización de PQR {{ticketNumber}}';
-          content = `
-            <p>Hola {{recipientName}},</p>
-            <p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido actualizado.</p>
-            <p>Estado anterior: {{previousStatus}}</p>
-            <p>Estado actual: {{status}}</p>
-            <p>Fecha límite: {{dueDate}}</p>
-            {{#if comment}}<p>Comentario: {{comment}}</p>{{/if}}
-          `;
       }
-
-      return { subject, content };
+      
+      // Devolver la plantilla correspondiente o la predeterminada
+      return this.notificationTemplates[templateKey] || this.notificationTemplates['DEFAULT'];
     } catch (error) {
       console.error('Error al obtener plantilla de notificación:', error);
-      return {
-        subject: 'Actualización de PQR {{ticketNumber}}',
-        content: `
-          <p>Hola {{recipientName}},</p>
-          <p>El PQR <strong>{{ticketNumber}}: {{title}}</strong> ha sido actualizado.</p>
-          <p>Estado actual: {{status}}</p>
-        `
-      };
+      return this.notificationTemplates['DEFAULT'];
     }
   }
 
   /**
    * Reemplaza variables en una plantilla
-   * @param template Plantilla con variables
-   * @param data Datos para reemplazar variables
+   * @param template Texto de la plantilla
+   * @param data Datos para reemplazar
    * @returns Texto con variables reemplazadas
    */
   private replaceTemplateVars(template: string, data: Record<string, any>): string {
+    if (!template) return '';
+    
     let result = template;
     
-    // Reemplazar variables simples
+    // Reemplazar variables simples {{variable}}
     for (const [key, value] of Object.entries(data)) {
       const regex = new RegExp(`{{${key}}}`, 'g');
       result = result.replace(regex, value?.toString() || '');
     }
     
-    // Procesar condicionales
+    // Procesar condicionales {{#if variable}}...{{/if}}
     const conditionalRegex = /{{#if ([^}]+)}}([\s\S]*?){{\/if}}/g;
     result = result.replace(conditionalRegex, (match, condition, content) => {
       return data[condition] ? content : '';
@@ -504,9 +482,10 @@ export class PQRNotificationService {
    * @returns Token generado
    */
   private generateSurveyToken(pqrId: number, userId: number): string {
-    // En un entorno real, esto debería usar una biblioteca de JWT o similar
-    const timestamp = Date.now();
-    const data = `${pqrId}-${userId}-${timestamp}`;
-    return Buffer.from(data).toString('base64');
+    // Simular generación de token
+    return `survey-token-${pqrId}-${userId}-${Date.now()}`;
   }
 }
+
+// Exportar el servicio
+export default PQRNotificationService;

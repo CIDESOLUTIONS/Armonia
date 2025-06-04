@@ -7,12 +7,20 @@ module.exports = {
   moduleNameMapper: {
     // Mapeos específicos primero (más específicos tienen precedencia)
     '^../../lib/constants$': '<rootDir>/src/lib/constants.js',
+    '^../../lib/constants/pqr-constants$': '<rootDir>/src/lib/constants/pqr-constants.js',
+    '^@/lib/constants/pqr-constants$': '<rootDir>/src/lib/constants/pqr-constants.js',
     '^../../communications/websocket-service$': '<rootDir>/src/communications/websocket-service.js',
     '^../../lib/pdf/receipt-service$': '<rootDir>/src/lib/pdf/receipt-service.ts',
     '^../../lib/security/encryption-service$': '<rootDir>/src/lib/security/encryption-service.ts',
+    '^../../lib/communications/email-service$': '<rootDir>/src/lib/communications/email-service.js',
+    '^../../lib/communications/push-notification-service$': '<rootDir>/src/lib/communications/push-notification-service.js',
     '^jose$': '<rootDir>/src/mocks/jose-mock.js',
     '^twilio$': '<rootDir>/src/mocks/twilio-mock.js',
     '^../../logging/activity-logger$': '<rootDir>/src/lib/logging/activity-logger.js',
+    
+    // Mapeos para servicios mockeados
+    '^../services/pqrAssignmentService$': '<rootDir>/src/services/pqrAssignmentService.mock.ts',
+    '^../services/pqrNotificationService$': '<rootDir>/src/services/pqrNotificationService.mock.ts',
     
     // Mapeos generales después
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -53,5 +61,6 @@ module.exports = {
     }
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  moduleDirectories: ['node_modules', 'src']
-};
+  // Asegurar que los mocks se carguen antes de las pruebas
+  setupFiles: ['<rootDir>/jest.mocks.js']
+}

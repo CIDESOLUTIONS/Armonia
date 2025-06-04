@@ -5,8 +5,9 @@
  * automáticamente las solicitudes PQR según reglas configurables.
  */
 
-import { PrismaClient, PQRCategory, PQRPriority, PQRStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { getSchemaFromRequest } from '@/lib/prisma';
+import { PQRCategory, PQRPriority, PQRStatus } from '@/lib/constants/pqr-constants';
 
 // Interfaz para datos de entrada de PQR
 export interface PQRInputData {
@@ -147,33 +148,23 @@ export class PQRAssignmentService {
         };
       } else if (combinedText.match(/admin|documento|certific|paz y salvo|contrato|reglamento/i)) {
         return { 
-          category: PQRCategory.ADMINISTRATIVE,
-          subcategory: this.determineSubcategory(combinedText, PQRCategory.ADMINISTRATIVE)
+          category: PQRCategory.ADMINISTRATION,
+          subcategory: this.determineSubcategory(combinedText, PQRCategory.ADMINISTRATION)
         };
       } else if (combinedText.match(/pag|cuota|factur|cobr|recib|mora|descuent|financ/i)) {
         return { 
-          category: PQRCategory.FINANCIAL,
-          subcategory: this.determineSubcategory(combinedText, PQRCategory.FINANCIAL)
+          category: PQRCategory.PAYMENTS,
+          subcategory: this.determineSubcategory(combinedText, PQRCategory.PAYMENTS)
         };
       } else if (combinedText.match(/comun|vecin|ruido|fiesta|mascot|basura|conviven/i)) {
         return { 
-          category: PQRCategory.COMMUNITY,
-          subcategory: this.determineSubcategory(combinedText, PQRCategory.COMMUNITY)
+          category: PQRCategory.NEIGHBORS,
+          subcategory: this.determineSubcategory(combinedText, PQRCategory.NEIGHBORS)
         };
       } else if (combinedText.match(/servicio|agua|luz|gas|internet|tv|ascensor|gimnasio|piscina/i)) {
         return { 
           category: PQRCategory.SERVICES,
           subcategory: this.determineSubcategory(combinedText, PQRCategory.SERVICES)
-        };
-      } else if (combinedText.match(/suger|propon|mejor|idea|recomend/i)) {
-        return { 
-          category: PQRCategory.SUGGESTION,
-          subcategory: null
-        };
-      } else if (combinedText.match(/quej|reclam|inconform|molest|insatisf/i)) {
-        return { 
-          category: PQRCategory.COMPLAINT,
-          subcategory: null
         };
       }
 
@@ -270,7 +261,7 @@ export class PQRAssignmentService {
 
       // Verificar coincidencias con palabras clave de prioridad
       if (urgentKeywords.some(keyword => combinedText.includes(keyword))) {
-        return { priority: PQRPriority.URGENT };
+        return { priority: PQRPriority.CRITICAL };
       } else if (highKeywords.some(keyword => combinedText.includes(keyword))) {
         return { priority: PQRPriority.HIGH };
       } else if (lowKeywords.some(keyword => combinedText.includes(keyword))) {
@@ -283,8 +274,6 @@ export class PQRAssignmentService {
           return { priority: PQRPriority.HIGH };
         case PQRCategory.MAINTENANCE:
           return { priority: PQRPriority.MEDIUM };
-        case PQRCategory.SUGGESTION:
-          return { priority: PQRPriority.LOW };
         default:
           return { priority: PQRPriority.MEDIUM };
       }
@@ -434,7 +423,7 @@ export class PQRAssignmentService {
       // Si no hay SLA específico, usar valores predeterminados según prioridad
       const now = new Date();
       switch (priority) {
-        case PQRPriority.URGENT:
+        case PQRPriority.CRITICAL:
           return new Date(now.getTime() + 4 * 60 * 60000); // 4 horas
         case PQRPriority.HIGH:
           return new Date(now.getTime() + 24 * 60 * 60000); // 24 horas
@@ -454,42 +443,52 @@ export class PQRAssignmentService {
   /**
    * Genera etiquetas para clasificación adicional
    */
-  private async generateTags(pqrData: PQRInputData, category: PQRCategory): Promise<string[]> {
-    const tags: string[] = [category];
-    const combinedText = `${pqrData.title} ${pqrData.description}`.toLowerCase();
-    
-    // Añadir etiqueta de tipo
-    tags.push(pqrData.type);
-    
-    // Añadir etiquetas basadas en contenido
-    if (combinedText.match(/urgent|emergencia|inmediato/i)) {
-      tags.push('urgente');
+  private async generateTags(pqrData: PQRInputData, category: PQRCategory): Promise<string[] | undefined> {
+    try {
+      const tags = [];
+      const combinedText = `${pqrData.title} ${pqrData.description}`.toLowerCase();
+      
+      // Añadir etiqueta de categoría
+      tags.push(category);
+      
+      // Añadir etiquetas basadas en palabras clave
+      if (combinedText.match(/urgent|emergencia|inmediato|grave|peligro/i)) {
+        tags.push('urgente');
+      }
+      
+      if (combinedText.match(/reincidente|repetido|nuevamente|otra vez/i)) {
+        tags.push('reincidente');
+      }
+      
+      if (combinedText.match(/garantía|reciente|nuevo|instalación/i)) {
+        tags.push('garantía');
+      }
+      
+      // Añadir etiquetas específicas por categoría
+      switch (category) {
+        case PQRCategory.MAINTENANCE:
+          if (combinedText.match(/agua|fuga|goter|humed|inunda|tuberi|ba[ñn]o/i)) {
+            tags.push('plomería');
+          }
+          if (combinedText.match(/luz|el[eé]ctric|bombill|enchufe|corto|apag[oó]n/i)) {
+            tags.push('eléctrico');
+          }
+          break;
+          
+        case PQRCategory.SECURITY:
+          if (combinedText.match(/c[aá]mara|cctv|video/i)) {
+            tags.push('videovigilancia');
+          }
+          if (combinedText.match(/robo|hurto|intrusi[oó]n/i)) {
+            tags.push('incidente');
+          }
+          break;
+      }
+      
+      return tags.length > 0 ? tags : undefined;
+    } catch (error) {
+      console.error('Error al generar etiquetas:', error);
+      return undefined;
     }
-    
-    if (combinedText.match(/reincidente|nuevamente|otra vez|vuelve a ocurrir/i)) {
-      tags.push('reincidente');
-    }
-    
-    // Etiquetas específicas por categoría
-    switch (category) {
-      case PQRCategory.MAINTENANCE:
-        if (combinedText.match(/agua|fuga|goter/i)) tags.push('plomería');
-        if (combinedText.match(/luz|el[eé]ctric/i)) tags.push('eléctrico');
-        break;
-      case PQRCategory.SECURITY:
-        if (combinedText.match(/c[aá]mara|cctv/i)) tags.push('cámaras');
-        if (combinedText.match(/robo|hurto/i)) tags.push('incidente');
-        break;
-    }
-    
-    return tags;
   }
-}
-
-/**
- * Crea una instancia del servicio de asignación de PQR para el esquema especificado
- */
-export function createPQRAssignmentService(req: Request): PQRAssignmentService {
-  const schema = getSchemaFromRequest(req);
-  return new PQRAssignmentService(schema);
 }
