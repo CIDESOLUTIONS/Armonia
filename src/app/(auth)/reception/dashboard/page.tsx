@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-;
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -70,12 +69,12 @@ interface DashboardData {
 }
 
 export default function ReceptionDashboard() {
-  const { isLoggedIn, _token, schemaName, userName, language = 'Español', themeMode = 'light'  } = useAuth();
-  const _router = useRouter();
+  const { isLoggedIn, token, schemaName, userName, language = 'Español', themeMode = 'light'  } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
-  const [error, _setError] = useState<string | null>(null);
-  const [_searchTerm, _setSearchTerm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { notifications, unreadNotificationsCount } = useRealTimeCommunication();
 
   // Datos de ejemplo para desarrollo y pruebas

@@ -44,7 +44,15 @@ import CreateVotingDialog from './CreateVotingDialog';
 import VotingResultsDialog from './VotingResultsDialog';
 
 // Componente para mostrar el estado del quórum
-const QuorumStatus = ({ current, required, status }) => {
+const QuorumStatus = ({ 
+  current, 
+  required, 
+  status 
+}: { 
+  current: number; 
+  required: number; 
+  status: string;
+}) => {
   const theme = useTheme();
   const percentage = Math.min(100, Math.round((current / required) * 100));
   
@@ -84,7 +92,7 @@ const QuorumStatus = ({ current, required, status }) => {
 };
 
 // Componente para mostrar el estado de la asamblea
-const AssemblyStatusChip = ({ status }) => {
+const AssemblyStatusChip = ({ status }: { status: string }) => {
   const getStatusConfig = (status) => {
     switch (status) {
       case 'SCHEDULED':

@@ -36,14 +36,9 @@ export async function GET(request: NextRequest) {
     const isPublic = searchParams.get('isPublic') ? searchParams.get('isPublic') === 'true' : undefined;
     const isEmergency = searchParams.get('isEmergency') ? searchParams.get('isEmergency') === 'true' : undefined;
     const tags = searchParams.get('tags') ? searchParams.get('tags')!.split(',') : undefined;
-
-    // Filtrar acceso según rol
-    const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'COMPLEX_ADMIN';
-    const isStaff = session.user.role === 'STAFF';
-    const isResident = session.user.role === 'RESIDENT';
-
-    // Aplicar restricciones según rol
-    let queryParams: any = {
+    
+    // Usar const en lugar de let para queryParams ya que nunca se reasigna
+    const queryParams = {
       page,
       limit,
       status,
@@ -55,6 +50,13 @@ export async function GET(request: NextRequest) {
       unitNumber,
       tags
     };
+
+    // Filtrar acceso según rol
+    const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'COMPLEX_ADMIN';
+    const isStaff = session.user.role === 'STAFF';
+    const isResident = session.user.role === 'RESIDENT';
+
+    // Aplicar restricciones según rol
 
     // Residentes solo ven sus propios incidentes o los públicos
     if (isResident) {

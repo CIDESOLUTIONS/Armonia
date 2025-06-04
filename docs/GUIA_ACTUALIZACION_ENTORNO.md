@@ -132,10 +132,13 @@ npm install [nombre-del-modulo] --legacy-peer-deps
 1. **Usa comillas dobles** para strings en JSX y TSX, no entidades HTML.
 2. **Evita props vacías** en componentes React.
 3. **Declara todas las variables** antes de usarlas.
-4. **Usa tipado explícito** para parámetros de funciones.
+4. **Usa tipado explícito** para parámetros de funciones y componentes.
 5. **Evita bloques try/catch anidados** o mal formados.
 6. **Actualiza rutas de API** para usar el nuevo formato App Router de Next.js 15.
 7. **Usa el operador de encadenamiento opcional** (`?.`) en lugar de verificaciones anidadas.
+8. **Usa `const` en lugar de `let`** para variables que no se reasignan.
+9. **Evita variables no utilizadas** o renómbralas con prefijo `_` si son necesarias para la estructura.
+10. **Importa todos los componentes** que utilizas en tus archivos, especialmente los iconos de Lucide React.
 
 ## Estructura de Rutas en Next.js 15
 

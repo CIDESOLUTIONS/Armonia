@@ -3,13 +3,9 @@
 const nextConfig = {
   // Configuraciones básicas
   reactStrictMode: true,
-  swcMinify: true,
   
   // Asegurar que Next.js maneje correctamente las rutas con grupos
-  experimental: {
-    // Opciones experimentales actualizadas para Next.js 14
-    serverComponentsExternalPackages: ["@prisma/client"],
-  }
+  serverExternalPackages: ["@prisma/client"]
 }
 
 module.exports = nextConfig;

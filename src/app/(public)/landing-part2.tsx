@@ -93,108 +93,108 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
     }
   };
   
-  const t = currentLanguage === &quot;Español&quot; ? texts.es : texts.en;
+  const t = currentLanguage === "Español" ? texts.es : texts.en;
   return (
     <>
       {/* Segunda fila de funcionalidades */}
-      <section className=&quot;py-20 bg-white&quot;>
-        <div className=&quot;container mx-auto px-4&quot;>
-          <div className=&quot;grid grid-cols-1 md:grid-cols-3 gap-8 mt-8&quot;>
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
             {/* Portal de Residentes */}
-            <div className=&quot;bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all&quot; data-testid=&quot;feature-card&quot;>
-              <User className=&quot;h-12 w-12 text-indigo-600 mb-6&quot; />
-              <h3 className=&quot;text-xl font-bold mb-3 text-gray-900&quot;>{t.resident}</h3>
-              <p className=&quot;text-gray-600 mb-6&quot;>
+            <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all" data-testid="feature-card">
+              <User className="h-12 w-12 text-indigo-600 mb-6" />
+              <h3 className="text-xl font-bold mb-3 text-gray-900">{t.resident}</h3>
+              <p className="text-gray-600 mb-6">
                 {t.residentDesc}
               </p>
-              <ul className=&quot;space-y-2 mb-6&quot;>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.residentFeatures.feature1}</span>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.residentFeatures.feature1}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.residentFeatures.feature2}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.residentFeatures.feature2}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.residentFeatures.feature3}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.residentFeatures.feature3}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.residentFeatures.feature4}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.residentFeatures.feature4}</span>
                 </li>
               </ul>
-              <a href=&quot;#&quot; className=&quot;inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium&quot;>
+              <a href="#" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium">
                 {t.learnMore}
-                <svg className=&quot;w-4 h-4 ml-1&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; strokeWidth=&quot;2&quot; strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot;>
-                  <path d=&quot;M5 12h14M12 5l7 7-7 7&quot; />
+                <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </a>
             </div>
 
             {/* Sistema PQR */}
-            <div className=&quot;bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all&quot; data-testid=&quot;feature-card&quot;>
-              <MessageSquare className=&quot;h-12 w-12 text-indigo-600 mb-6&quot; />
-              <h3 className=&quot;text-xl font-bold mb-3 text-gray-900&quot;>{t.pqr}</h3>
-              <p className=&quot;text-gray-600 mb-6&quot;>
+            <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all" data-testid="feature-card">
+              <MessageSquare className="h-12 w-12 text-indigo-600 mb-6" />
+              <h3 className="text-xl font-bold mb-3 text-gray-900">{t.pqr}</h3>
+              <p className="text-gray-600 mb-6">
                 {t.pqrDesc}
               </p>
-              <ul className=&quot;space-y-2 mb-6&quot;>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.pqrFeatures.feature1}</span>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.pqrFeatures.feature1}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.pqrFeatures.feature2}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.pqrFeatures.feature2}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.pqrFeatures.feature3}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.pqrFeatures.feature3}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.pqrFeatures.feature4}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.pqrFeatures.feature4}</span>
                 </li>
               </ul>
-              <a href=&quot;#&quot; className=&quot;inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium&quot;>
+              <a href="#" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium">
                 {t.learnMore}
-                <svg className=&quot;w-4 h-4 ml-1&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; strokeWidth=&quot;2&quot; strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot;>
-                  <path d=&quot;M5 12h14M12 5l7 7-7 7&quot; />
+                <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </a>
             </div>
 
             {/* Portal de Recepción y Vigilancia */}
-            <div className=&quot;bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all&quot; data-testid=&quot;feature-card&quot;>
-              <Shield className=&quot;h-12 w-12 text-indigo-600 mb-6&quot; />
-              <h3 className=&quot;text-xl font-bold mb-3 text-gray-900&quot;>{t.reception}</h3>
-              <p className=&quot;text-gray-600 mb-6&quot;>
+            <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-all" data-testid="feature-card">
+              <Shield className="h-12 w-12 text-indigo-600 mb-6" />
+              <h3 className="text-xl font-bold mb-3 text-gray-900">{t.reception}</h3>
+              <p className="text-gray-600 mb-6">
                 {t.receptionDesc}
               </p>
-              <ul className=&quot;space-y-2 mb-6&quot;>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.receptionFeatures.feature1}</span>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.receptionFeatures.feature1}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.receptionFeatures.feature2}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.receptionFeatures.feature2}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.receptionFeatures.feature3}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.receptionFeatures.feature3}</span>
                 </li>
-                <li className=&quot;flex items-start&quot;>
-                  <Check className=&quot;h-5 w-5 text-green-500 mr-2 flex-shrink-0&quot; />
-                  <span className=&quot;text-gray-700&quot;>{t.receptionFeatures.feature4}</span>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                  <span className="text-gray-700">{t.receptionFeatures.feature4}</span>
                 </li>
               </ul>
-              <a href=&quot;#&quot; className=&quot;inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium&quot;>
+              <a href="#" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium">
                 {t.learnMore}
-                <svg className=&quot;w-4 h-4 ml-1&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; strokeWidth=&quot;2&quot; strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot;>
-                  <path d=&quot;M5 12h14M12 5l7 7-7 7&quot; />
+                <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </a>
             </div>
@@ -203,46 +203,46 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
       </section>
 
       {/* Características Adicionales */}
-      <section className=&quot;py-20 bg-white&quot;>
-        <div className=&quot;container mx-auto px-4&quot;>
-          <div className=&quot;text-center mb-16&quot;>
-            <h2 className=&quot;text-3xl md:text-4xl font-bold mb-4 text-gray-900&quot;>
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
               {t.featuresTitle}
             </h2>
-            <p className=&quot;text-lg text-gray-600 max-w-3xl mx-auto&quot;>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t.featuresDescription}
             </p>
           </div>
 
-          <div className=&quot;grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8&quot;>
-            <div className=&quot;p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center&quot;>
-              <Calendar className=&quot;h-12 w-12 text-indigo-500 mb-4&quot; />
-              <h3 className=&quot;text-lg font-semibold mb-2 text-gray-900&quot;>{t.features.virtualAssemblies}</h3>
-              <p className=&quot;text-gray-600&quot;>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
+              <Calendar className="h-12 w-12 text-indigo-500 mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.virtualAssemblies}</h3>
+              <p className="text-gray-600">
                 {t.features.virtualAssembliesDesc}
               </p>
             </div>
 
-            <div className=&quot;p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center&quot;>
-              <BarChart4 className=&quot;h-12 w-12 text-indigo-500 mb-4&quot; />
-              <h3 className=&quot;text-lg font-semibold mb-2 text-gray-900&quot;>{t.features.advancedReports}</h3>
-              <p className=&quot;text-gray-600&quot;>
+            <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
+              <BarChart4 className="h-12 w-12 text-indigo-500 mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.advancedReports}</h3>
+              <p className="text-gray-600">
                 {t.features.advancedReportsDesc}
               </p>
             </div>
 
-            <div className=&quot;p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center&quot;>
-              <Bell className=&quot;h-12 w-12 text-indigo-500 mb-4&quot; />
-              <h3 className=&quot;text-lg font-semibold mb-2 text-gray-900&quot;>{t.features.notifications}</h3>
-              <p className=&quot;text-gray-600&quot;>
+            <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
+              <Bell className="h-12 w-12 text-indigo-500 mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.notifications}</h3>
+              <p className="text-gray-600">
                 {t.features.notificationsDesc}
               </p>
             </div>
 
-            <div className=&quot;p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center&quot;>
-              <Archive className=&quot;h-12 w-12 text-indigo-500 mb-4&quot; />
-              <h3 className=&quot;text-lg font-semibold mb-2 text-gray-900&quot;>{t.features.documentManagement}</h3>
-              <p className=&quot;text-gray-600&quot;>
+            <div className="p-6 bg-white rounded-lg shadow-md flex flex-col items-center text-center">
+              <Archive className="h-12 w-12 text-indigo-500 mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">{t.features.documentManagement}</h3>
+              <p className="text-gray-600">
                 {t.features.documentManagementDesc}
               </p>
             </div>
@@ -251,60 +251,60 @@ export function LandingPart2({ theme, language }: { theme: string, language?: st
       </section>
 
       {/* Testimonios */}
-      <section className=&quot;py-20 bg-indigo-50&quot;>
-        <div className=&quot;container mx-auto px-4&quot;>
-          <div className=&quot;text-center mb-16&quot;>
-            <h2 className=&quot;text-3xl md:text-4xl font-bold mb-4 text-gray-900&quot;>
+      <section className="py-20 bg-indigo-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
               {t.statsTitle}
             </h2>
-            <p className=&quot;text-lg text-gray-600 max-w-3xl mx-auto&quot;>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {t.statsDescription}
             </p>
           </div>
 
-          <div className=&quot;grid grid-cols-1 md:grid-cols-3 gap-8&quot;>
-            <div className=&quot;p-8 rounded-lg bg-white shadow-lg&quot;>
-              <div className=&quot;flex items-center mb-4&quot;>
-                <div className=&quot;w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4&quot;>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-8 rounded-lg bg-white shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
                   JR
                 </div>
                 <div>
-                  <h4 className=&quot;font-bold text-gray-900&quot;>Juan Rodríguez</h4>
-                  <p className=&quot;text-sm text-gray-500&quot;>Administrador, Conjunto Residencial Los Pinos</p>
+                  <h4 className="font-bold text-gray-900">Juan Rodríguez</h4>
+                  <p className="text-sm text-gray-500">Administrador, Conjunto Residencial Los Pinos</p>
                 </div>
               </div>
-              <p className=&quot;text-gray-600 italic&quot;>
-                &quot;Armonía ha revolucionado nuestra administración. Las asambleas virtuales y el sistema de votación han aumentado la participación en un 80%. La gestión financiera es ahora transparente y sencilla.&quot;
+              <p className="text-gray-600 italic">
+                "Armonía ha revolucionado nuestra administración. Las asambleas virtuales y el sistema de votación han aumentado la participación en un 80%. La gestión financiera es ahora transparente y sencilla."
               </p>
             </div>
 
-            <div className=&quot;p-8 rounded-lg bg-white shadow-lg&quot;>
-              <div className=&quot;flex items-center mb-4&quot;>
-                <div className=&quot;w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4&quot;>
+            <div className="p-8 rounded-lg bg-white shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
                   CG
                 </div>
                 <div>
-                  <h4 className=&quot;font-bold text-gray-900&quot;>Carolina Gómez</h4>
-                  <p className=&quot;text-sm text-gray-500&quot;>Residente, Torres del Parque</p>
+                  <h4 className="font-bold text-gray-900">Carolina Gómez</h4>
+                  <p className="text-sm text-gray-500">Residente, Torres del Parque</p>
                 </div>
               </div>
-              <p className=&quot;text-gray-600 italic&quot;>
-                &quot;Como residente, Armonía ha cambiado completamente mi experiencia. Puedo pagar mis cuotas online, reservar áreas comunes desde mi celular, y estar informada de todo lo que ocurre en el conjunto.&quot;
+              <p className="text-gray-600 italic">
+                "Como residente, Armonía ha cambiado completamente mi experiencia. Puedo pagar mis cuotas online, reservar áreas comunes desde mi celular, y estar informada de todo lo que ocurre en el conjunto."
               </p>
             </div>
 
-            <div className=&quot;p-8 rounded-lg bg-white shadow-lg&quot;>
-              <div className=&quot;flex items-center mb-4&quot;>
-                <div className=&quot;w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4&quot;>
+            <div className="p-8 rounded-lg bg-white shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
                   ML
                 </div>
                 <div>
-                  <h4 className=&quot;font-bold text-gray-900&quot;>Miguel López</h4>
-                  <p className=&quot;text-sm text-gray-500&quot;>Vigilante, Conjunto Alto Verde</p>
+                  <h4 className="font-bold text-gray-900">Miguel López</h4>
+                  <p className="text-sm text-gray-500">Vigilante, Conjunto Alto Verde</p>
                 </div>
               </div>
-              <p className=&quot;text-gray-600 italic&quot;>
-                &quot;El módulo de recepción es muy intuitivo. La gestión de visitantes y paquetes es ahora 100% digital, y los residentes reciben notificaciones instantáneas cuando tienen correspondencia.&quot;
+              <p className="text-gray-600 italic">
+                "El módulo de recepción es muy intuitivo. La gestión de visitantes y paquetes es ahora 100% digital, y los residentes reciben notificaciones instantáneas cuando tienen correspondencia."
               </p>
             </div>
           </div>

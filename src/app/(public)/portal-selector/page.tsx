@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Plus, Shield, ArrowLeft } from 'lucide-react';
+import { Building, UserPlus, Shield, ArrowLeft, User } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { Header } from '@/components/layout/header';
 
 export default function PortalSelector() {
-  const _router = useRouter();
-  const [uage, _setLanguageUnused] = useState("Español");
-  const [_theme, _setTheme] = useState("Claro");
-  const [setCurrency] = useState("Pesos");
+  const router = useRouter();
+  const [language, setLanguage] = useState("Español");
+  const [theme, setTheme] = useState("Claro");
+  const [currency, setCurrency] = useState("Pesos");
   
   // Textos según el idioma
   const texts = {
@@ -248,7 +248,7 @@ export default function PortalSelector() {
       
       <footer className={`py-6 ${theme === "Oscuro" ? "bg-gray-800 text-gray-400" : "bg-gray-900 text-gray-400"}`}>
         <div className="container mx-auto px-4 text-center">
-          <p>© 2025 Armonía. {uage === "Español" ? "Todos los derechos reservados" : "All rights reserved"}.</p>
+          <p>© 2025 Armonía. {language === "Español" ? "Todos los derechos reservados" : "All rights reserved"}.</p>
         </div>
       </footer>
     </div>
