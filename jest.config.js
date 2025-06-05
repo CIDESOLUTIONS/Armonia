@@ -1,6 +1,16 @@
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      isolatedModules: true,
+      jsx: 'react-jsx'
+    }],
+    '^.+\\.(js|jsx)$': ['babel-jest', {
+      presets: ['@babel/preset-env', '@babel/preset-react']
+    }]
+  },
   transformIgnorePatterns: [
     '/node_modules/(?!(jose)/)'
   ],
@@ -22,6 +32,10 @@ module.exports = {
     '^../services/pqrAssignmentService$': '<rootDir>/src/services/pqrAssignmentService.mock.ts',
     '^../services/pqrNotificationService$': '<rootDir>/src/services/pqrNotificationService.mock.ts',
     
+    // Mapeos para estilos y assets
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/src/services/__mocks__/fileMock.js',
+    
     // Mapeos generales después
     '^@/(.*)$': '<rootDir>/src/$1',
     '^../../lib/(.*)$': '<rootDir>/src/lib/$1',
@@ -29,7 +43,9 @@ module.exports = {
     '^../../lib/prisma$': '<rootDir>/src/lib/prisma',
     '^../../communications/(.*)$': '<rootDir>/src/communications/$1',
     '^../../communications/integrations/(.*)$': '<rootDir>/src/communications/integrations/$1',
-    '^next/server$': '<rootDir>/node_modules/next/server.js'
+    '^next/server$': '<rootDir>/node_modules/next/server.js',
+    '^react$': '<rootDir>/node_modules/react',
+    '^react-dom$': '<rootDir>/node_modules/react-dom'
   },
   moduleDirectories: ['node_modules', 'src'],
   modulePaths: ['<rootDir>/src'],
