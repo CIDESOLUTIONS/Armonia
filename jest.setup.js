@@ -3,38 +3,6 @@
  * Este archivo centraliza todos los mocks necesarios para las pruebas
  */
 
-// Importar configuración de Prisma mock extendido
-// Usando jest.requireActual para evitar problemas con 'require'
-const prismaMockSetup = jest.requireActual('./src/services/__mocks__/jest-prisma-setup');
-
-// Importar mocks de enums y constantes usando jest.requireActual
-const pqrConstants = jest.requireActual('./src/services/__mocks__/pqr-constants');
-const intercomConstants = jest.requireActual('./src/services/__mocks__/intercom-constants');
-
-// Definir explícitamente las variables para evitar errores
-const PQRCategory = pqrConstants.PQRCategory || {};
-const PQRStatus = pqrConstants.PQRStatus || {};
-const PQRPriority = pqrConstants.PQRPriority || {};
-const VisitStatus = intercomConstants.VisitStatus || {};
-const VisitType = intercomConstants.VisitType || {};
-
-// Importar utilidades de fecha
-const dateUtils = jest.requireActual('./src/services/__mocks__/date-utils');
-const restoreDateNow = dateUtils.restoreDateNow;
-const mockDateNow = dateUtils.mockDateNow;
-
-// Asegurar que Date.now sea una función
-if (typeof Date.now !== 'function') {
-  Date.now = function() {
-    return new Date().getTime();
-  };
-}
-
-// Mock de PaymentService - usando jest.requireActual para evitar errores
-const PaymentService = jest.requireActual('./src/services/__mocks__/payment-service');
-// Registrar globalmente para que esté disponible en todos los tests
-global.PaymentService = PaymentService;
-
 // Mock de módulos de comunicación
 jest.mock('./src/lib/communications/email-service', () => ({
   sendEmail: jest.fn().mockResolvedValue({ success: true })
@@ -52,20 +20,19 @@ jest.mock('./src/lib/communications/whatsapp-service', () => ({
   sendWhatsAppMessage: jest.fn().mockResolvedValue({ success: true })
 }));
 
-// Mock de utilidades de plantillas - usando try/catch para evitar errores
-const templateServiceMock = jest.requireActual('./src/services/__mocks__/template-service');
-global.templateServiceMock = templateServiceMock;
-
-// Condicionar el mock de template-service para evitar errores si no existe
-try {
-  // Verificar si el módulo existe antes de mockearlo
-  jest.requireActual('./src/lib/templates/template-service');
-  // Si existe, mockearlo
-  jest.mock('./src/lib/templates/template-service', () => templateServiceMock);
-} catch (e) {
-  // Si no existe, no hacer nada y evitar el error
-  console.log('Módulo template-service no encontrado, se usa mock global');
-}
+// Mock de utilidades de plantillas - usando factory inline para evitar errores de referencia
+jest.mock('./src/lib/templates/template-service', () => ({
+  registerTemplate: jest.fn().mockReturnValue(true),
+  getTemplate: jest.fn().mockReturnValue({
+    content: '<html><body>Plantilla de prueba</body></html>',
+    defaultVars: { appName: 'Armonía Test' }
+  }),
+  renderTemplate: jest.fn().mockReturnValue('<html><body>Plantilla renderizada</body></html>'),
+  removeTemplate: jest.fn().mockReturnValue(true),
+  updateTemplate: jest.fn().mockReturnValue(true),
+  getAllTemplateNames: jest.fn().mockReturnValue(['email', 'notification', 'receipt']),
+  hasTemplate: jest.fn().mockReturnValue(true)
+}));
 
 // Mock de utilidades
 jest.mock('./src/lib/prisma', () => ({
@@ -125,6 +92,74 @@ jest.mock('./src/lib/prisma', () => ({
   getTenantPrismaClient: jest.fn()
 }));
 
+// Definir constantes globales para pruebas
+global.PQRCategory = {
+  MAINTENANCE: 'MAINTENANCE',
+  SECURITY: 'SECURITY',
+  NOISE: 'NOISE',
+  COMMON_AREAS: 'COMMON_AREAS',
+  PAYMENTS: 'PAYMENTS',
+  SERVICES: 'SERVICES',
+  ADMINISTRATIVE: 'ADMINISTRATIVE',
+  FINANCIAL: 'FINANCIAL',
+  COMMUNITY: 'COMMUNITY',
+  SUGGESTION: 'SUGGESTION',
+  COMPLAINT: 'COMPLAINT',
+  OTHER: 'OTHER'
+};
+
+global.PQRStatus = {
+  OPEN: 'OPEN',
+  ASSIGNED: 'ASSIGNED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  PENDING_INFO: 'PENDING_INFO',
+  RESOLVED: 'RESOLVED',
+  CLOSED: 'CLOSED',
+  CANCELLED: 'CANCELLED'
+};
+
+global.PQRPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+  CRITICAL: 'CRITICAL'
+};
+
+global.VisitStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
+global.VisitType = {
+  DELIVERY: 'DELIVERY',
+  GUEST: 'GUEST',
+  SERVICE: 'SERVICE',
+  FAMILY: 'FAMILY',
+  OTHER: 'OTHER'
+};
+
+// Mock para Date.now
+const originalDateNow = Date.now;
+global.mockDateNow = (mockTimestamp) => {
+  Date.now = jest.fn(() => mockTimestamp);
+};
+
+global.restoreDateNow = () => {
+  Date.now = originalDateNow;
+};
+
+// Mock de PaymentService
+global.PaymentService = {
+  processPayment: jest.fn().mockResolvedValue({ success: true, transactionId: 'mock-tx-123' }),
+  getPaymentStatus: jest.fn().mockResolvedValue({ status: 'COMPLETED' }),
+  refundPayment: jest.fn().mockResolvedValue({ success: true, refundId: 'mock-refund-123' })
+};
+
 // Configuración global para pruebas
 beforeEach(() => {
   jest.clearAllMocks();
@@ -132,7 +167,5 @@ beforeEach(() => {
 
 afterEach(() => {
   // Restaurar Date.now original después de cada prueba
-  if (typeof restoreDateNow === 'function') {
-    restoreDateNow();
-  }
+  global.restoreDateNow();
 });
