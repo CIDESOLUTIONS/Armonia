@@ -27,7 +27,7 @@ interface TranslationProviderProps {
 
 export const TranslationProvider: React.FC<TranslationProviderProps> = ({ children }) => {
   // Estado para almacenar el idioma actual
-  const [language, _setLanguage] = useState<Language>('Español');
+  const [language, setLanguage] = useState<Language>('Español');
 
   // Valor del contexto
   const value = {
