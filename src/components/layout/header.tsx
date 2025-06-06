@@ -124,7 +124,7 @@ export function Header({
               title={langlanguage === 'Español' ? 'Cambiar a Inglés' : 'Switch to Spanish'}
             >
               <Globe className="w-5 h-5" />
-              <span className="text-xs">{langlanguage.substring(0, 2)}</span>
+              <span className="text-xs">{langlanguage?.substring(0, 2) || 'Es'}</span>
             </button>
             <button
               onClick={toggleTheme}
@@ -221,7 +221,7 @@ export function Header({
                 className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               >
                 <Globe className="w-5 h-5" />
-                <span className="text-xs">{langlanguage.substring(0, 2)}</span>
+                <span className="text-xs">{langlanguage?.substring(0, 2) || 'Es'}</span>
               </button>
               <button
                 onClick={toggleTheme}
