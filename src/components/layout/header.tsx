@@ -28,8 +28,8 @@ const headerTexts = {
 interface HeaderProps {
   theme: string;
   setTheme: (theme: string) => void;
-  language: string;
-  setLanguage: (language: string) => void;
+  langlanguage: string;
+  setLanglanguage: (language: string) => void;
   currency: string;
   setCurrency: (currency: string) => void;
   logout?: () => void;
@@ -42,8 +42,8 @@ interface HeaderProps {
 export function Header({
   theme,
   setTheme,
-  language,
-  setLanguage,
+  langlanguage,
+  setLanglanguage,
   currency,
   setCurrency,
   logout,
@@ -52,15 +52,15 @@ export function Header({
   adminName = null,
   hideNavLinks = false,
 }: HeaderProps) {
-  const _router = useRouter();
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Obtenemos las traducciones según el idioma
-  const t = language === 'Español' ? headerTexts.es : headerTexts.en;
+  const t = langlanguage === 'Español' ? headerTexts.es : headerTexts.en;
 
   const toggleLanguage = () => {
-    setLanguage(language === 'Español' ? 'English' : 'Español');
+    setLanglanguage(langlanguage === 'Español' ? 'English' : 'Español');
   };
 
   const toggleTheme = () => {
@@ -121,10 +121,10 @@ export function Header({
             <button
               onClick={toggleLanguage}
               className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
-              title={language === 'Español' ? 'Cambiar a Inglés' : 'Switch to Spanish'}
+              title={langlanguage === 'Español' ? 'Cambiar a Inglés' : 'Switch to Spanish'}
             >
               <Globe className="w-5 h-5" />
-              <span className="text-xs">{language.substring(0, 2)}</span>
+              <span className="text-xs">{langlanguage.substring(0, 2)}</span>
             </button>
             <button
               onClick={toggleTheme}
@@ -221,7 +221,7 @@ export function Header({
                 className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
               >
                 <Globe className="w-5 h-5" />
-                <span className="text-xs">{language.substring(0, 2)}</span>
+                <span className="text-xs">{langlanguage.substring(0, 2)}</span>
               </button>
               <button
                 onClick={toggleTheme}

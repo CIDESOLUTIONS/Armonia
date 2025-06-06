@@ -1,9 +1,9 @@
 // Funcionalidades adicionales y características
 import { Shield, Check, Calendar, BarChart4, MessageSquare, Bell, Archive, User } from 'lucide-react';
 
-export function LandingPart2({ theme, language }: { theme: string, language?: string }) {
+export function LandingPart2({ theme, langlanguage }: { theme: string, langlanguage?: string }) {
   // Si no se pasa el idioma, asumimos español
-  const currentLanguage = language || "Español";
+  const currentLanguage = langlanguage || "Español";
   
   // Textos localizados
   const texts = {

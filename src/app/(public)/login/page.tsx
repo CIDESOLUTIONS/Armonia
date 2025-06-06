@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES } from '@/constants/routes';
-import { AlertCircle, Building, Shield, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Building, Shield, ArrowLeft, User } from 'lucide-react';
 
 interface PortalInfo {
   type: 'admin' | 'resident' | 'reception' | null;
@@ -20,18 +20,18 @@ interface PortalInfo {
 }
 
 export default function LoginPage() {
-  const _router = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const portalParam = searchParams.get('portal') as 'admin' | 'resident' | 'reception' | null;
   
   const { login } = useAuth();
-  const [_formData, _setFormData] = useState({
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-  const [error, _setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [language, _setLanguageUnused] = useState('Español'); // Por defecto en español
+  const [language, setLanguage] = useState('Español'); // Por defecto en español
 
   // Obtener información del portal
   const getPortalInfo = (): PortalInfo => {
@@ -111,7 +111,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      setError(uage === 'Español'
+      setError(language === 'Español'
         ? 'Por favor, completa todos los campos.'
         : 'Please fill in all fields.');
       return;
@@ -131,7 +131,7 @@ export default function LoginPage() {
       
     } catch (err: unknown) {
       console.error('[LoginPage] Error de autenticación:', err);
-      setError(uage === 'Español'
+      setError(language === 'Español'
         ? 'Credenciales inválidas. Por favor, verifica tu email y contraseña.'
         : 'Invalid credentials. Please verify your email and password.');
     } finally {
@@ -166,7 +166,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="email">
-                  {uage === 'Español' ? 'Email' : 'Email'}
+                  {language === 'Español' ? 'Email' : 'Email'}
                 </Label>
                 <Input
                   id="email"
@@ -176,13 +176,13 @@ export default function LoginPage() {
                   required
                   disabled={loading}
                   className="mt-1"
-                  placeholder={uage === 'Español' ? 'Tu correo electrónico' : 'Your email'}
+                  placeholder={language === 'Español' ? 'Tu correo electrónico' : 'Your email'}
                 />
               </div>
 
               <div>
                 <Label htmlFor="password">
-                  {uage === 'Español' ? 'Contraseña' : 'Password'}
+                  {language === 'Español' ? 'Contraseña' : 'Password'}
                 </Label>
                 <Input
                   id="password"
@@ -192,7 +192,7 @@ export default function LoginPage() {
                   required
                   disabled={loading}
                   className="mt-1"
-                  placeholder={uage === 'Español' ? 'Tu contraseña' : 'Your password'}
+                  placeholder={language === 'Español' ? 'Tu contraseña' : 'Your password'}
                 />
               </div>
 
@@ -209,8 +209,8 @@ export default function LoginPage() {
                 disabled={loading}
               >
                 {loading
-                  ? (uage === 'Español' ? 'Iniciando sesión...' : 'Logging in...')
-                  : (uage === 'Español' ? 'Iniciar Sesión' : 'Log In')}
+                  ? (language === 'Español' ? 'Iniciando sesión...' : 'Logging in...')
+                  : (language === 'Español' ? 'Iniciar Sesión' : 'Log In')}
               </Button>
 
               <div className="flex justify-between text-sm">
@@ -220,7 +220,7 @@ export default function LoginPage() {
                   onClick={() => router.push(ROUTES.HOME)}
                   className={`${portalInfo.textColor}`}
                 >
-                  {uage === 'Español' ? 'Volver al inicio' : 'Back to home'}
+                  {language === 'Español' ? 'Volver al inicio' : 'Back to home'}
                 </Button>
               </div>
             </form>

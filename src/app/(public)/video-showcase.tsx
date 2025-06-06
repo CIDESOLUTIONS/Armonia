@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
-export function VideoShowcase({ theme, language }: { theme: string, language?: string }) {
+export function VideoShowcase({ theme, langlanguage }: { theme: string, langlanguage?: string }) {
   // Si no se pasa el idioma, asumimos español
-  const currentLanguage = language || "Español";
+  const currentLanguage = langlanguage || "Español";
   
   // Textos traducciones
   const texts = {

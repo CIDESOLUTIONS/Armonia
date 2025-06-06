@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Building, MessageSquare, Calendar, Mail, Phone } from 'lucide-react';
 
-export function FooterContact({ theme, uage }: { theme: string, uage?: string }) {
+export function FooterContact({ theme, langlanguage }: { theme: string, langlanguage?: string }) {
   // Si no se pasa el idioma, asumimos español
-  const currentLanguage = uage || "Español";
+  const currentLanguage = langlanguage || "Español";
   
   // Textos localizados
   const texts = {
@@ -62,7 +62,7 @@ export function FooterContact({ theme, uage }: { theme: string, uage?: string })
   
   const t = currentLanguage === "Español" ? texts.es : texts.en;
   
-  const [_formData, _setFormData] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
