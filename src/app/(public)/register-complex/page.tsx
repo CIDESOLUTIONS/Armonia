@@ -179,9 +179,9 @@ export default function RegisterComplex() {
   const planParam = searchParams.get("plan");
   const paidParam = searchParams.get("paid");
   
-  const [language, _setLanguage] = useState("Español");
-  const [_currency, _setCurrency] = useState("Pesos");
-  const [_theme, _setTheme] = useState("Claro");
+  const [language, setLanguage] = useState("Español");
+  const [currency, setCurrency] = useState("Pesos");
+  const [theme, setTheme] = useState("Claro");
   const [step, setStep] = useState(1);
   const [plan, setPlan] = useState(planParam || "basic");
   const [paymentCompleted, setPaymentCompleted] = useState(paidParam === "true");
@@ -191,7 +191,7 @@ export default function RegisterComplex() {
   const t = language === "Español" ? texts.es : texts.en;
   
   // Formulario para registro de conjunto
-  const [_formData, _setFormData] = useState({
+  const [formData, setFormData] = useState({
     complexName: "",
     adminName: "",
     adminEmail: "",
@@ -520,8 +520,8 @@ export default function RegisterComplex() {
       <Header 
         theme={theme}
         setTheme={setTheme}
-        language={language}
-        setLanguage={setLanguage}
+        langlanguage={language}
+        setLanglanguage={setLanguage}
         currency={currency}
         setCurrency={setCurrency}
         hideNavLinks={true}
