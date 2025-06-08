@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import { ServerLogger } from '@/lib/logging/server-logger';
 import { cookies } from 'next/headers';
 
-export async function POST(_req: unknown) {
+export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
     ServerLogger.info(`Intento de login para: ${email}`);
@@ -31,7 +31,7 @@ export async function POST(_req: unknown) {
       );
     }
 
-    const _user = users[0];
+    const user = users[0];
 
     // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -43,9 +43,6 @@ export async function POST(_req: unknown) {
       );
     }
 
-    // Preparar la respuesta
-    // Variable response eliminada por lint
-    
     // Si el usuario no está asociado a un conjunto, es un administrador global
     if (!user.complexId) {
       ServerLogger.info(`Login exitoso para administrador global: ${email}`);
@@ -57,7 +54,7 @@ export async function POST(_req: unknown) {
         isGlobalAdmin: true
       };
 
-      const _token = await generateToken(payload);
+      const token = await generateToken(payload);
       
       // Establecer cookie segura con el token (7 días de expiración)
       cookies().set({
@@ -93,7 +90,7 @@ export async function POST(_req: unknown) {
       }
 
       const complexData = complex[0];
-      const _schemaName = complexData.schemaName;
+      const schemaName = complexData.schemaName;
 
       ServerLogger.info(`Login exitoso para ${email}, conjunto: ${complexData.name}, schema: ${schemaName}`);
 
@@ -107,7 +104,7 @@ export async function POST(_req: unknown) {
         complexName: complexData.name
       };
 
-      const _token = await generateToken(payload);
+      const token = await generateToken(payload);
       
       // Establecer cookie segura con el token (7 días de expiración)
       cookies().set({
@@ -139,3 +136,4 @@ export async function POST(_req: unknown) {
     );
   }
 }
+
