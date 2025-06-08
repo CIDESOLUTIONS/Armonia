@@ -708,6 +708,7 @@ export default function RegisterComplex() {
                       className={`w-full px-4 py-2 border ${validationErrors.complexName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.complexNamePlaceholder}
                       required
+                      title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                     />
                     {validationErrors.complexName && (
                       <p className="mt-1 text-sm text-red-600">{validationErrors.complexName}</p>
@@ -726,6 +727,7 @@ export default function RegisterComplex() {
                         className={`w-full px-4 py-2 border ${validationErrors.adminName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                         placeholder={t.adminNamePlaceholder}
                         required
+                        title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                       />
                       {validationErrors.adminName && (
                         <p className="mt-1 text-sm text-red-600">{validationErrors.adminName}</p>
@@ -742,6 +744,7 @@ export default function RegisterComplex() {
                         className={`w-full px-4 py-2 border ${validationErrors.adminPhone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                         placeholder={t.phonePlaceholder}
                         required
+                        title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                       />
                       {validationErrors.adminPhone && (
                         <p className="mt-1 text-sm text-red-600">{validationErrors.adminPhone}</p>
@@ -760,6 +763,7 @@ export default function RegisterComplex() {
                       className={`w-full px-4 py-2 border ${validationErrors.adminEmail ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.emailPlaceholder}
                       required
+                      title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                     />
                     {validationErrors.adminEmail && (
                       <p className="mt-1 text-sm text-red-600">{validationErrors.adminEmail}</p>
@@ -777,6 +781,7 @@ export default function RegisterComplex() {
                       className={`w-full px-4 py-2 border ${validationErrors.address ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.addressPlaceholder}
                       required
+                      title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                     />
                     {validationErrors.address && (
                       <p className="mt-1 text-sm text-red-600">{validationErrors.address}</p>
@@ -795,6 +800,7 @@ export default function RegisterComplex() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
                         placeholder={t.cityPlaceholder}
                         required
+                        title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                       />
                     </div>
                     <div>
@@ -808,6 +814,7 @@ export default function RegisterComplex() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" 
                         placeholder={t.statePlaceholder}
                         required
+                        title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                       />
                     </div>
                     <div>
@@ -819,6 +826,7 @@ export default function RegisterComplex() {
                         onChange={handleChange} 
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                         required
+                        title={language === "Español" ? "Por favor seleccione una opción" : "Please select an option"}
                       >
                         <option value="Colombia">Colombia</option>
                         <option value="México">México</option>
@@ -841,6 +849,7 @@ export default function RegisterComplex() {
                       className={`w-full px-4 py-2 border ${validationErrors.units ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-indigo-500 focus:border-indigo-500`} 
                       placeholder={t.unitsPlaceholder}
                       required
+                      title={language === "Español" ? "Por favor complete este campo" : "Please fill out this field"}
                     />
                     {validationErrors.units ? (
                       <p className="mt-1 text-sm text-red-600">{validationErrors.units}</p>
