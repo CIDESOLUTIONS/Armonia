@@ -11,8 +11,8 @@ import { ROUTES } from '@/constants/routes';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, loading, adminName, complexName, _logout: authLogout  } = useAuth();
-  const _router = useRouter();
+  const { isLoggedIn, loading, adminName, complexName, logout: authLogout  } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +39,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const handleLogout = async () => {
     try {
       console.log('[AuthLayout] Iniciando proceso de logout');
-      // Variable response eliminada por lint
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
       
       if (response.ok) {
         console.log('[AuthLayout] Logout exitoso en el API');

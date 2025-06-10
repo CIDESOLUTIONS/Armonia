@@ -1,6 +1,6 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import { getPrisma } from '@/lib/prisma';
+import { getPrismaClient } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth';
 import bcrypt from "bcrypt";
 import { ServerLogger } from '@/lib/logging/server-logger';
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     ServerLogger.info(`Intento de login para: ${email}`);
 
     // Usar el cliente de prisma para la base de datos global
-    const prisma = getPrisma();  // Sin schema para el login inicial
+    const prisma = getPrismaClient();  // Sin schema para el login inicial
     
     // Buscar usuario en la tabla principal
     const users = await prisma.$queryRawUnsafe(`
