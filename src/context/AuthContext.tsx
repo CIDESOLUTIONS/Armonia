@@ -194,6 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.push('/reception');
       } else if (data.user.role === 'ADMIN') {
         router.push('/admin');
+      } else if (data.user.role === 'RESIDENT') {
+        router.push('/dashboard');
       } else {
         router.push('/dashboard');
       }
