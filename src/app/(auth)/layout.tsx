@@ -39,7 +39,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const handleLogout = async () => {
     try {
       console.log('[AuthLayout] Iniciando proceso de logout');
-      // Variable response eliminada por lint
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
       
       if (response.ok) {
         console.log('[AuthLayout] Logout exitoso en el API');
