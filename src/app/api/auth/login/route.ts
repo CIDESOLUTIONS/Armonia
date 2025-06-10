@@ -3,18 +3,14 @@ import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth';
 import bcrypt from "bcrypt";
-import { ServerLogger } from '@/lib/logging/server-logger';
-import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
-    ServerLogger.info(`Intento de login para: ${email}`);
+    console.log(`[LOGIN] Intento de login para: ${email}`);
 
-    // Usar el cliente de prisma para la base de datos global
-    const prisma = getPrisma();  // Sin schema para el login inicial
+    const prisma = getPrisma();
     
-    // Buscar usuario usando Prisma ORM directamente
     const user = await prisma.user.findFirst({
       where: {
         email: email,
@@ -22,114 +18,49 @@ export async function POST(req: Request) {
       }
     });
     
-    ServerLogger.debug(`Resultado de búsqueda de usuario: ${user ? 'Usuario encontrado' : 'Usuario no encontrado'}`);
+    console.log(`[LOGIN] Usuario encontrado:`, !!user);
 
     if (!user) {
-      ServerLogger.warn(`Login fallido para ${email}: Usuario no encontrado o inactivo`);
+      console.log(`[LOGIN] Usuario no encontrado: ${email}`);
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }
       );
     }
 
-    // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log(`[LOGIN] Contraseña válida:`, passwordMatch);
+    
     if (!passwordMatch) {
-      ServerLogger.warn(`Login fallido para ${email}: Contraseña incorrecta`);
+      console.log(`[LOGIN] Contraseña incorrecta para: ${email}`);
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }
       );
     }
 
-    // Si el usuario no está asociado a un conjunto, es un administrador global o usuario de recepción sin conjunto
-    if (!user.complexId) {
-      ServerLogger.info(`Login exitoso para usuario sin conjunto: ${email}, rol: ${user.role}`);
-      const payload = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name: user.name,
-        isGlobalAdmin: user.role === 'ADMIN',
-        isReception: user.role === 'RECEPTION'
-      };
+    console.log(`[LOGIN] Login exitoso para: ${email}, rol: ${user.role}`);
+    
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      isGlobalAdmin: user.role === 'ADMIN',
+      isReception: user.role === 'RECEPTION'
+    };
 
-      const token = await generateToken(payload);
-      
-      // Establecer cookie segura con el token (7 días de expiración)
-      cookies().set({
-        name: 'token',
-        value: token,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 7, // 7 días
-        path: '/',
-        sameSite: 'strict'
-      });
+    const token = await generateToken(payload);
+    
+    console.log(`[LOGIN] Token generado para: ${email}`);
+    
+    return NextResponse.json({ 
+      token, 
+      user: payload 
+    });
 
-      return NextResponse.json({ 
-        token, 
-        user: payload 
-      });
-    }
-
-    // Obtener información del conjunto residencial
-    try {
-      const complex = await prisma.$queryRawUnsafe(`
-        SELECT "id", "name", "schemaName", "totalUnits", "adminEmail", "adminName" 
-        FROM "armonia"."ResidentialComplex" 
-        WHERE id = $1
-      `, user.complexId);
-
-      if (!complex || complex.length === 0) {
-        ServerLogger.error(`Login fallido para ${email}: Conjunto residencial no encontrado (ID: ${user.complexId})`);
-        return NextResponse.json(
-          { message: "Error en la información del conjunto residencial" },
-          { status: 500 }
-        );
-      }
-
-      const complexData = complex[0];
-      const schemaName = complexData.schemaName;
-
-      ServerLogger.info(`Login exitoso para ${email}, conjunto: ${complexData.name}, schema: ${schemaName}`);
-
-      const payload = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        complexId: user.complexId,
-        name: user.name,
-        schemaName: schemaName,
-        complexName: complexData.name
-      };
-
-      const token = await generateToken(payload);
-      
-      // Establecer cookie segura con el token (7 días de expiración)
-      cookies().set({
-        name: 'token',
-        value: token,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 7, // 7 días
-        path: '/',
-        sameSite: 'strict'
-      });
-
-      return NextResponse.json({ 
-        token, 
-        user: payload 
-      });
-    } catch (error) {
-      ServerLogger.error(`Error al obtener información del conjunto residencial:`, error);
-      return NextResponse.json(
-        { message: "Error en la información del conjunto residencial" },
-        { status: 500 }
-      );
-    }
   } catch (error) {
-    ServerLogger.error(`Error en proceso de login:`, error);
+    console.error('[LOGIN] Error en API:', error);
     return NextResponse.json(
       { message: "Error al iniciar sesión" },
       { status: 500 }

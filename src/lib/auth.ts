@@ -45,7 +45,7 @@ export async function generateToken(payload: Partial<JWTPayload>): Promise<strin
     const encodedSecret = getJwtSecret();
     
     // Crear token con jose
-    const _token = await new SignJWT({ ...payload })
+    const token = await new SignJWT({ ...payload })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('24h')
@@ -62,7 +62,7 @@ export async function generateToken(payload: Partial<JWTPayload>): Promise<strin
 export async function verifyAuth(request: NextRequest) {
   try {
     // Obtener el token
-    const _token = getToken(request);
+    const token = getToken(request);
     
     if (!token) {
       ServerLogger.warn('Autenticación fallida: No hay token');
