@@ -43,15 +43,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Si el usuario no está asociado a un conjunto, es un administrador global
+    // Si el usuario no está asociado a un conjunto, es un administrador global o usuario de recepción sin conjunto
     if (!user.complexId) {
-      ServerLogger.info(`Login exitoso para administrador global: ${email}`);
+      ServerLogger.info(`Login exitoso para usuario sin conjunto: ${email}, rol: ${user.role}`);
       const payload = {
         id: user.id,
         email: user.email,
         role: user.role,
         name: user.name,
-        isGlobalAdmin: true
+        isGlobalAdmin: user.role === 'ADMIN',
+        isReception: user.role === 'RECEPTION'
       };
 
       const token = await generateToken(payload);

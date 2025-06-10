@@ -184,11 +184,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       storeAuthData(data.token, data.user);
       
       console.log('[AuthContext] Login exitoso, guardando datos:', data.user);
-      console.log('[AuthContext] Redirigiendo a dashboard...');
+      console.log('[AuthContext] Redirigiendo según rol:', data.user.role);
       
       // Pequeño retraso para asegurar que los estados se actualicen
       await new Promise(resolve => setTimeout(resolve, 100));
-      router.push('/dashboard');
+      
+      // Redirección según el rol del usuario
+      if (data.user.role === 'RECEPTION') {
+        router.push('/reception');
+      } else if (data.user.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       console.error('[AuthContext] Error en login:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
