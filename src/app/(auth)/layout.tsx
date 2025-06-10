@@ -84,7 +84,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className={`fixed z-20 h-full ${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
         <Sidebar
           language={language}
-          theme={theme}
+          theme={theme || 'light'}
           currency={currency}
           adminName={adminName}
           complexName={complexName}
