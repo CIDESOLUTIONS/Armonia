@@ -38,11 +38,9 @@ export function getSchemaFromReq(req: any): string {
 }
 
 /**
- * Obtiene una instancia de PrismaClient para el esquema especificado
- * @param schema Esquema de base de datos
+ * Obtiene una instancia de PrismaClient global
  * @returns Instancia de PrismaClient
  */
-export function getPrismaClient(schema: string = 'public'): PrismaClient {
-  // En pruebas, simplemente devolvemos una nueva instancia de PrismaClient
-  return new PrismaClient();
+export function getPrisma(): PrismaClient {
+  return prisma;
 }

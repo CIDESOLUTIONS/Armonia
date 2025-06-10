@@ -1,6 +1,6 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth';
 import bcrypt from "bcrypt";
 import { ServerLogger } from '@/lib/logging/server-logger';
@@ -12,26 +12,25 @@ export async function POST(req: Request) {
     ServerLogger.info(`Intento de login para: ${email}`);
 
     // Usar el cliente de prisma para la base de datos global
-    const prisma = getPrismaClient();  // Sin schema para el login inicial
+    const prisma = getPrisma();  // Sin schema para el login inicial
     
-    // Buscar usuario en la tabla principal
-    const users = await prisma.$queryRawUnsafe(`
-      SELECT id, email, name, password, role, "complexId" 
-      FROM "armonia"."User" 
-      WHERE email = $1 AND active = true
-    `, email);
+    // Buscar usuario usando Prisma ORM directamente
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email,
+        active: true
+      }
+    });
     
-    ServerLogger.debug(`Resultado de búsqueda de usuario: ${users?.length || 0} usuarios encontrados`);
+    ServerLogger.debug(`Resultado de búsqueda de usuario: ${user ? 'Usuario encontrado' : 'Usuario no encontrado'}`);
 
-    if (!users || users.length === 0) {
+    if (!user) {
       ServerLogger.warn(`Login fallido para ${email}: Usuario no encontrado o inactivo`);
       return NextResponse.json(
         { message: "Credenciales inválidas" },
         { status: 401 }
       );
     }
-
-    const user = users[0];
 
     // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
