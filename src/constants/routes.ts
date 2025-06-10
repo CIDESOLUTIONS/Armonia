@@ -7,7 +7,7 @@ export const ROUTES = {
   RECEPTION_LOGIN: '/login?portal=reception',
   ADMIN_LOGIN: '/login?portal=admin',
   DASHBOARD: '/dashboard',
-  RESIDENT_DASHBOARD: '/resident/dashboard',
+  RESIDENT_DASHBOARD: '/dashboard',
   RECEPTION_DASHBOARD: '/reception/dashboard',
   INVENTORY: '/dashboard/inventory',
   INVENTORY_PROPERTIES: '/dashboard/inventory/properties',
