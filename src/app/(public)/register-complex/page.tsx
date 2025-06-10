@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -174,7 +174,7 @@ const texts = {
 };
 
 export default function RegisterComplex() {
-  const _router = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan");
   const paidParam = searchParams.get("paid");

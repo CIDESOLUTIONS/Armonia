@@ -35,14 +35,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, _setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [adminName, setAdminName] = useState<string | null>(null);
   const [complexName, setComplexName] = useState<string | null>(null);
   const [complexId, setComplexId] = useState<number | null>(null);
   const [schemaName, setSchemaName] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const _router = useRouter();
+  const router = useRouter();
 
   // Función para almacenar el token y los datos de usuario
   const storeAuthData = (authToken: string, userData: User) => {
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             
             // Verificar sesión en el servidor
             try {
-              const _response = await fetch('/api/auth/check', {
+              const response = await fetch('/api/auth/check', {
                 method: 'GET',
                 headers: {
                   'Authorization': `Bearer ${storedToken}`
@@ -166,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       console.log('[AuthContext] Iniciando login para:', email);
 
-      const _response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
-      const _data = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.message || 'Error al iniciar sesión');
@@ -184,11 +184,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       storeAuthData(data.token, data.user);
       
       console.log('[AuthContext] Login exitoso, guardando datos:', data.user);
-      console.log('[AuthContext] Redirigiendo a dashboard...');
+      console.log('[AuthContext] Redirigiendo según rol:', data.user.role);
       
       // Pequeño retraso para asegurar que los estados se actualicen
       await new Promise(resolve => setTimeout(resolve, 100));
-      router.push('/dashboard');
+      
+      // Redirección según el rol del usuario
+      if (data.user.role === 'RECEPTION') {
+        router.push('/reception');
+      } else if (data.user.role === 'ADMIN') {
+        router.push('/admin');
+      } else if (data.user.role === 'RESIDENT') {
+        router.push('/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       console.error('[AuthContext] Error en login:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');

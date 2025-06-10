@@ -129,10 +129,10 @@ export function Header({
             <button
               onClick={toggleTheme}
               className="text-white hover:text-indigo-200 focus:outline-none flex items-center gap-1"
-              title={theme === 'Claro' ? 'Cambiar a Oscuro' : 'Switch to Light'}
+              title={theme === 'Claro' ? 'Cambiar a Oscuro' : 'Cambiar a Claro'}
             >
               {theme === 'Claro' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              <span className="text-xs">{theme.substring(0, 1)}</span>
+              <span className="text-xs">{theme?.substring(0, 1) || 'C'}</span>
             </button>
             <button
               onClick={toggleCurrency}
@@ -140,7 +140,7 @@ export function Header({
               title={currency === 'Dólares' ? 'Cambiar a Pesos' : 'Switch to Dollars'}
             >
               <DollarSign className="w-5 h-5" />
-              <span className="text-xs">{currency.substring(0, 1)}</span>
+              <span className="text-xs">{currency?.substring(0, 1) || 'P'}</span>
             </button>
           </div>
           {isLoggedIn ? (

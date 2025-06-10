@@ -124,10 +124,10 @@ export default function LoginPage() {
       
       await login(formData.email, formData.password);
       
-      console.log('[LoginPage] Login exitoso, redirigiendo...');
+      console.log('[LoginPage] Login exitoso, AuthContext manejará la redirección...');
       
-      // Redirigir según el portal seleccionado
-      router.push(portalInfo.redirectTo);
+      // El AuthContext ya maneja la redirección según el rol
+      // No necesitamos redirigir manualmente aquí
       
     } catch (err: unknown) {
       console.error('[LoginPage] Error de autenticación:', err);

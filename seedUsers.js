@@ -5,23 +5,40 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function seedUsers() {
-  const adminPassword = await bcrypt.hash('password123', 10);
+  const adminPassword = await bcrypt.hash('Admin123!', 10);
   const userPassword = await bcrypt.hash('password123', 10);
+  const receptionPassword = await bcrypt.hash('Reception123!', 10);
 
   try {
     // Crear usuario administrador
     const admin = await prisma.user.upsert({
-      where: { email: 'admin@test.com' },
+      where: { email: 'admin@armonia.com' },
       update: {
         name: 'Admin User',
         role: 'ADMIN',
         password: adminPassword,
       },
       create: {
-        email: 'admin@test.com',
+        email: 'admin@armonia.com',
         name: 'Admin User',
         role: 'ADMIN',
         password: adminPassword,
+      },
+    });
+
+    // Crear usuario de recepción
+    const reception = await prisma.user.upsert({
+      where: { email: 'reception@armonia.com' },
+      update: {
+        name: 'Reception User',
+        role: 'RECEPTION',
+        password: receptionPassword,
+      },
+      create: {
+        email: 'reception@armonia.com',
+        name: 'Reception User',
+        role: 'RECEPTION',
+        password: receptionPassword,
       },
     });
 
@@ -43,6 +60,7 @@ async function seedUsers() {
 
     console.log('Usuarios creados/actualizados:');
     console.log('Admin:', admin);
+    console.log('Reception:', reception);
     console.log('User:', user);
   } catch (error) {
     console.error('Error al sembrar usuarios:', error);
