@@ -48,6 +48,7 @@ const menuItems = [
       { title: 'Mascotas', href: '/admin/inventory/pets', icon: PawPrint }
     ]
   },
+  {
     title: 'Asambleas',
     icon: Calendar,
     href: '/admin/assemblies',
