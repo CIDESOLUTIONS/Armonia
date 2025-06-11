@@ -52,68 +52,50 @@ const menuItems = [
     title: 'Asambleas',
     icon: Calendar,
     href: '/admin/assemblies',
-    description: 'Gestión de asambleas'
+    description: 'Gestión de asambleas',
   },
   {
     title: 'Finanzas',
     icon: DollarSign,
-    href: '/admin/finances',
-    description: 'Gestión financiera',
-    submenu: [
-      { title: 'Presupuestos', href: '/admin/finances/budgets', icon: BarChart3 },
-      { title: 'Cuotas', href: '/admin/finances/fees', icon: FileText },
-      { title: 'Pagos', href: '/admin/finances/payments', icon: DollarSign },
-      { title: 'Reportes', href: '/admin/finances/reports', icon: FileText }
-    ]
+    href: '/(auth)/dashboard/finances',
+    description: 'Gestión financiera'
   },
   {
     title: 'PQR',
     icon: MessageSquare,
-    href: '/admin/pqr',
+    href: '/(auth)/dashboard/pqr',
     description: 'Peticiones, quejas y reclamos'
   },
   {
     title: 'Servicios',
     icon: ClipboardList,
-    href: '/admin/services',
-    description: 'Servicios comunes',
-    submenu: [
-      { title: 'Reservas', href: '/admin/services/reservations', icon: Calendar },
-      { title: 'Áreas Comunes', href: '/admin/services/areas', icon: Building2 }
-    ]
+    href: '/(auth)/dashboard/services',
+    description: 'Servicios comunes'
   },
   {
     title: 'Comunicaciones',
     icon: Megaphone,
-    href: '/admin/communications',
-    description: 'Anuncios y notificaciones'
+    href: '/(auth)/dashboard/communications',
+    description: 'Comunicaciones'
   },
   {
     title: 'Seguridad',
     icon: Shield,
-    href: '/admin/security',
-    description: 'Gestión de seguridad',
-    submenu: [
-      { title: 'Visitantes', href: '/admin/security/visitors', icon: Users },
-      { title: 'Incidentes', href: '/admin/security/incidents', icon: Shield },
-      { title: 'Cámaras', href: '/admin/security/cameras', icon: Camera }
-    ]
+    href: '/(auth)/dashboard/security',
+    description: 'Seguridad'
   },
   {
     title: 'Reportes',
     icon: BarChart3,
-    href: '/admin/reports',
+    href: '/(auth)/dashboard/reports',
     description: 'Reportes y estadísticas'
   },
   {
     title: 'Configuración',
     icon: Settings,
-    href: '/admin/settings',
+    href: '/(auth)/dashboard/settings',
     description: 'Configuración del sistema'
-  }
-];
-
-export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
+  } }: AdminSidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
