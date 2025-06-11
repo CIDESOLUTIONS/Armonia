@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Header } from '@/components/layout/header';
+import AdminHeader from '@/components/admin/layout/AdminHeader';
 import { AdminSidebar } from '@/components/admin/layout/AdminSidebar';
 import { AdminDashboardContent } from '@/components/admin/dashboard/AdminDashboardContent';
 import { Loader2 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (loading) {
@@ -32,8 +32,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
+      {/* Header específico del dashboard */}
+      <AdminHeader 
+        adminName={user?.name || "Administrador"}
+        complexName="Conjunto Residencial Armonía"
+        onLogout={logout}
+      />
       
       <div className="flex">
         {/* Sidebar */}
