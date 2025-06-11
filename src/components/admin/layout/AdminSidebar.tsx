@@ -51,7 +51,7 @@ const menuItems = [
     title: 'Asambleas',
     icon: Calendar,
     href: '/admin/assemblies',
-    description: 'Gestión de asambleas'
+    description: 'Gestión de asambleas',
   },
   {
     title: 'Finanzas',
