@@ -1,171 +1,400 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import PaymentService from '@/lib/services/payment-service';
+import { getPrisma } from '@/lib/prisma';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { verifyAuth } from '@/lib/auth';
 import { ServerLogger } from '@/lib/logging/server-logger';
 import { ActivityLogger } from '@/lib/logging/activity-logger';
-import { getTenantSchema } from '@/lib/db';
-import { z } from 'zod';
+import {
+  UpdateTransactionSchema,
+  TransactionIdSchema,
+  type UpdateTransactionRequest,
+  type TransactionIdParams
+} from '@/validators/financial/payments.validator';
 
 const activityLogger = new ActivityLogger();
 
-// Esquema de validación para actualizar una transacción
-const updateTransactionSchema = z.object({
-  status: z.enum(['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED']),
-  gatewayReference: z.string().optional(),
-  gatewayResponse: z.record(z.string(), z.any()).optional(),
-  errorMessage: z.string().optional()
-});
-
 /**
- * Manejador de solicitudes GET para obtener una transacción específica
+ * GET: Obtener transacción específica por ID
  */
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido' },
+        { status: 401 }
+      );
     }
-    
-    // Obtener esquema del tenant
-    const schema = getTenantSchema(session);
-    
-    // Obtener ID de transacción
-    const transactionId = parseInt(params.id);
-    if (isNaN(transactionId)) {
-      return NextResponse.json({ error: 'ID de transacción inválido' }, { status: 400 });
+
+    // Verificar autorización
+    if (!['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT'].includes(payload.role)) {
+      return NextResponse.json(
+        { message: 'Permisos insuficientes para acceder a transacciones' },
+        { status: 403 }
+      );
     }
-    
-    // Inicializar servicio de pagos
-    const paymentService = new PaymentService(schema);
-    
-    // Obtener transacción
-    const transaction = await paymentService.getTransaction(transactionId);
-    
+
+    if (!payload.complexId) {
+      return NextResponse.json(
+        { message: 'Usuario no está asociado a un complejo residencial' },
+        { status: 400 }
+      );
+    }
+
+    // Validar parámetros
+    const validation = validateRequest(TransactionIdSchema, params);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const { id: transactionId } = validation.data;
+    const prisma = getPrisma();
+
+    // Construir filtros con multi-tenant
+    const where: any = {
+      id: transactionId,
+      complexId: payload.complexId // CRÍTICO: Filtro multi-tenant
+    };
+
+    // Si es residente, solo puede ver sus propias transacciones
+    if (payload.role === 'RESIDENT') {
+      where.userId = payload.userId;
+    }
+
+    // Obtener transacción con relaciones
+    const transaction = await prisma.transaction.findFirst({
+      where,
+      include: {
+        invoice: {
+          select: {
+            id: true,
+            invoiceNumber: true,
+            amount: true,
+            dueDate: true,
+            status: true
+          }
+        },
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            type: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
     if (!transaction) {
-      return NextResponse.json({ error: 'Transacción no encontrada' }, { status: 404 });
+      return NextResponse.json(
+        { message: 'Transacción no encontrada o sin permisos para acceder' },
+        { status: 404 }
+      );
     }
-    
+
     return NextResponse.json(transaction);
+
   } catch (error) {
-    ServerLogger.error(`Error al obtener transacción:`, error);
+    console.error('[PAYMENTS GET ID] Error:', error);
     return NextResponse.json(
-      { error: 'Error al procesar la solicitud' },
+      { message: 'Error interno del servidor' },
       { status: 500 }
     );
   }
 }
 
 /**
- * Manejador de solicitudes PUT para actualizar una transacción
+ * PUT: Actualizar transacción específica
  */
-export async function PUT(
-  req: NextRequest,
+async function updateTransactionHandler(
+  validatedData: UpdateTransactionRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido' },
+        { status: 401 }
+      );
     }
-    
-    // Obtener esquema del tenant
-    const schema = getTenantSchema(session);
-    
-    // Obtener ID de transacción
-    const transactionId = parseInt(params.id);
-    if (isNaN(transactionId)) {
-      return NextResponse.json({ error: 'ID de transacción inválido' }, { status: 400 });
+
+    // Solo admins pueden actualizar transacciones
+    if (!['ADMIN', 'COMPLEX_ADMIN'].includes(payload.role)) {
+      return NextResponse.json(
+        { message: 'Permisos insuficientes para actualizar transacciones' },
+        { status: 403 }
+      );
     }
-    
-    // Parsear y validar datos de entrada
-    const body = await req.json();
-    const validatedData = updateTransactionSchema.parse(body);
-    
-    // Inicializar servicio de pagos
-    const paymentService = new PaymentService(schema);
-    
-    // Actualizar transacción
-    const transaction = await paymentService.updateTransaction(transactionId, validatedData);
-    
+
+    if (!payload.complexId) {
+      return NextResponse.json(
+        { message: 'Usuario no está asociado a un complejo residencial' },
+        { status: 400 }
+      );
+    }
+
+    // Validar parámetros
+    const paramsValidation = validateRequest(TransactionIdSchema, params);
+    if (!paramsValidation.success) {
+      return paramsValidation.response;
+    }
+
+    const { id: transactionId } = paramsValidation.data;
+    const prisma = getPrisma();
+
+    // Verificar que la transacción existe y pertenece al complejo
+    const existingTransaction = await prisma.transaction.findFirst({
+      where: {
+        id: transactionId,
+        complexId: payload.complexId // CRÍTICO: Filtro multi-tenant
+      }
+    });
+
+    if (!existingTransaction) {
+      return NextResponse.json(
+        { message: 'Transacción no encontrada en este complejo' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar que la transacción se puede actualizar
+    if (existingTransaction.status === 'COMPLETED' && validatedData.status !== 'REFUNDED') {
+      return NextResponse.json(
+        { message: 'No se puede modificar una transacción completada' },
+        { status: 400 }
+      );
+    }
+
+    // Actualizar transacción en una transacción de base de datos
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedTransaction = await tx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          status: validatedData.status,
+          gatewayReference: validatedData.gatewayReference,
+          gatewayResponse: validatedData.gatewayResponse,
+          errorMessage: validatedData.errorMessage,
+          completedAt: validatedData.status === 'COMPLETED' ? new Date() : undefined,
+          updatedAt: new Date()
+        },
+        include: {
+          invoice: {
+            select: {
+              id: true,
+              invoiceNumber: true,
+              amount: true
+            }
+          },
+          paymentMethod: {
+            select: {
+              id: true,
+              name: true,
+              type: true
+            }
+          }
+        }
+      });
+
+      // Si la transacción se completa, actualizar factura asociada
+      if (validatedData.status === 'COMPLETED' && existingTransaction.invoiceId) {
+        await tx.invoice.update({
+          where: { id: existingTransaction.invoiceId },
+          data: { status: 'PAID', paidAt: new Date() }
+        });
+      }
+
+      return updatedTransaction;
+    });
+
     // Registrar actividad
     await activityLogger.logActivity({
-      userId: session.user.id,
+      userId: payload.userId!,
       action: 'UPDATE_TRANSACTION',
       resourceType: 'PAYMENT',
       resourceId: transactionId,
       details: {
-        status: validatedData.status
+        oldStatus: existingTransaction.status,
+        newStatus: validatedData.status,
+        gatewayReference: validatedData.gatewayReference
       }
     });
-    
-    return NextResponse.json(transaction);
+
+    console.log(`[PAYMENTS] Transacción ${transactionId} actualizada por usuario ${payload.email} en complejo ${payload.complexId}`);
+
+    return NextResponse.json(result);
+
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    console.error('[PAYMENTS PUT] Error:', error);
+    
+    if (error.code === 'P2025') {
       return NextResponse.json(
-        { error: 'Datos de entrada inválidos', details: error.format() },
-        { status: 400 }
+        { message: 'Transacción no encontrada' },
+        { status: 404 }
       );
     }
     
-    ServerLogger.error(`Error al actualizar transacción:`, error);
     return NextResponse.json(
-      { error: 'Error al procesar la solicitud' },
+      { message: 'Error interno del servidor' },
       { status: 500 }
     );
   }
 }
 
+// Exportar PUT con validación
+export const PUT = async (
+  request: NextRequest,
+  context: { params: { id: string } }
+) => {
+  const body = await request.json();
+  const validation = validateRequest(UpdateTransactionSchema, body);
+  
+  if (!validation.success) {
+    return validation.response;
+  }
+  
+  return updateTransactionHandler(validation.data, request, context);
+};
+
 /**
- * Manejador de solicitudes DELETE para cancelar una transacción
+ * DELETE: Cancelar transacción específica
  */
 export async function DELETE(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     // Verificar autenticación
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json(
+        { message: 'Token de autorización requerido' },
+        { status: 401 }
+      );
     }
-    
-    // Obtener esquema del tenant
-    const schema = getTenantSchema(session);
-    
-    // Obtener ID de transacción
-    const transactionId = parseInt(params.id);
-    if (isNaN(transactionId)) {
-      return NextResponse.json({ error: 'ID de transacción inválido' }, { status: 400 });
+
+    // Solo admins y el propietario de la transacción pueden cancelarla
+    if (!['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT'].includes(payload.role)) {
+      return NextResponse.json(
+        { message: 'Permisos insuficientes para cancelar transacciones' },
+        { status: 403 }
+      );
     }
-    
-    // Inicializar servicio de pagos
-    const paymentService = new PaymentService(schema);
-    
+
+    if (!payload.complexId) {
+      return NextResponse.json(
+        { message: 'Usuario no está asociado a un complejo residencial' },
+        { status: 400 }
+      );
+    }
+
+    // Validar parámetros
+    const validation = validateRequest(TransactionIdSchema, params);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const { id: transactionId } = validation.data;
+    const prisma = getPrisma();
+
+    // Construir filtros con multi-tenant
+    const where: any = {
+      id: transactionId,
+      complexId: payload.complexId // CRÍTICO: Filtro multi-tenant
+    };
+
+    // Si es residente, solo puede cancelar sus propias transacciones
+    if (payload.role === 'RESIDENT') {
+      where.userId = payload.userId;
+    }
+
+    // Verificar que la transacción existe y se puede cancelar
+    const existingTransaction = await prisma.transaction.findFirst({
+      where
+    });
+
+    if (!existingTransaction) {
+      return NextResponse.json(
+        { message: 'Transacción no encontrada o sin permisos para acceder' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar que la transacción se puede cancelar
+    if (!['PENDING', 'PROCESSING'].includes(existingTransaction.status)) {
+      return NextResponse.json(
+        { message: 'Solo se pueden cancelar transacciones en estado PENDING o PROCESSING' },
+        { status: 400 }
+      );
+    }
+
     // Cancelar transacción
-    const transaction = await paymentService.cancelTransaction(transactionId);
-    
+    const cancelledTransaction = await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        status: 'CANCELLED',
+        updatedAt: new Date(),
+        completedAt: new Date()
+      },
+      include: {
+        invoice: {
+          select: {
+            id: true,
+            invoiceNumber: true,
+            amount: true
+          }
+        },
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            type: true
+          }
+        }
+      }
+    });
+
     // Registrar actividad
     await activityLogger.logActivity({
-      userId: session.user.id,
+      userId: payload.userId!,
       action: 'CANCEL_TRANSACTION',
       resourceType: 'PAYMENT',
       resourceId: transactionId,
       details: {
-        status: 'CANCELLED'
+        oldStatus: existingTransaction.status,
+        newStatus: 'CANCELLED',
+        cancelledBy: payload.email
       }
     });
-    
-    return NextResponse.json(transaction);
+
+    console.log(`[PAYMENTS] Transacción ${transactionId} cancelada por usuario ${payload.email} en complejo ${payload.complexId}`);
+
+    return NextResponse.json(cancelledTransaction);
+
   } catch (error) {
-    ServerLogger.error(`Error al cancelar transacción:`, error);
+    console.error('[PAYMENTS DELETE] Error:', error);
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { message: 'Transacción no encontrada' },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Error al procesar la solicitud' },
+      { message: 'Error interno del servidor' },
       { status: 500 }
     );
   }
