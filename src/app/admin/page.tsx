@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import AdminHeader from '@/components/admin/layout/AdminHeader';
-import { AdminSidebar } from '@/components/admin/layout/AdminSidebar';
+import AdminSidebar from '@/components/admin/layout/AdminSidebar';
 import { AdminDashboardContent } from '@/components/admin/dashboard/AdminDashboardContent';
 import { Loader2 } from 'lucide-react';
 
