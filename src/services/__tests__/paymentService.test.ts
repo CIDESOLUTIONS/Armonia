@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import PaymentService from '../../lib/services/payment-service';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { encryptData, decryptData } from '../../lib/utils/encryption';
 
 // Mock de dependencias
@@ -55,7 +55,7 @@ describe('PaymentService', () => {
     
     // Instanciar el servicio y obtener las dependencias mockeadas
     service = new PaymentService('public');
-    prisma = new PrismaClient();
+    prisma = getPrisma();
   });
   
   describe('createTransaction', () => {

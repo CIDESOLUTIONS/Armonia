@@ -6,10 +6,10 @@
  */
 
 import { notifyUser, notifyByRole, notifyAll, NotificationType, NotificationPriority } from '@/lib/communications/notification-service';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { AuditActionType, AuditStatus } from '@/lib/security/audit-trail';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Envía notificación de intento de acceso fallido

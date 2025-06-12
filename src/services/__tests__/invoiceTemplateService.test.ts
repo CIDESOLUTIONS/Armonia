@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import InvoiceTemplateService from '../../lib/services/invoice-template-service';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { ActivityLogger } from '../../lib/logging/activity-logger';
 import { ServerLogger } from '../../lib/logging/server-logger';
 
@@ -56,7 +56,7 @@ describe('InvoiceTemplateService', () => {
     service = new InvoiceTemplateService('test_schema');
     
     // Obtener la instancia mock de PrismaClient
-    mockPrisma = new PrismaClient();
+    mockPrisma = getPrisma();
   });
   
   describe('getTemplates', () => {

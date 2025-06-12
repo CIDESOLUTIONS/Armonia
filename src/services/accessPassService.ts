@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
 import { format, addDays, addHours, isAfter } from 'date-fns';
 
 // Inicializar cliente Prisma
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Servicio para la gestión de pases de acceso

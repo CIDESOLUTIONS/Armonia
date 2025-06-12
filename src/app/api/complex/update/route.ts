@@ -1,9 +1,9 @@
 // C:\Users\meciz\Documents\armonia\frontend\src\app\api\complex\update\route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 // Variable JWT_SECRET eliminada por lint
 
 export async function POST(_req: unknown) {

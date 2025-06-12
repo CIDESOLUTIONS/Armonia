@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { getPrisma } from '@/lib/prisma';
 import { PrismaClient, ReservationStatus } from '@prisma/client';
 import reservationService from '../reservationService';
 
@@ -50,7 +51,7 @@ jest.mock('@prisma/client', () => {
 });
 
 // Get the mocked prisma instance
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 describe('ReservationService', () => {
   beforeEach(() => {

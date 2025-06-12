@@ -1,8 +1,9 @@
 import { getPrismaClient } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 // Problema: 'prisma' no está definido globalmente aquí. Necesitamos inicializarlo para el esquema 'public'.
-const prismaGlobal = new PrismaClient(); // Cliente para el esquema 'public' donde está 'Tenant'
+const prismaGlobal = getPrisma(); // Cliente para el esquema 'public' donde está 'Tenant'
 
 export async function GET(request: Request) {
   const tenantId = request.headers.get('x-tenant-id'); // Obtener el tenantId del header

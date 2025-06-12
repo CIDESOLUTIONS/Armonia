@@ -5,14 +5,14 @@
  * que son utilizadas por los servicios de PQR durante las pruebas.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
 // Instancia global de Prisma
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+export const prisma = globalForPrisma.prisma ?? getPrisma();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
@@ -24,7 +24,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 export function getSchemaFromRequest(schema: string = 'public'): PrismaClient {
   // En pruebas, simplemente devolvemos una nueva instancia de PrismaClient
   // que ya estará mockeada por Jest
-  return new PrismaClient();
+  return getPrisma();
 }
 
 /**

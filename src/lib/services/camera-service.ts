@@ -3,7 +3,7 @@
  * Parte del sistema de integración con cámaras - Proyecto Armonía
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { ServerLogger } from '@/lib/logging/server-logger';
 import { ActivityLogger } from '@/lib/logging/activity-logger';
 import { getTenantSchema } from '@/lib/db';
@@ -26,7 +26,7 @@ export default class CameraService {
    */
   constructor(schema: string) {
     this.schema = schema;
-    this.prisma = new PrismaClient();
+    this.prisma = getPrisma();
     this.activityLogger = new ActivityLogger();
     this.recordingsPath = process.env.RECORDINGS_PATH || '/data/recordings';
     

@@ -1,9 +1,9 @@
 // src/pages/api/assemblies/quorum.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 export default async function handler(_req:unknown, res: NextApiResponse) {
   if (req.method !== 'GET') {

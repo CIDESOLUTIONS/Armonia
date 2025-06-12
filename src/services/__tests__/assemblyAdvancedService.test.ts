@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import AssemblyAdvancedService from '../../services/assembly-advanced-service';
 import { WebSocketService } from '../../communications/websocket-service';
 import { ActivityLogger } from '../../logging/activity-logger';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
 // Mock de dependencias
 jest.mock('@prisma/client', () => {
@@ -67,7 +67,7 @@ describe('AssemblyAdvancedService', () => {
     
     // Instanciar el servicio y obtener las dependencias mockeadas
     service = new AssemblyAdvancedService();
-    prisma = new PrismaClient();
+    prisma = getPrisma();
     wsService = new WebSocketService();
   });
   

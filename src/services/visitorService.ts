@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 // Inicializar cliente Prisma
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Servicio para la gestión de visitantes

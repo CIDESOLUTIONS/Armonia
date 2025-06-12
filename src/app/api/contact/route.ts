@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 export async function POST(request: Request) {
   try {
