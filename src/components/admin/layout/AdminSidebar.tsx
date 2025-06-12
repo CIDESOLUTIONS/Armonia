@@ -95,7 +95,10 @@ const menuItems = [
     icon: Settings,
     href: '/(auth)/dashboard/settings',
     description: 'Configuración del sistema'
-  } }: AdminSidebarProps) {
+  }
+];
+
+export default function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
