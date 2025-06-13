@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/es';
@@ -16,11 +16,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { AlertCircle, Calendar as CalendarIcon, Clock, Info, MapPin, Users } from 'lucide-react';
+import { AlertCircle, Calendar as CalendarIcon, Clock, Info, MapPin, Users, DollarSign, CreditCard } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSession } from 'next-auth/react';
+import { useReservationsWithPayments } from '@/hooks/useReservationsWithPayments';
+import PaymentModal from './PaymentModal';
 
 // Localización del calendario
 moment.locale('es');
@@ -116,287 +118,54 @@ const CommonAreaReservation: React.FC = () => {
   const { data: session } = useSession();
   const { toast } = useToast();
   
-  // Estados
-  const [commonAreas, setCommonAreas] = useState<CommonArea[]>([]);
-  const [selectedArea, setSelectedArea] = useState<CommonArea | null>(null);
-  const [myReservations, setMyReservations] = useState<Reservation[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [viewDate, setViewDate] = useState<Date>(new Date());
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
-  
-  // Estados para el formulario de reserva
-  const [isReservationDialogOpen, setIsReservationDialogOpen] = useState<boolean>(false);
-  const [reservationForm, setReservationForm] = useState({
-    title: '',
-    description: '',
-    startDateTime: '',
-    endDateTime: '',
-    attendees: 1,
-    propertyId: 0
-  });
-  
-  // Estados para el detalle de reserva
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState<boolean>(false);
-  
-  // Cargar áreas comunes al iniciar
-  useEffect(() => {
-    const fetchCommonAreas = async () => {
-      try {
-        const response = await fetch('/api/common-areas?active=true');
-        if (response.ok) {
-          const data = await response.json();
-          setCommonAreas(data);
-          if (data.length > 0) {
-            setSelectedArea(data[0]);
-          }
-        } else {
-          toast({
-            title: 'Error',
-            description: 'No se pudieron cargar las áreas comunes',
-            variant: 'destructive'
-          });
-        }
-      } catch (error) {
-        console.error('Error al cargar áreas comunes:', error);
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar las áreas comunes',
-          variant: 'destructive'
-        });
-      }
-    };
+  // Usar el hook personalizado para manejar reservas con pagos
+  const {
+    // Estados de datos
+    commonAreas,
+    selectedArea,
+    myReservations,
+    calendarEvents,
+    viewDate,
     
-    const fetchProperties = async () => {
-      try {
-        // En una implementación real, esto cargaría las propiedades del usuario
-        // Por ahora, usamos datos de ejemplo
-        setProperties([
-          { id: 1, name: 'Apartamento 101' },
-          { id: 2, name: 'Apartamento 102' }
-        ]);
-        setSelectedProperty(1);
-      } catch (error) {
-        console.error('Error al cargar propiedades:', error);
-      }
-    };
+    // Estados de carga
+    isLoading,
+    isCreatingReservation,
     
-    fetchCommonAreas();
-    fetchProperties();
-  }, [toast]);
-  
-  // Cargar reservas cuando cambia el área seleccionada
-  useEffect(() => {
-    if (selectedArea) {
-      fetchReservations();
-    }
-  }, [selectedArea, viewDate]);
-  
-  // Función para cargar reservas
-  const fetchReservations = async () => {
-    if (!selectedArea) return;
+    // Estados de formulario
+    reservationForm,
     
-    setIsLoading(true);
+    // Estados de UI
+    isReservationDialogOpen,
+    selectedReservation,
+    isDetailDialogOpen,
+    isPaymentModalOpen,
     
-    try {
-      // Calcular rango de fechas para la vista actual (mes)
-      const startDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-      const endDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
-      
-      // Cargar disponibilidad del área común
-      const availabilityResponse = await fetch(
-        `/api/common-areas/${selectedArea.id}/availability?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
-      );
-      
-      if (!availabilityResponse.ok) {
-        throw new Error('Error al cargar disponibilidad');
-      }
-      
-      const availabilityData = await availabilityResponse.json();
-      
-      // Cargar mis reservas
-      const myReservationsResponse = await fetch(
-        `/api/reservations?commonAreaId=${selectedArea.id}`
-      );
-      
-      if (!myReservationsResponse.ok) {
-        throw new Error('Error al cargar mis reservas');
-      }
-      
-      const myReservationsData = await myReservationsResponse.json();
-      setMyReservations(myReservationsData);
-      
-      // Convertir reservas a eventos de calendario
-      const events: CalendarEvent[] = [];
-      
-      // Agregar slots ocupados
-      if (availabilityData.occupiedSlots) {
-        availabilityData.occupiedSlots.forEach((slot: any) => {
-          events.push({
-            id: slot.reservationId,
-            title: 'Reservado',
-            start: new Date(slot.startDateTime),
-            end: new Date(slot.endDateTime),
-            status: slot.status
-          });
-        });
-      }
-      
-      // Agregar mis reservas con más detalle
-      myReservationsData.forEach((reservation: Reservation) => {
-        // Buscar si ya existe un evento para esta reserva
-        const existingEventIndex = events.findIndex(event => event.id === reservation.id);
-        
-        // Si existe, actualizar con más detalle
-        if (existingEventIndex >= 0) {
-          events[existingEventIndex] = {
-            id: reservation.id,
-            title: reservation.title,
-            start: new Date(reservation.startDateTime),
-            end: new Date(reservation.endDateTime),
-            status: reservation.status,
-            resource: reservation
-          };
-        } else {
-          // Si no existe, agregar nuevo evento
-          events.push({
-            id: reservation.id,
-            title: reservation.title,
-            start: new Date(reservation.startDateTime),
-            end: new Date(reservation.endDateTime),
-            status: reservation.status,
-            resource: reservation
-          });
-        }
-      });
-      
-      setCalendarEvents(events);
-    } catch (error) {
-      console.error('Error al cargar reservas:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudieron cargar las reservas',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Función para crear una nueva reserva
-  const handleCreateReservation = async () => {
-    if (!selectedArea || !selectedProperty) {
-      toast({
-        title: 'Error',
-        description: 'Seleccione un área común y una propiedad',
-        variant: 'destructive'
-      });
-      return;
-    }
+    // Funciones de manejo de datos
+    setSelectedArea,
+    setViewDate,
+    fetchReservations,
     
-    try {
-      const response = await fetch('/api/reservations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          commonAreaId: selectedArea.id,
-          propertyId: selectedProperty,
-          title: reservationForm.title,
-          description: reservationForm.description,
-          startDateTime: new Date(reservationForm.startDateTime).toISOString(),
-          endDateTime: new Date(reservationForm.endDateTime).toISOString(),
-          attendees: reservationForm.attendees
-        })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        toast({
-          title: 'Reserva creada',
-          description: selectedArea.requiresApproval 
-            ? 'Su solicitud de reserva ha sido enviada y está pendiente de aprobación'
-            : 'Su reserva ha sido confirmada exitosamente',
-        });
-        setIsReservationDialogOpen(false);
-        resetReservationForm();
-        fetchReservations();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al crear la reserva');
-      }
-    } catch (error) {
-      console.error('Error al crear reserva:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Error al crear la reserva',
-        variant: 'destructive'
-      });
-    }
-  };
+    // Funciones de formulario
+    setReservationForm,
+    
+    // Funciones de UI
+    setIsReservationDialogOpen,
+    setIsDetailDialogOpen,
+    setIsPaymentModalOpen,
+    
+    // Funciones de acciones
+    handleCreateReservation,
+    handleCancelReservation,
+    handleEventClick,
+    handleNewReservation,
+    handlePaymentComplete
+  } = useReservationsWithPayments();
   
-  // Función para cancelar una reserva
-  const handleCancelReservation = async (id: number) => {
-    try {
-      const response = await fetch(`/api/reservations/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          cancellationReason: 'Cancelada por el usuario'
-        })
-      });
-      
-      if (response.ok) {
-        toast({
-          title: 'Reserva cancelada',
-          description: 'La reserva ha sido cancelada exitosamente'
-        });
-        setIsDetailDialogOpen(false);
-        fetchReservations();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al cancelar la reserva');
-      }
-    } catch (error) {
-      console.error('Error al cancelar reserva:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Error al cancelar la reserva',
-        variant: 'destructive'
-      });
-    }
-  };
-  
-  // Función para mostrar detalle de una reserva
-  const handleEventClick = (event: CalendarEvent) => {
-    if (event.resource) {
-      setSelectedReservation(event.resource);
-      setIsDetailDialogOpen(true);
-    }
-  };
-  
-  // Función para resetear el formulario de reserva
-  const resetReservationForm = () => {
-    setReservationForm({
-      title: '',
-      description: '',
-      startDateTime: '',
-      endDateTime: '',
-      attendees: 1,
-      propertyId: selectedProperty || 0
-    });
-  };
-  
-  // Función para abrir el diálogo de nueva reserva
-  const handleNewReservation = () => {
-    resetReservationForm();
-    setIsReservationDialogOpen(true);
-  };
+  // Propiedades de ejemplo (en producción vendría de la API)
+  const properties = [
+    { id: 1, name: 'Apartamento 101' },
+    { id: 2, name: 'Apartamento 102' }
+  ];
   
   // Función para cambiar el área común seleccionada
   const handleAreaChange = (areaId: string) => {
