@@ -41,7 +41,7 @@ describe('BillingEngine', () => {
 
   describe('generateBillsForPeriod', () => {
     it('should generate bills for all active properties', async () => {
-      const { getPrisma } = require('@/lib/prisma');
+      const { getPrisma } = await import('@/lib/prisma');
       const mockPrisma = getPrisma();
 
       // Mock data
@@ -130,7 +130,7 @@ describe('BillingEngine', () => {
     });
 
     it('should throw error for complexes without billing access', async () => {
-      const { getPrisma } = require('@/lib/prisma');
+      const { getPrisma } = await import('@/lib/prisma');
       const mockPrisma = getPrisma();
 
       const mockComplex = {
@@ -176,7 +176,7 @@ describe('BillingEngine', () => {
 
   describe('processPayment', () => {
     it('should process full payment correctly', async () => {
-      const { getPrisma } = require('@/lib/prisma');
+      const { getPrisma } = await import('@/lib/prisma');
       const mockPrisma = getPrisma();
 
       const mockBill = {
@@ -195,7 +195,7 @@ describe('BillingEngine', () => {
     });
 
     it('should process partial payment correctly', async () => {
-      const { getPrisma } = require('@/lib/prisma');
+      const { getPrisma } = await import('@/lib/prisma');
       const mockPrisma = getPrisma();
 
       const mockBill = {
@@ -213,7 +213,7 @@ describe('BillingEngine', () => {
     });
 
     it('should throw error for already paid bills', async () => {
-      const { getPrisma } = require('@/lib/prisma');
+      const { getPrisma } = await import('@/lib/prisma');
       const mockPrisma = getPrisma();
 
       const mockBill = {

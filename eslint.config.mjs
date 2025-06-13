@@ -6,6 +6,29 @@ import pluginReact from "eslint-plugin-react";
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   { files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"] },
+  
+  // Configuración específica para archivos Jest
+  {
+    files: ["**/*.config.js", "**/jest.*.js", "**/__mocks__/**/*.js", "jest.mocks.js", "jest.setup.js"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        ...globals.node,
+        jest: "readonly",
+        global: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly"
+      }
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "no-undef": "off",
+      "@typescript-eslint/no-unused-vars": "warn"
+    }
+  },
   { 
     ignores: [
       // Archivos de configuración
@@ -22,6 +45,11 @@ export default [
       "seedUsers.js",
       "analyze-project.js",
       "createTestUsers.js",
+      "recreateUsers.js",
+      
+      // Archivos de configuración Jest
+      "jest.mocks.js",
+      "jest.setup.js",
       
       // Archivos generados
       "node_modules/**",
