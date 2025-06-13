@@ -13,7 +13,29 @@ import { Pagination } from '@/components/ui/pagination/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow,  } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useServices, PQRStatus, PQRPriority, PQRType, PQR } from '@/lib/services';
+import { usePQR } from '@/hooks/usePQR';
+
+// PQR Enums
+enum PQRStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+  CLOSED = 'CLOSED',
+  REJECTED = 'REJECTED'
+}
+
+enum PQRPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
+}
+
+enum PQRType {
+  PETITION = 'PETITION',
+  COMPLAINT = 'COMPLAINT',
+  CLAIM = 'CLAIM'
+}
 import { PQRDetailDialog } from './PQRDetailDialog';
 import { CreatePQRForm } from './CreatePQRForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -36,16 +58,6 @@ export function PQRList({
   title = "Solicitudes",
   description = "Lista de peticiones, quejas y reclamos",
 }: PQRListProps) {
-  const { pqr } = useServices();
-  
-  // Estados para la lista y filtros
-  const [pqrs, setPqrs] = useState<PQR[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState(initialLimit);
-  const [loading, setLoading] = useState(true);
-  const [error, _setError] = useState<string | null>(null);
-  
   // Estados para filtros
   const [filters, setFilters] = useState({
     status: "",
@@ -55,59 +67,35 @@ export function PQRList({
     showFilters: false,
   });
   
+  // Hook PQR con filtros
+  const {
+    pqrs,
+    loading,
+    error,
+    pagination,
+    refresh,
+    loadPage,
+    createPQR,
+  } = usePQR({
+    page: 1,
+    limit: initialLimit,
+    status: filters.status || undefined,
+    autoLoad: true,
+  });
+  
   // Estados para diálogos
   const [selectedPQR, setSelectedPQR] = useState<number | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   
-  // Función para cargar PQRs
-  const loadPQRs = async (page = currentPage) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Preparar filtros para la API
-      const apiFilters: unknown = {
-        page,
-        limit,
-      };
-      
-      // Agregar filtros opcionales
-      if (filters.status) apiFilters.status = filters.status;
-      if (filters.priority) apiFilters.priority = filters.priority;
-      if (filters.type) apiFilters.type = filters.type;
-      if (filters.search) apiFilters.search = filters.search;
-      
-      // Obtener datos
-      // Variable response eliminada por lint
-      
-      setPqrs(response.pqrs);
-      setTotalPages(Math.ceil(response.total / limit));
-    } catch (err) {
-      console.error("Error al cargar PQRs:", err);
-      setError("No se pudieron cargar las solicitudes. Intenta nuevamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Cargar datos iniciales
+  // Handle filter changes with debouncing
   useEffect(() => {
-    loadPQRs(1);
-  }, [limit]);
-  
-  // Cargar al cambiar los filtros
-  useEffect(() => {
-    // Usar un debounce para evitar muchas llamadas al API
     const handler = setTimeout(() => {
-      setCurrentPage(1);
-      loadPQRs(1);
+      refresh();
     }, 300);
     
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [filters.status, filters.priority, filters.type, filters.search]);
+    return () => clearTimeout(handler);
+  }, [filters.status, filters.priority, filters.type, filters.search, refresh]);
   
   // Función para obtener el color de badge según el estado
   const getStatusColor = (status: PQRStatus) => {
@@ -199,8 +187,7 @@ export function PQRList({
   
   // Función para manejar cambio de página
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    loadPQRs(page);
+    loadPage(page);
   };
   
   // Función para limpiar los filtros
@@ -246,7 +233,7 @@ export function PQRList({
             <Button
               variant="outline"
               size="icon"
-              onClick={() => loadPQRs()}
+              onClick={() => refresh()}
               title="Refrescar"
             >
               <RefreshCw className="h-4 w-4" />
@@ -358,7 +345,7 @@ export function PQRList({
         {error && (
           <ErrorMessage 
             message={error} 
-            retry={() => loadPQRs()} 
+            retry={() => refresh()} 
           />
         )}
         
@@ -446,11 +433,11 @@ export function PQRList({
         </div>
         
         {/* Paginación */}
-        {showPagination && pqrs.length > 0 && (
+        {showPagination && pqrs.length > 0 && pagination && (
           <div className="mt-4">
             <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
               onPageChange={handlePageChange}
             />
           </div>
@@ -462,7 +449,7 @@ export function PQRList({
         isOpen={showDetailDialog}
         onClose={() => setShowDetailDialog(false)}
         pqrId={selectedPQR}
-        onStatusChange={() => loadPQRs()}
+        onStatusChange={() => refresh()}
       />
       
       {/* Diálogo para crear nueva solicitud */}
@@ -474,7 +461,7 @@ export function PQRList({
           <CreatePQRForm
             onSuccess={() => {
               setShowCreateDialog(false);
-              loadPQRs();
+              refresh();
             }}
             onCancel={() => setShowCreateDialog(false)}
           />
