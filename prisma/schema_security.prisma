@@ -1,0 +1,312 @@
+// prisma/schema_security.prisma
+// Schema para gestión de seguridad y minutas digitales
+
+model DigitalLog {
+  id            Int          @id @default(autoincrement())
+  complexId     Int
+  
+  // Información del turno
+  shiftDate     DateTime     @default(now())
+  shiftStart    DateTime
+  shiftEnd      DateTime?
+  guardOnDuty   Int          // ID del usuario (guardia)
+  relievedBy    Int?         // ID del guardia que releva
+  
+  // Tipo de entrada
+  logType       LogType      @default(GENERAL)
+  priority      LogPriority  @default(NORMAL)
+  
+  // Contenido de la minuta
+  title         String       @db.VarChar(200)
+  description   String       @db.Text
+  location      String?      @db.VarChar(100)
+  
+  // Personas involucradas
+  involvedPersons Json?      // Array de personas: [{ name, documentId, role, unit }]
+  
+  // Evidencias
+  attachments   Json?        // Array de archivos: [{ url, type, name }]
+  photos        Json?        // Array de fotos: [{ url, caption, timestamp }]
+  
+  // Estado y seguimiento
+  status        LogStatus    @default(OPEN)
+  requiresFollowUp Boolean   @default(false)
+  followUpDate  DateTime?
+  
+  // Clasificación
+  category      LogCategory  @default(OTHER)
+  subcategory   String?      @db.VarChar(100)
+  
+  // Referencias externas
+  incidentId    Int?         // Relación con incidentes si aplica
+  visitorId     Int?         // Relación con visitantes si aplica
+  unitId        Int?         // Unidad involucrada
+  
+  // Clima y condiciones
+  weatherConditions String?  @db.VarChar(100)
+  temperature       Float?
+  
+  // Verificaciones de ronda
+  patrolChecks     Json?     // [{ checkpoint, time, status, observations }]
+  systemChecks     Json?     // [{ system, status, notes }]
+  
+  // Metadata
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  createdBy     Int          // ID del usuario que crea
+  updatedBy     Int?         // ID del usuario que actualiza
+  
+  // Validación y firma digital
+  guardSignature String?     @db.Text // Firma digital del guardia
+  supervisorReview Boolean   @default(false)
+  reviewedBy    Int?         // ID del supervisor que revisa
+  reviewedAt    DateTime?
+  reviewNotes   String?      @db.Text
+  
+  // Relaciones
+  complex       ResidentialComplex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+  guard         User         @relation("GuardLogs", fields: [guardOnDuty], references: [id])
+  reliever      User?        @relation("RelievedLogs", fields: [relievedBy], references: [id])
+  creator       User         @relation("CreatedLogs", fields: [createdBy], references: [id])
+  updater       User?        @relation("UpdatedLogs", fields: [updatedBy], references: [id])
+  reviewer      User?        @relation("ReviewedLogs", fields: [reviewedBy], references: [id])
+  
+  // Índices
+  @@index([complexId, shiftDate])
+  @@index([guardOnDuty, shiftDate])
+  @@index([status, requiresFollowUp])
+  @@index([category, priority])
+  @@map("digital_logs")
+}
+
+// Turnos de guardia
+model GuardShift {
+  id            Int          @id @default(autoincrement())
+  complexId     Int
+  
+  // Información del turno
+  shiftDate     DateTime
+  startTime     DateTime
+  endTime       DateTime
+  guardAssigned Int          // ID del guardia asignado
+  
+  // Estado del turno
+  status        ShiftStatus  @default(SCHEDULED)
+  checkInTime   DateTime?    // Hora real de llegada
+  checkOutTime  DateTime?    // Hora real de salida
+  
+  // Observaciones del turno
+  notes         String?      @db.Text
+  irregularities String?     @db.Text
+  
+  // Metadata
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  createdBy     Int
+  
+  // Relaciones
+  complex       ResidentialComplex @relation(fields: [complexId], references: [id])
+  guard         User         @relation("AssignedShifts", fields: [guardAssigned], references: [id])
+  creator       User         @relation("CreatedShifts", fields: [createdBy], references: [id])
+  
+  // Un guardia no puede tener turnos superpuestos
+  @@unique([guardAssigned, shiftDate, startTime])
+  @@index([complexId, shiftDate])
+  @@index([guardAssigned, status])
+  @@map("guard_shifts")
+}
+
+// Puntos de ronda de seguridad
+model SecurityCheckpoint {
+  id          Int      @id @default(autoincrement())
+  complexId   Int
+  
+  // Información del checkpoint
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  location    String   @db.VarChar(100)
+  
+  // Coordenadas (opcional)
+  latitude    Float?
+  longitude   Float?
+  
+  // QR/NFC para verificación
+  qrCode      String?  @unique @db.VarChar(100)
+  nfcTag      String?  @unique @db.VarChar(100)
+  
+  // Configuración
+  isActive    Boolean  @default(true)
+  checkOrder  Int?     // Orden en la ronda
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int
+  
+  // Relaciones
+  complex     ResidentialComplex @relation(fields: [complexId], references: [id])
+  creator     User     @relation("CreatedCheckpoints", fields: [createdBy], references: [id])
+  
+  @@index([complexId, isActive])
+  @@index([complexId, checkOrder])
+  @@map("security_checkpoints")
+}
+
+// Registros de ronda
+model PatrolLog {
+  id           Int         @id @default(autoincrement())
+  complexId    Int
+  digitalLogId Int?        // Opcional: puede estar asociado a una minuta
+  
+  // Información de la ronda
+  patrolDate   DateTime    @default(now())
+  guardId      Int
+  startTime    DateTime
+  endTime      DateTime?
+  
+  // Estado de la ronda
+  status       PatrolStatus @default(IN_PROGRESS)
+  
+  // Checkpoints verificados
+  checkpoints  Json        // [{ checkpointId, verifiedAt, status, notes }]
+  
+  // Incidencias encontradas
+  incidents    Json?       // [{ type, description, location, severity }]
+  
+  // Observaciones generales
+  notes        String?     @db.Text
+  
+  // Metadata
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relaciones
+  complex      ResidentialComplex @relation(fields: [complexId], references: [id])
+  guard        User        @relation("PatrolLogs", fields: [guardId], references: [id])
+  digitalLog   DigitalLog? @relation(fields: [digitalLogId], references: [id])
+  
+  @@index([complexId, patrolDate])
+  @@index([guardId, status])
+  @@map("patrol_logs")
+}
+
+// Alertas de seguridad
+model SecurityAlert {
+  id          Int         @id @default(autoincrement())
+  complexId   Int
+  
+  // Información de la alerta
+  alertType   AlertType
+  priority    AlertPriority @default(MEDIUM)
+  title       String      @db.VarChar(200)
+  description String      @db.Text
+  location    String?     @db.VarChar(100)
+  
+  // Estado
+  status      AlertStatus @default(ACTIVE)
+  
+  // Respuesta
+  acknowledgedBy Int?      // ID del usuario que reconoce
+  acknowledgedAt DateTime?
+  resolvedBy     Int?      // ID del usuario que resuelve
+  resolvedAt     DateTime?
+  resolution     String?   @db.Text
+  
+  // Metadata
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  createdBy   Int
+  
+  // Relaciones\n  complex     ResidentialComplex @relation(fields: [complexId], references: [id])
+  creator     User        @relation("CreatedAlerts", fields: [createdBy], references: [id])
+  acknowledger User?      @relation("AcknowledgedAlerts", fields: [acknowledgedBy], references: [id])
+  resolver    User?       @relation("ResolvedAlerts", fields: [resolvedBy], references: [id])
+  
+  @@index([complexId, status])
+  @@index([alertType, priority])
+  @@map("security_alerts")
+}
+
+// Enumeraciones
+enum LogType {
+  GENERAL      // Registro general
+  INCIDENT     // Incidente
+  VISITOR      // Registro de visitante
+  MAINTENANCE  // Mantenimiento
+  PATROL       // Ronda de seguridad
+  HANDOVER     // Entrega de turno
+  EMERGENCY    // Emergencia
+  SYSTEM_CHECK // Verificación de sistemas
+}
+
+enum LogPriority {
+  LOW      // Baja prioridad
+  NORMAL   // Prioridad normal
+  HIGH     // Alta prioridad
+  URGENT   // Urgente
+  CRITICAL // Crítico
+}
+
+enum LogStatus {
+  OPEN       // Abierto
+  IN_REVIEW  // En revisión
+  RESOLVED   // Resuelto
+  CLOSED     // Cerrado
+  CANCELLED  // Cancelado
+}
+
+enum LogCategory {
+  ACCESS_CONTROL    // Control de acceso
+  VISITOR_MGMT      // Gestión de visitantes
+  INCIDENT          // Incidentes
+  MAINTENANCE       // Mantenimiento
+  SAFETY            // Seguridad
+  EMERGENCY         // Emergencias
+  PATROL            // Rondas
+  SYSTEM_ALERT      // Alertas del sistema
+  COMMUNICATION     // Comunicaciones
+  OTHER             // Otros
+}
+
+enum ShiftStatus {
+  SCHEDULED   // Programado
+  ACTIVE      // Activo
+  COMPLETED   // Completado
+  MISSED      // No asistió
+  CANCELLED   // Cancelado
+}
+
+enum PatrolStatus {
+  PLANNED       // Planificada
+  IN_PROGRESS   // En progreso
+  COMPLETED     // Completada
+  INTERRUPTED   // Interrumpida
+  CANCELLED     // Cancelada
+}
+
+enum AlertType {
+  SECURITY_BREACH    // Brecha de seguridad
+  FIRE              // Incendio
+  MEDICAL_EMERGENCY // Emergencia médica
+  SYSTEM_FAILURE    // Fallo del sistema
+  UNAUTHORIZED_ACCESS // Acceso no autorizado
+  VANDALISM         // Vandalismo
+  NOISE_COMPLAINT   // Queja de ruido
+  SUSPICIOUS_ACTIVITY // Actividad sospechosa
+  EQUIPMENT_FAILURE // Fallo de equipo
+  OTHER             // Otro
+}
+
+enum AlertPriority {
+  LOW      // Baja
+  MEDIUM   // Media
+  HIGH     // Alta
+  CRITICAL // Crítica
+}
+
+enum AlertStatus {
+  ACTIVE      // Activa
+  ACKNOWLEDGED // Reconocida
+  RESOLVED    // Resuelta
+  CANCELLED   // Cancelada
+}

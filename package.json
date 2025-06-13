@@ -63,6 +63,7 @@
     "next": "^15.3.3",
     "next-auth": "^4.24.11",
     "node-onvif": "^0.1.7",
+    "node-rtsp-stream": "^0.0.9",
     "nodemailer": "^6.10.0",
     "pdf-lib": "^1.17.1",
     "pg": "^8.14.1",
@@ -76,7 +77,8 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.0.2",
-    "tsyringe": "^4.8.0"
+    "tsyringe": "^4.8.0",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.27.4",
