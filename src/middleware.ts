@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ServerLogger } from '@/lib/logging/server-logger';
 import { verifyToken } from '@/lib/auth';
+import { FreemiumService, FEATURES } from '@/lib/freemium-service';
+import { getPrisma } from '@/lib/prisma';
 
 // Rutas públicas que no requieren autenticación
 const PUBLIC_ROUTES = [
@@ -29,6 +31,20 @@ const ROLE_ROUTES = {
   '/api/dashboard': ['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT', 'RECEPTION']
 };
 
+// Mapeo de rutas a funcionalidades freemium
+const FEATURE_ROUTES = {
+  '/api/assemblies': FEATURES.ASSEMBLY_MANAGEMENT,
+  '/(admin)/assemblies': FEATURES.ASSEMBLY_MANAGEMENT,
+  '/api/finances': FEATURES.ADVANCED_FINANCIAL,
+  '/api/financial': FEATURES.ADVANCED_FINANCIAL,
+  '/(admin)/finances': FEATURES.ADVANCED_FINANCIAL,
+  '/api/reservations': FEATURES.COMMON_AREAS_RESERVATIONS,
+  '/api/common-areas': FEATURES.COMMON_AREAS_RESERVATIONS,
+  '/api/correspondence': FEATURES.DIGITAL_CORRESPONDENCE,
+  '/api/communications/whatsapp': FEATURES.VIRTUAL_INTERCOM,
+  '/api/communications/telegram': FEATURES.VIRTUAL_INTERCOM
+};
+
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(route => 
     pathname.startsWith(route) || pathname === route
@@ -42,6 +58,54 @@ function hasRequiredRole(pathname: string, userRole: string): boolean {
     }
   }
   return true; // Si no está en rutas restringidas, permitir acceso
+}
+
+function getRequiredFeature(pathname: string): string | null {
+  for (const [route, feature] of Object.entries(FEATURE_ROUTES)) {
+    if (pathname.startsWith(route)) {
+      return feature;
+    }
+  }
+  return null;
+}
+
+async function hasFeatureAccess(complexId: number, requiredFeature: string): Promise<boolean> {
+  try {
+    const prisma = getPrisma();
+    const complex = await prisma.residentialComplex.findUnique({
+      where: { id: complexId },
+      select: { 
+        planType: true, 
+        trialEndDate: true, 
+        planEndDate: true,
+        isTrialActive: true 
+      }
+    });
+
+    if (!complex) return false;
+
+    // Verificar si la suscripción está vencida
+    const isExpired = FreemiumService.isSubscriptionExpired(
+      complex.planEndDate, 
+      complex.planType
+    );
+    
+    if (isExpired) return false;
+
+    // Verificar si el trial está activo y permite la funcionalidad
+    const isTrialActive = FreemiumService.isTrialActive(complex.trialEndDate);
+    
+    // Durante el trial, permitir funcionalidades estándar
+    if (isTrialActive) {
+      return FreemiumService.hasFeatureAccess('STANDARD', requiredFeature);
+    }
+
+    // Verificar según el plan actual
+    return FreemiumService.hasFeatureAccess(complex.planType, requiredFeature);
+  } catch (error) {
+    console.error('[MIDDLEWARE] Error verificando acceso a funcionalidad:', error);
+    return false;
+  }
 }
 
 export async function middleware(request: NextRequest) {
@@ -119,6 +183,30 @@ export async function middleware(request: NextRequest) {
         const redirectUrl = payload.role === 'RESIDENT' ? '/dashboard' : 
                            payload.role === 'RECEPTION' ? '/reception' : '/admin';
         return NextResponse.redirect(new URL(redirectUrl, request.url));
+      }
+
+      // Verificar acceso a funcionalidades freemium
+      const requiredFeature = getRequiredFeature(pathname);
+      if (requiredFeature && payload.complexId) {
+        const hasAccess = await hasFeatureAccess(payload.complexId, requiredFeature);
+        
+        if (!hasAccess) {
+          console.log(`[MIDDLEWARE] Acceso denegado a funcionalidad ${requiredFeature} para complejo ${payload.complexId}`);
+          
+          if (pathname.startsWith('/api/')) {
+            return NextResponse.json(
+              { 
+                message: 'Esta funcionalidad no está disponible en su plan actual',
+                requiredFeature,
+                upgradeRequired: true
+              },
+              { status: 402 } // Payment Required
+            );
+          }
+          
+          // Para páginas web, redirigir a upgrade
+          return NextResponse.redirect(new URL('/upgrade?feature=' + requiredFeature, request.url));
+        }
       }
 
       // Agregar información del usuario a headers para las APIs

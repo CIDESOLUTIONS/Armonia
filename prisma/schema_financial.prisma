@@ -1,52 +1,229 @@
-// Modelos Prisma para el sistema financiero - Proyecto Armonía
+// Modelos Prisma para el sistema financiero avanzado - Proyecto Armonía
 
-// Modelo para cuotas (fees)
-model Fee {
-  id          Int           @id @default(autoincrement())
-  title       String
-  description String?
-  amount      Decimal       @db.Decimal(10, 2)
-  type        FeeType
-  dueDate     DateTime
-  status      PaymentStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  // Relaciones
-  property    Property      @relation(fields: [propertyId], references: [id])
-  propertyId  Int
-  payments    Payment[]
-  receipts    Receipt[]
-
-  @@index([propertyId])
-  @@index([status])
-  @@index([dueDate])
-  @@index([type])
+// Enumeraciones para el sistema financiero
+enum FeeType {
+  MONTHLY           // Cuota mensual de administración
+  EXTRAORDINARY     // Cuota extraordinaria
+  SPECIAL_ASSESSMENT // Derrama especial
+  LATE_FEE         // Interés moratorio
+  SERVICE          // Cuota por servicios
+  MAINTENANCE      // Cuota de mantenimiento
+  INSURANCE        // Seguro
+  OTHER            // Otros conceptos
+  
   @@schema("tenant")
 }
 
-// Modelo para pagos (payments)
+enum PaymentStatus {
+  PENDING    // Pendiente de pago
+  PARTIAL    // Pago parcial
+  PAID       // Pagado completamente
+  OVERDUE    // Vencido
+  CANCELLED  // Cancelado
+  
+  @@schema("tenant")
+}
+
+enum PaymentMethod {
+  CASH           // Efectivo
+  BANK_TRANSFER  // Transferencia bancaria
+  CREDIT_CARD    // Tarjeta de crédito
+  DEBIT_CARD     // Tarjeta débito
+  CHECK          // Cheque
+  PSE            // PSE Colombia
+  DIGITAL_WALLET // Billetera digital
+  OTHER          // Otro método
+  
+  @@schema("tenant")
+}
+
+// Modelo para estructura de cuotas (plantilla de facturación)
+model Fee {
+  id          Int      @id @default(autoincrement())
+  name        String   // Nombre de la cuota (ej: "Administración", "Fondo de Reserva")
+  description String?
+  baseAmount  Decimal  @db.Decimal(10, 2) // Monto base
+  type        FeeType
+  isActive    Boolean  @default(true)
+  isPerUnit   Boolean  @default(false) // Si se cobra por unidad/área
+  dueDay      Int      @default(15)    // Día del mes en que vence (1-31)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relación con complejo
+  complexId   Int
+  complex     ResidentialComplex @relation(fields: [complexId], references: [id])
+  
+  // Relación con facturas generadas
+  billItems   BillItem[]
+
+  @@index([complexId])
+  @@index([type])
+  @@index([isActive])
+  @@schema("tenant")
+}
+
+// Modelo para facturas generadas
+model Bill {
+  id             Int           @id @default(autoincrement())
+  billNumber     String        @unique // Número de factura secuencial
+  billingPeriod  String        // YYYY-MM formato
+  totalAmount    Decimal       @db.Decimal(10, 2)
+  dueDate        DateTime
+  status         PaymentStatus @default(PENDING)
+  generatedAt    DateTime      @default(now())
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  
+  // Relaciones
+  propertyId     Int
+  property       Property      @relation(fields: [propertyId], references: [id])
+  billItems      BillItem[]    // Items de la factura
+  payments       Payment[]     // Pagos aplicados a esta factura
+
+  @@index([propertyId])
+  @@index([status])
+  @@index([billingPeriod])
+  @@index([dueDate])
+  @@schema("tenant")
+}
+
+// Modelo para items de factura (detalle de conceptos)
+model BillItem {
+  id        Int     @id @default(autoincrement())
+  name      String  // Nombre del concepto
+  amount    Decimal @db.Decimal(10, 2)
+  type      String  // Tipo de cuota
+  
+  // Relaciones
+  billId    Int
+  bill      Bill    @relation(fields: [billId], references: [id])
+  feeId     Int?    // Referencia opcional a la estructura de cuota
+  fee       Fee?    @relation(fields: [feeId], references: [id])
+
+  @@index([billId])
+  @@schema("tenant")
+}
+
+// Modelo para pagos (mejorado)
 model Payment {
   id              Int           @id @default(autoincrement())
   amount          Decimal       @db.Decimal(10, 2)
-  paymentDate     DateTime
   paymentMethod   PaymentMethod
-  reference       String?
+  reference       String?       // Referencia externa del pago
   status          PaymentStatus @default(PENDING)
   notes           String?
   transactionId   String?       @unique
+  paidAt          DateTime      @default(now())
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   // Relaciones
-  fee             Fee           @relation(fields: [feeId], references: [id])
-  feeId           Int
-  paidBy          User          @relation("PaymentsPaid", fields: [paidById], references: [id])
-  paidById        Int
+  billId          Int
+  bill            Bill          @relation(fields: [billId], references: [id])
+  paidById        Int?          // Usuario que realizó el pago
+  paidBy          User?         @relation("PaymentsPaid", fields: [paidById], references: [id])
+  receivedById    Int?          // Usuario que recibió el pago
   receivedBy      User?         @relation("PaymentsReceived", fields: [receivedById], references: [id])
-  receivedById    Int?
-  receipt         Receipt?      @relation(fields: [receiptId], references: [id])
-  receiptId       Int?
+
+  @@index([billId])
+  @@index([status])
+  @@index([paidAt])
+  @@schema("tenant")
+}
+
+// Modelo para presupuestos
+model Budget {
+  id          Int      @id @default(autoincrement())
+  name        String   // Nombre del presupuesto
+  description String?
+  totalAmount Decimal  @db.Decimal(12, 2)
+  year        Int      // Año del presupuesto
+  status      String   @default("DRAFT") // DRAFT, APPROVED, ACTIVE, CLOSED
+  approvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relaciones
+  complexId   Int
+  complex     ResidentialComplex @relation(fields: [complexId], references: [id])
+  budgetItems BudgetItem[]
+  expenses    Expense[]
+
+  @@index([complexId])
+  @@index([year])
+  @@index([status])
+  @@schema("tenant")
+}
+
+// Modelo para items del presupuesto
+model BudgetItem {
+  id             Int     @id @default(autoincrement())
+  category       String  // Categoría del gasto (ej: "Mantenimiento", "Servicios Públicos")
+  description    String?
+  budgetedAmount Decimal @db.Decimal(10, 2)
+  spentAmount    Decimal @default(0) @db.Decimal(10, 2)
+  
+  // Relaciones
+  budgetId       Int
+  budget         Budget  @relation(fields: [budgetId], references: [id])
+
+  @@index([budgetId])
+  @@index([category])
+  @@schema("tenant")
+}
+
+// Modelo para gastos/egresos
+model Expense {
+  id            Int           @id @default(autoincrement())
+  description   String
+  amount        Decimal       @db.Decimal(10, 2)
+  category      String        // Categoría del gasto
+  expenseDate   DateTime
+  vendor        String?       // Proveedor o beneficiario
+  invoiceNumber String?       // Número de factura del proveedor
+  notes         String?
+  status        String        @default("PENDING") // PENDING, APPROVED, PAID
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relaciones
+  complexId     Int
+  complex       ResidentialComplex @relation(fields: [complexId], references: [id])
+  budgetId      Int?          // Presupuesto al que pertenece (opcional)
+  budget        Budget?       @relation(fields: [budgetId], references: [id])
+  approvedById  Int?          // Usuario que aprobó el gasto
+  approvedBy    User?         @relation("ExpensesApproved", fields: [approvedById], references: [id])
+  
+  @@index([complexId])
+  @@index([category])
+  @@index([expenseDate])
+  @@index([status])
+  @@schema("tenant")
+}
+
+// Modelo para recibos/comprobantes
+model Receipt {
+  id            Int      @id @default(autoincrement())
+  receiptNumber String   @unique
+  description   String
+  amount        Decimal  @db.Decimal(10, 2)
+  issuedDate    DateTime @default(now())
+  format        String   @default("PDF") // PDF, EMAIL, PRINT
+  content       Json?    // Contenido estructurado del recibo
+  createdAt     DateTime @default(now())
+  
+  // Relaciones
+  propertyId    Int
+  property      Property @relation(fields: [propertyId], references: [id])
+  paymentId     Int?     // Pago asociado (opcional)
+  payment       Payment? @relation(fields: [paymentId], references: [id])
+
+  @@index([propertyId])
+  @@index([issuedDate])
+  @@schema("tenant")
+}
 
   @@index([feeId])
   @@index([paidById])

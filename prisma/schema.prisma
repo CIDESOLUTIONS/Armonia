@@ -76,6 +76,15 @@ enum AttachmentType {
   @@schema("tenant")
 }
 
+// Enumeración para planes freemium
+enum PlanType {
+  BASIC         // Gratuito: hasta 30 unidades, funcionalidades básicas, 1 año de históricos
+  STANDARD      // $25/mes: hasta 30 unidades + $1/unidad adicional, funcionalidades avanzadas, 3 años de históricos
+  PREMIUM       // $50/mes: hasta 80 unidades + $1/unidad adicional, todas las funcionalidades, históricos ilimitados
+  
+  @@schema("armonia")
+}
+
 // Modelo ampliado para Incidentes
 model Incident {
   id                Int               @id @default(autoincrement())
@@ -345,9 +354,18 @@ model ResidentialComplex {
   state       String?
   country     String?  @default("Colombia")
   propertyTypes Json?
+  // Campos del modelo freemium
+  planType    PlanType @default(BASIC)  // Plan actual del conjunto
+  planStartDate DateTime @default(now()) // Fecha de inicio del plan
+  planEndDate   DateTime? // Fecha de fin del plan (null para BASIC)
+  trialEndDate  DateTime? // Fecha de fin del período de prueba
+  isTrialActive Boolean  @default(true)  // Si está en período de prueba
+  maxUnits      Int      @default(30)    // Máximo de unidades permitidas según plan
+  // Campos de auditoría
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   users       User[]
+  subscriptions Subscription[]
   @@schema("armonia")
 }
 
@@ -375,6 +393,30 @@ model Prospect {
   message     String?
   createdAt   DateTime @default(now())
   contacted   Boolean  @default(false)
+  @@schema("armonia")
+}
+
+// Modelo para historial de suscripciones y facturación
+model Subscription {
+  id          Int      @id @default(autoincrement())
+  complexId   Int
+  complex     ResidentialComplex @relation(fields: [complexId], references: [id])
+  planType    PlanType
+  startDate   DateTime
+  endDate     DateTime?
+  isActive    Boolean  @default(true)
+  amount      Decimal  @db.Decimal(10,2) // Monto mensual
+  currency    String   @default("USD")
+  // Datos de facturación
+  billingEmail     String
+  billingName      String
+  billingAddress   String?
+  billingCity      String?
+  billingCountry   String? @default("Colombia")
+  // Metadatos
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
   @@schema("armonia")
 }
 
