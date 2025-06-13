@@ -21,9 +21,9 @@ const PUBLIC_ROUTES = [
 
 // Rutas que requieren roles específicos
 const ROLE_ROUTES = {
-  '/admin': ['ADMIN', 'COMPLEX_ADMIN'],
-  '/dashboard': ['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT'],
-  '/reception': ['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'],
+  '/(admin)': ['ADMIN', 'COMPLEX_ADMIN'],
+  '/(resident)': ['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT'],
+  '/(reception)': ['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'],
   '/api/admin': ['ADMIN'],
   '/api/complex': ['ADMIN', 'COMPLEX_ADMIN'],
   '/api/dashboard': ['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT', 'RECEPTION']
@@ -167,10 +167,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Páginas protegidas
-    '/dashboard/:path*',
-    '/admin/:path*', 
-    '/reception/:path*',
+    // Páginas protegidas (nuevos grupos de rutas)
+    '/(admin)/:path*',
+    '/(resident)/:path*', 
+    '/(reception)/:path*',
     '/profile/:path*',
     // APIs protegidas
     '/api/dashboard/:path*',
