@@ -89,25 +89,50 @@ async function createAssemblyHandler(validatedData: CreateAssemblyRequest, reque
     
     const assembly = await prisma.assembly.create({
       data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        scheduledDate: new Date(validatedData.scheduledDate),
-        location: validatedData.location,
-        type: validatedData.type,
-        agenda: validatedData.agenda,
-        complexId: payload.complexId,
-        status: 'PLANNED',
-        createdBy: payload.userId
-      }
+        title: data.title,
+        type: data.type,
+        date: new Date(data.date),
+        description: data.description,
+        quorum: data.quorum,
+        complexId: data.complexId,
+        organizerId: data.organizerId,
+        status: 'PENDING',
+      },
     });
-
-    console.log(`[ASSEMBLIES] Nueva asamblea creada: ${assembly.id} por ${payload.email}`);
-    return NextResponse.json(assembly, { status: 201 });
-
+    return NextResponse.json(assembly);
   } catch (error) {
-    console.error('[ASSEMBLIES POST] Error:', error);
-    return NextResponse.json({ message: 'Error interno' }, { status: 500 });
+    console.error('Error creating assembly:', error);
+    return NextResponse.json({ error: error.message || 'Error al crear asamblea' }, { status: 500 });
   }
 }
 
-export const POST = withValidation(CreateAssemblySchema, createAssemblyHandler);
+export async function PUT(request: Request) { // Agregué ': Request' para tipado
+  try {
+    const _data = await request.json();
+    const tenantId = request.headers.get('x-tenant-id');
+    const tenant = await prismaGlobal.tenant.findUnique({ where: { id: parseInt(tenantId) } });
+    if (!tenant) return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 });
+
+    const prisma = getPrismaClient(tenant.schemaName);
+    const { id } = data;
+    const complex = await prisma.residentialComplex.findUnique({ where: { id: data.complexId } });
+    if (!complex) throw new Error('Conjunto residencial no encontrado');
+    
+    const assembly = await prisma.assembly.update({
+      where: { id: parseInt(id) },
+      data: {
+        title: data.title,
+        type: data.type,
+        date: new Date(data.date),
+        description: data.description,
+        quorum: data.quorum,
+        complexId: data.complexId,
+        organizerId: data.organizerId,
+      },
+    });
+    return NextResponse.json(assembly);
+  } catch (error) {
+    console.error('Error updating assembly:', error);
+    return NextResponse.json({ error: error.message || 'Error al actualizar asamblea' }, { status: 500 });
+  }
+}
