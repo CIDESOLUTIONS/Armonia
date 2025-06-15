@@ -1,18 +1,26 @@
 /**
- * Mock para el módulo prisma
- * 
- * Este archivo proporciona mocks para las funciones del módulo prisma
- * que son utilizadas por los servicios de PQR durante las pruebas.
+ * configuracion de Prisma Client
+ * Este archivo proporciona la configuración y instancia global de Prisma
+ * para el proyecto Armonía.
  */
 
-import { getPrisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+
+/**
+ * Obtiene una instancia de PrismaClient global
+ * @returns Instancia de PrismaClient
+ */
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient();
+}
+
 
 // Instancia global de Prisma
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? getPrisma();
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 

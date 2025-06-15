@@ -11,7 +11,7 @@ interface ContactFormProps {
 
 export function ContactForm({ theme }: ContactFormProps) {
   const _router = useRouter();
-  const [_formData, _setFormData] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",

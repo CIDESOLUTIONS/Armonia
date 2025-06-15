@@ -113,10 +113,10 @@ export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     
     // Registrar solicitud HTTP
-    ServerLogger.httpRequest({
-      method: request.method,
-      url: pathname,
-      ip: request.ip || 'unknown'
+    //ServerLogger.httpRequest({
+     // method: request.method,
+      //url: pathname,
+      //ip: request.ip || 'unknown'
     });
 
     // Aplicar headers de seguridad a todas las respuestas
