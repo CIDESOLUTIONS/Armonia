@@ -7,6 +7,7 @@
  */
 
 import { PrismaClient, AssemblyStatus, VotingStatus, QuorumStatus, MinutesStatus, SignatureStatus } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { ServerLogger } from '../logging/server-logger';
 import { ActivityLogger } from '../logging/activity-logger';
 import { WebSocketService } from '../communications/websocket-service';
@@ -14,7 +15,7 @@ import { notifyAssemblyConvocation, notifyQuorumReached, notifyVotingOpened, not
 import { generatePdf } from '../pdf/pdfGenerator';
 import { DigitalSignatureService } from './digital-signature-service';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 const activityLogger = new ActivityLogger();
 const wsService = new WebSocketService();
 const signatureService = new DigitalSignatureService();

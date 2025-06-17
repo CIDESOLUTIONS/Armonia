@@ -1,9 +1,9 @@
 // C:\Users\meciz\Documents\armonia\frontend\src\app\api\assemblies\clean-dependencies\route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 ;
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 // Variable JWT_SECRET eliminada por lint
 
 export async function DELETE(_req: unknown) {

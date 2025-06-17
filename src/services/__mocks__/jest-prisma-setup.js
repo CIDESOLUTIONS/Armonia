@@ -5,9 +5,10 @@
 
 // Importar el mock extendido de PrismaClient
 const { PrismaClient, PQRCategory, PQRStatus, PQRPriority, VisitStatus, VisitType } = require('./prisma-client-extended');
+import { getPrisma } from '@/lib/prisma';
 
 // Crear una instancia global del mock
-const prismaClientMock = new PrismaClient();
+const prismaClientMock = getPrisma();
 
 // Mockear el módulo @prisma/client para todos los tests
 jest.mock('@prisma/client', () => {

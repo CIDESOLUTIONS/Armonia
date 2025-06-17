@@ -2,12 +2,15 @@
 "use client";
 
 import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,  } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 enum PQRType {
   PETITION = 'PETITION',
@@ -34,7 +37,7 @@ export function CreatePQRForm({
   isInCard = false
 }: CreatePQRFormProps) {
   // Estados para el formulario
-  const [_formData, _setFormData] = useState({
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
     type: PQRType.PETITION,
@@ -45,7 +48,10 @@ export function CreatePQRForm({
   
   // Estados para la carga y errores
   const [loading, setLoading] = useState(false);
-  const [error, _setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Hook de autenticación
+  const { user } = useAuth();
   
   // Categorías disponibles
   const categories = [
@@ -100,17 +106,34 @@ export function CreatePQRForm({
     setError(null);
     
     try {
-      // Simulación de envío
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Crear PQR usando el cliente API seguro
+      const response = await apiClient.pqr.create({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        type: formData.type,
+        priority: formData.priority,
+        category: formData.category,
+        propertyUnit: formData.propertyUnit.trim() || undefined,
+        submittedBy: user?.id,
+      });
       
-      // En un caso real, aquí llamaríamos a la API
-      console.log("Datos enviados:", formData);
+      console.log("PQR creado exitosamente:", response.data);
+      
+      // Limpiar formulario
+      setFormData({
+        title: "",
+        description: "",
+        type: PQRType.PETITION,
+        priority: PQRPriority.MEDIUM,
+        category: "",
+        propertyUnit: "",
+      });
       
       // Notificar éxito
       onSuccess();
     } catch (err) {
-      console.error("Error al crear solicitud:", err);
-      setError("No se pudo crear la solicitud. Intenta nuevamente.");
+      console.error("Error al crear PQR:", err);
+      setError(err instanceof Error ? err.message : "No se pudo crear la solicitud. Intenta nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -213,9 +236,9 @@ export function CreatePQRForm({
         </div>
         
         {error && (
-          <div className="bg-red-50 text-red-700 p-3 rounded-md border border-red-200">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
       </div>
       

@@ -1,6 +1,8 @@
-// frontend/src/hooks/usePayments.ts
-import { useState, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
+// src/hooks/usePayments.ts
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface Payment {
   id: string;

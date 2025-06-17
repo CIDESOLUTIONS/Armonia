@@ -5,11 +5,11 @@
  * de todos los componentes del sistema de comunicaciones.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { notifyUser, notifyByRole, markNotificationAsRead, confirmNotificationReading } from '@/lib/communications/notification-service';
 ;
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Ejecuta pruebas de validación para el sistema de comunicaciones

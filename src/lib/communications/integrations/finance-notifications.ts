@@ -6,9 +6,9 @@
  */
 
 import { notifyUser, notifyByRole } from '@/lib/communications/notification-service';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Envía notificación de nueva cuota generada

@@ -1,202 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { packageService } from '@/services/packageService';
-import { validateCsrfToken } from '@/lib/security/csrf-protection';
-import { sanitizeInput } from '@/lib/security/xss-protection';
-import { logAuditEvent } from '@/lib/security/audit-trail';
+import { getPrisma } from '@/lib/prisma';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { verifyAuth } from '@/lib/auth';
+import {
+  GetPackagesSchema,
+  CreatePackageSchema,
+  type GetPackagesRequest,
+  type CreatePackageRequest
+} from '@/validators/correspondence/packages.validator';
 
-/**
- * GET /api/correspondence/packages
- * Obtiene la lista de paquetes con paginación y filtros
- */
+// GET: Obtener paquetes con filtros
 export async function GET(request: NextRequest) {
   try {
-    // Extraer parámetros de consulta
-    const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const status = searchParams.get('status') || undefined;
-    const type = searchParams.get('type') || undefined;
-    const search = searchParams.get('search') || undefined;
-    const startDate = searchParams.get('startDate') || undefined;
-    const endDate = searchParams.get('endDate') || undefined;
-    const unitNumber = searchParams.get('unitNumber') || undefined;
-    const residentId = searchParams.get('residentId') ? parseInt(searchParams.get('residentId')!) : undefined;
-    const priority = searchParams.get('priority') || undefined;
-
-    // Obtener paquetes
-    const result = await packageService.getAllPackages({
-      page,
-      limit,
-      status,
-      type,
-      search,
-      startDate,
-      endDate,
-      unitNumber,
-      residentId,
-      priority
-    });
-
-    return NextResponse.json(result);
-  } catch (error: any) {
-    console.error('Error al obtener paquetes:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener paquetes', message: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * POST /api/correspondence/packages
- * Crea un nuevo registro de paquete
- */
-export async function POST(request: NextRequest) {
-  try {
-    // Validar token CSRF
-    const csrfValidation = await validateCsrfToken(request);
-    if (!csrfValidation.valid) {
-      return NextResponse.json(
-        { error: 'Token CSRF inválido' },
-        { status: 403 }
-      );
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
     }
 
-    // Obtener y sanitizar datos
-    const requestData = await request.json();
-    const sanitizedData = {
-      type: sanitizeInput(requestData.type),
-      trackingNumber: sanitizeInput(requestData.trackingNumber),
-      courier: sanitizeInput(requestData.courier),
-      senderName: sanitizeInput(requestData.senderName),
-      senderCompany: sanitizeInput(requestData.senderCompany),
-      residentId: requestData.residentId,
-      unitId: requestData.unitId,
-      unitNumber: sanitizeInput(requestData.unitNumber),
-      residentName: sanitizeInput(requestData.residentName),
-      receivedByStaffId: requestData.receivedByStaffId,
-      receivedByStaffName: sanitizeInput(requestData.receivedByStaffName),
-      size: sanitizeInput(requestData.size),
-      weight: requestData.weight,
-      isFragile: requestData.isFragile,
-      needsRefrigeration: requestData.needsRefrigeration,
-      description: sanitizeInput(requestData.description),
-      notes: sanitizeInput(requestData.notes),
-      tags: requestData.tags?.map((tag: string) => sanitizeInput(tag)),
-      mainPhotoUrl: sanitizeInput(requestData.mainPhotoUrl),
-      attachments: requestData.attachments,
-      priority: sanitizeInput(requestData.priority)
+    if (!['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'].includes(payload.role)) {
+      return NextResponse.json({ message: 'Permisos insuficientes' }, { status: 403 });
+    }
+
+    if (!payload.complexId) {
+      return NextResponse.json({ message: 'Usuario sin complejo asociado' }, { status: 400 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const queryParams = {
+      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
+      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 20,
+      status: searchParams.get('status') || undefined,
+      unit: searchParams.get('unit') || undefined
     };
 
-    // Crear paquete
-    const packageData = await packageService.createPackage(sanitizedData);
+    const validation = validateRequest(GetPackagesSchema, queryParams);
+    if (!validation.success) return validation.response;
 
-    // Registrar evento de auditoría
-    await logAuditEvent({
-      userId: sanitizedData.receivedByStaffId,
-      entityType: 'PACKAGE',
-      entityId: packageData.id.toString(),
-      action: 'PACKAGE_CREATED',
-      details: JSON.stringify({
-        type: packageData.type,
-        trackingCode: packageData.trackingCode,
-        unitNumber: packageData.unitNumber,
-        residentName: packageData.residentName
-      })
+    const validatedParams = validation.data;
+    const prisma = getPrisma();
+
+    const where: any = { complexId: payload.complexId };
+    if (validatedParams.status) where.status = validatedParams.status;
+    if (validatedParams.unit) where.recipientUnit = validatedParams.unit;
+
+    const offset = (validatedParams.page - 1) * validatedParams.limit;
+
+    const [packages, total] = await Promise.all([
+      prisma.package.findMany({
+        where,
+        skip: offset,
+        take: validatedParams.limit,
+        orderBy: { receivedAt: 'desc' }
+      }),
+      prisma.package.count({ where })
+    ]);
+
+    return NextResponse.json({
+      data: packages,
+      pagination: {
+        page: validatedParams.page,
+        limit: validatedParams.limit,
+        total,
+        totalPages: Math.ceil(total / validatedParams.limit)
+      }
     });
 
-    return NextResponse.json(packageData, { status: 201 });
-  } catch (error: any) {
-    console.error('Error al crear paquete:', error);
-    return NextResponse.json(
-      { error: 'Error al crear paquete', message: error.message },
-      { status: 400 }
-    );
+  } catch (error) {
+    console.error('[PACKAGES GET] Error:', error);
+    return NextResponse.json({ message: 'Error interno' }, { status: 500 });
   }
 }
 
-/**
- * GET /api/correspondence/packages/stats
- * Obtiene estadísticas de paquetes
- */
-export async function GET_STATS(request: NextRequest) {
+// POST: Registrar nuevo paquete
+async function createPackageHandler(validatedData: CreatePackageRequest, request: NextRequest) {
   try {
-    // Extraer parámetros de consulta
-    const searchParams = request.nextUrl.searchParams;
-    const startDate = searchParams.get('startDate') || undefined;
-    const endDate = searchParams.get('endDate') || undefined;
-
-    // Obtener estadísticas
-    const stats = await packageService.getPackageStats({
-      startDate,
-      endDate
-    });
-
-    return NextResponse.json(stats);
-  } catch (error: any) {
-    console.error('Error al obtener estadísticas:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener estadísticas', message: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET /api/correspondence/packages/settings
- * Obtiene la configuración de paquetes
- */
-export async function GET_SETTINGS() {
-  try {
-    const settings = await packageService.getPackageSettings();
-    return NextResponse.json(settings);
-  } catch (error: any) {
-    console.error('Error al obtener configuración:', error);
-    return NextResponse.json(
-      { error: 'Error al obtener configuración', message: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * PUT /api/correspondence/packages/settings
- * Actualiza la configuración de paquetes
- */
-export async function PUT_SETTINGS(request: NextRequest) {
-  try {
-    // Validar token CSRF
-    const csrfValidation = await validateCsrfToken(request);
-    if (!csrfValidation.valid) {
-      return NextResponse.json(
-        { error: 'Token CSRF inválido' },
-        { status: 403 }
-      );
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
     }
 
-    // Obtener datos
-    const requestData = await request.json();
-    
-    // Actualizar configuración
-    const settings = await packageService.updatePackageSettings(requestData);
+    if (!['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'].includes(payload.role)) {
+      return NextResponse.json({ message: 'Solo recepción puede registrar paquetes' }, { status: 403 });
+    }
 
-    // Registrar evento de auditoría
-    await logAuditEvent({
-      userId: requestData.updatedBy || 0,
-      entityType: 'PACKAGE_SETTINGS',
-      entityId: settings.id.toString(),
-      action: 'PACKAGE_SETTINGS_UPDATED',
-      details: JSON.stringify({
-        updatedFields: Object.keys(requestData)
-      })
+    if (!payload.complexId) {
+      return NextResponse.json({ message: 'Usuario sin complejo asociado' }, { status: 400 });
+    }
+
+    const prisma = getPrisma();
+    
+    const packageRecord = await prisma.package.create({
+      data: {
+        recipientName: validatedData.recipientName,
+        recipientUnit: validatedData.recipientUnit,
+        senderName: validatedData.senderName,
+        trackingNumber: validatedData.trackingNumber,
+        description: validatedData.description,
+        receivedBy: validatedData.receivedBy,
+        complexId: payload.complexId,
+        status: 'RECEIVED',
+        receivedAt: new Date()
+      }
     });
 
-    return NextResponse.json(settings);
-  } catch (error: any) {
-    console.error('Error al actualizar configuración:', error);
-    return NextResponse.json(
-      { error: 'Error al actualizar configuración', message: error.message },
-      { status: 500 }
-    );
+    console.log(`[PACKAGES] Nuevo paquete registrado: ${packageRecord.id} por ${payload.email}`);
+    return NextResponse.json(packageRecord, { status: 201 });
+
+  } catch (error) {
+    console.error('[PACKAGES POST] Error:', error);
+    return NextResponse.json({ message: 'Error interno' }, { status: 500 });
   }
 }
+
+export const POST = withValidation(CreatePackageSchema, createPackageHandler);

@@ -1,5 +1,6 @@
 // src/services/financialService.ts
 import { PrismaClient, Fee, Payment, Receipt, ReceiptType, ReceiptStatus, PaymentStatus } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { generatePDF } from '@/lib/pdf/pdfGenerator';
 import { sendEmail } from '@/lib/email/emailSender';
 import { formatCurrency } from '@/lib/utils/formatters';
@@ -17,7 +18,7 @@ export class FinancialService {
    * @param schema Esquema del conjunto residencial (multi-tenant)
    */
   constructor(schema: string = 'tenant') {
-    this.prisma = new PrismaClient();
+    this.prisma = getPrisma();
     this.schema = schema;
   }
 

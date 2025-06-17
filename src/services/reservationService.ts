@@ -1,6 +1,7 @@
 import { PrismaClient, ReservationStatus } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Servicio para la gestión de áreas comunes y reservas

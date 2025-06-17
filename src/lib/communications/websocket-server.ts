@@ -7,12 +7,12 @@
 
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
 import { logAuditAction, AuditActionType, AuditStatus } from '@/lib/security/audit-trail';
 
 // Cliente Prisma para operaciones de base de datos
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 // Mapa de conexiones activas: userId -> socketId
 const activeConnections: Map<number, string[]> = new Map();

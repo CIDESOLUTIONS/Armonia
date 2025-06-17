@@ -2,19 +2,47 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth';
-import bcrypt from "bcrypt";
+import { withValidation } from '@/lib/validation';
+import { LoginSchema, type LoginRequest } from '@/validators/auth/login.validator';
+import * as bcrypt from "bcrypt";
 
-export async function POST(req: Request) {
+async function loginHandler(validatedData: LoginRequest, req: Request) {
   try {
-    const { email, password } = await req.json();
-    console.log(`[LOGIN] Intento de login para: ${email}`);
+    const { email, password, complexId, schemaName } = validatedData;
+    console.log(`[LOGIN] Intento de login para: ${email} en complejo: ${complexId || schemaName}`);
 
     const prisma = getPrisma();
     
+    // Construir la consulta con filtro multi-tenant
+    const whereClause: any = {
+      email: email,
+      active: true
+    };
+
+    // Si se proporciona complexId, usarlo directamente
+    if (complexId) {
+      whereClause.complexId = complexId;
+    } else if (schemaName) {
+      // Si se proporciona schemaName, primero buscar el complex
+      const complex = await prisma.residentialComplex.findUnique({
+        where: { schemaName: schemaName }
+      });
+      
+      if (!complex) {
+        console.log(`[LOGIN] Complejo no encontrado: ${schemaName}`);
+        return NextResponse.json(
+          { message: "Complejo residencial no encontrado" },
+          { status: 404 }
+        );
+      }
+      
+      whereClause.complexId = complex.id;
+    }
+    
     const user = await prisma.user.findFirst({
-      where: {
-        email: email,
-        active: true
+      where: whereClause,
+      include: {
+        complex: true // Incluir información del complejo
       }
     });
     
@@ -39,15 +67,20 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`[LOGIN] Login exitoso para: ${email}, rol: ${user.role}`);
+    console.log(`[LOGIN] Login exitoso para: ${email}, rol: ${user.role}, complejo: ${user.complex?.name}`);
     
     const payload = {
       id: user.id,
       email: user.email,
       role: user.role,
       name: user.name,
+      complexId: user.complexId,
+      complexName: user.complex?.name,
+      schemaName: user.complex?.schemaName,
       isGlobalAdmin: user.role === 'ADMIN',
-      isReception: user.role === 'RECEPTION'
+      isReception: user.role === 'RECEPTION',
+      isComplexAdmin: user.role === 'COMPLEX_ADMIN',
+      isResident: user.role === 'RESIDENT'
     };
 
     const token = await generateToken(payload);
@@ -62,9 +95,12 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('[LOGIN] Error en API:', error);
     return NextResponse.json(
-      { message: "Error al iniciar sesión" },
+      { message: "Error interno del servidor" },
       { status: 500 }
     );
   }
 }
+
+// Exportar el handler con validación
+export const POST = withValidation(LoginSchema, loginHandler);
 

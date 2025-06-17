@@ -1,48 +1,120 @@
 // src/app/api/inventory/pets/route.ts
-import { NextResponse } from 'next/server';
-import { getPrisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth';
+import { inventoryService, PetCreateSchema } from '@/lib/services/inventory-service-refactored';
+import { z } from 'zod';
 
-export async function GET(_req: unknown) {
+// Schema para parámetros de búsqueda
+const PetSearchSchema = z.object({
+  complexId: z.string().transform(val => parseInt(val)).pipe(z.number().positive()),
+  propertyId: z.string().transform(val => parseInt(val)).pipe(z.number().positive()).optional()
+});
+
+// GET: Obtener mascotas de un complejo
+export async function GET(request: NextRequest) {
   try {
-    const _token = req.headers.get("Authorization")?.replace("Bearer ", "");
-    if (!token) {
-      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
     }
 
-    // Variable decoded eliminada por lint
-    const { searchParams } = new URL(req.url);
-    const _complexId = parseInt(searchParams.get("complexId") || "0");
-    const _schemaName = searchParams.get("schemaName");
-    const propertyId = searchParams.get("propertyId");
+    const { searchParams } = new URL(request.url);
+    const queryParams = {
+      complexId: searchParams.get('complexId') || '',
+      propertyId: searchParams.get('propertyId') || undefined
+    };
 
-    const prisma = getPrisma(schemaName);
-
-    let query = `
-      SELECT 
-        p.*,
-        pr."unitNumber",
-        r.name as "residentName"
-      FROM "${schemaName}"."Pet" p
-      INNER JOIN "${schemaName}"."Property" pr ON p."propertyId" = pr.id
-      INNER JOIN "${schemaName}"."Resident" r ON p."residentId" = r.id
-      WHERE pr."complexId" = $1
-    `;
-
-    const params = [complexId];
-
-    if (propertyId) {
-      query += ` AND p."propertyId" = $2`;
-      params.push(propertyId);
+    // Validar parámetros
+    const validation = PetSearchSchema.safeParse(queryParams);
+    if (!validation.success) {
+      return NextResponse.json(
+        { 
+          message: 'Parámetros inválidos',
+          errors: validation.error.format()
+        },
+        { status: 400 }
+      );
     }
 
-    const pets = await prisma.$queryRawUnsafe(query, ...params);
+    const { complexId, propertyId } = validation.data;
 
-    return NextResponse.json({ pets });
+    // Verificar acceso al complejo
+    if (payload.complexId && payload.complexId !== complexId) {
+      return NextResponse.json({ 
+        message: 'Sin acceso a este complejo' 
+      }, { status: 403 });
+    }
+
+    // Obtener mascotas usando el servicio refactorizado
+    const pets = await inventoryService.getPets(complexId, propertyId);
+
+    console.log(`[INVENTORY PETS] ${pets.length} mascotas obtenidas para complejo ${complexId}`);
+
+    return NextResponse.json({ 
+      success: true,
+      pets,
+      total: pets.length
+    });
+
   } catch (error) {
-    console.error("[API Pets GET] Error:", error);
+    console.error('[INVENTORY PETS GET] Error:', error);
     return NextResponse.json(
-      { message: "Error al obtener mascotas" },
+      { 
+        message: error instanceof Error ? error.message : 'Error al obtener mascotas' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// POST: Crear nueva mascota
+export async function POST(request: NextRequest) {
+  try {
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    }
+
+    // Solo admins y personal autorizado pueden crear mascotas
+    if (!['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'].includes(payload.role)) {
+      return NextResponse.json({ 
+        message: 'Sin permisos para registrar mascotas' 
+      }, { status: 403 });
+    }
+
+    const body = await request.json();
+    
+    // Validar datos de entrada
+    const validation = PetCreateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { 
+          message: 'Datos inválidos',
+          errors: validation.error.format()
+        },
+        { status: 400 }
+      );
+    }
+
+    const petData = validation.data;
+
+    // Crear mascota usando el servicio refactorizado
+    const pet = await inventoryService.createPet(petData);
+
+    console.log(`[INVENTORY PETS] Mascota ${pet.name} creada por ${payload.email}`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Mascota registrada exitosamente',
+      pet
+    });
+
+  } catch (error) {
+    console.error('[INVENTORY PETS POST] Error:', error);
+    return NextResponse.json(
+      { 
+        message: error instanceof Error ? error.message : 'Error al registrar mascota' 
+      },
       { status: 500 }
     );
   }

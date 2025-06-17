@@ -1,8 +1,8 @@
 // C:\Users\meciz\Documents\armonia\frontend\src\app\api\common-services\route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 export async function GET() {
   try {

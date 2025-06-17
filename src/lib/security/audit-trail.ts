@@ -5,7 +5,7 @@
  * importantes en el sistema, permitiendo trazabilidad y cumplimiento normativo.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
@@ -44,7 +44,7 @@ export interface AuditData {
 }
 
 // Cliente Prisma para operaciones de base de datos
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Registra una acción en el sistema de auditoría

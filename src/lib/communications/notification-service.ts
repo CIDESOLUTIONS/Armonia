@@ -5,10 +5,10 @@
  * grupos de usuarios o roles, con soporte para confirmación de lectura y priorización.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { sendNotificationToUser } from './websocket-server';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 // Tipos de notificaciones
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';

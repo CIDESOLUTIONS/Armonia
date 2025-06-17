@@ -1,12 +1,12 @@
 // C:\Users\meciz\Documents\armonia\frontend\src\app\api\assemblies\delete\route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { csrfProtection } from '@/lib/security/csrf-protection';
 import { xssProtection } from '@/lib/security/xss-protection';
 import { auditMiddleware, AuditActionType } from '@/lib/security/audit-trail';
 import { verifyToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 export async function DELETE(req: Request) {
   const token = req.headers.get('Authorization')?.replace('Bearer ', '');

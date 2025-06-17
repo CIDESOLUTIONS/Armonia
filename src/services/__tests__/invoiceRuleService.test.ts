@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import InvoiceRuleService from '../../lib/services/invoice-rule-service';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { ActivityLogger } from '../../lib/logging/activity-logger';
 import { ServerLogger } from '../../lib/logging/server-logger';
 
@@ -68,7 +68,7 @@ describe('InvoiceRuleService', () => {
     service = new InvoiceRuleService('test_schema');
     
     // Obtener la instancia mock de PrismaClient
-    mockPrisma = new PrismaClient();
+    mockPrisma = getPrisma();
   });
   
   describe('getRules', () => {

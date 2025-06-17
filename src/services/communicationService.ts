@@ -1,10 +1,10 @@
 // communicationService.ts
 // Servicio unificado para el sistema de comunicaciones
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { sendNotificationToUser } from '@/lib/communications/websocket-server';
 
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 // Tipos para notificaciones
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';

@@ -1,3 +1,4 @@
+import { getPrisma } from '@/lib/prisma';
 /**
  * Servicio de personalización visual para Armonía
  * 
@@ -7,7 +8,7 @@
  */
 
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 const logger = require('../logging/server-logger');
 
 /**

@@ -3,11 +3,11 @@
  * Compatible con Next.js 15 y React 19
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
 // Cliente Prisma con soporte para múltiples esquemas
 const prismaClientSingleton = () => {
-  return new PrismaClient();
+  return getPrisma();
 };
 
 // Aseguramos una única instancia del cliente Prisma

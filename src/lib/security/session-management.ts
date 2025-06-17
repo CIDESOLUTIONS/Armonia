@@ -9,11 +9,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { logAuditAction, AuditActionType, AuditStatus } from './audit-trail';
 
 // Cliente Prisma para operaciones de base de datos
-const prisma = new PrismaClient();
+const prisma = getPrisma();
 
 /**
  * Verifica si una sesión ha expirado según la configuración

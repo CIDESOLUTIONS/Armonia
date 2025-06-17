@@ -58,6 +58,25 @@ export async function generateToken(payload: Partial<JWTPayload>): Promise<strin
   }
 }
 
+// Función para verificar solo el token (sin Request)
+export async function verifyToken(token: string): Promise<JWTPayload | null> {
+  try {
+    const secretKey = getJwtSecret();
+    const { payload } = await jwtVerify(token, secretKey);
+    
+    // Asegurar que el payload tenga los campos mínimos requeridos
+    if (!payload.id || !payload.email || !payload.role) {
+      ServerLogger.warn('Token JWT con datos incompletos');
+      return null;
+    }
+    
+    return payload as JWTPayload;
+  } catch (error) {
+    ServerLogger.warn('Token JWT inválido', { error });
+    return null;
+  }
+}
+
 // Función para verificar autenticación
 export async function verifyAuth(request: NextRequest) {
   try {
@@ -69,25 +88,16 @@ export async function verifyAuth(request: NextRequest) {
       return { auth: false, payload: null };
     }
 
-    // Verificar el token
-    const secretKey = getJwtSecret();
+    // Verificar el token usando la función anterior
+    const payload = await verifyToken(token);
     
-    try {
-      const { payload } = await jwtVerify(token, secretKey);
-      
-      // Asegurar que el payload tenga los campos mínimos requeridos
-      if (!payload.id || !payload.email || !payload.role) {
-        ServerLogger.warn('Token JWT con datos incompletos');
-        return { auth: false, payload: null };
-      }
-      
-      ServerLogger.debug('Token verificado correctamente', { userId: payload.id });
-      
-      return { auth: true, payload: payload as JWTPayload };
-    } catch (jwtError) {
-      ServerLogger.warn('Token JWT inválido', { error: jwtError });
+    if (!payload) {
       return { auth: false, payload: null };
     }
+    
+    ServerLogger.debug('Token verificado correctamente', { userId: payload.id });
+    return { auth: true, payload };
+    
   } catch (error) {
     ServerLogger.error('Error verificando autenticación', { error });
     return { auth: false, payload: null };

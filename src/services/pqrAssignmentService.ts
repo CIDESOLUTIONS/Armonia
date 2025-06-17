@@ -5,7 +5,7 @@
  * automáticamente las solicitudes PQR según reglas configurables.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { getSchemaFromRequest } from '@/lib/prisma';
 import { PQRCategory, PQRPriority, PQRStatus } from '@/lib/constants/pqr-constants';
 
@@ -46,7 +46,7 @@ export class PQRAssignmentService {
   private schema: string;
 
   constructor(schema: string) {
-    this.prisma = new PrismaClient();
+    this.prisma = getPrisma();
     this.schema = schema;
   }
 
