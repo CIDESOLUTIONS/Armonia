@@ -7,55 +7,54 @@ comunicación y coordinación entre administradores, residentes y personal. La p
 eficientemente todos los aspectos de la vida en comunidad, desde el inventario general del conjunto, administración  de 
 espacios comunes, hasta la gestión de finanzas , asambleas, recepción , seguridad  y solicitudes.  
  
-Armonía: Transfor ma la Gestión Residencial a través de la Tecnología  
-Desarrolladores, tienen en sus manos la oportunidad de crear una solución integral que revolucionará la administración 
-de conjuntos residenciales. Armonía no es solo otra aplicación web/móvil; es un ecosistema tecnológico completo que 
-conectará comunidades enteras.  
-Su misión : Construir una plataforma robusta, escalable y de alto rendimiento que sirva simultáneamente a múltiples 
-tipos de usuarios: empresas administradoras, administradores de conjuntos, residentes y personal de seguridad.  
+Armonía: Transforma la Gestión Residencial a través de la Tecnología  
+Loa desarrolladores, tienen en sus manos la oportunidad de crear una solución integral que revolucionará la administración 
+de conjuntos residenciales. Armonía no es solo otra aplicación web/móvil; es un ecosistema tecnológico completo que conectará comunidades enteras.  
+Su misión: Construir una plataforma robusta, escalable y de alto rendimiento que sirva simultáneamente a múltiples 
+tipos de usuarios: empresas administradoras, administradores de conjuntos, residentes y personal de recepción/seguridad.  
 El desafío técnico : Desarrollar una arquitectura que soporte:  
 • Portal Público Inteligente : Landing page optimizada para SEO que convierta visitantes en usuarios, con UX/UI 
-excepcional que comunique valor desde el primer segundo  
-• Motor de Gestión Integral : Sistema complejo de inventarios (propietarios, inmuebles, vehículos, mascotas) con 
-relaciones de datos eficientes  
-• Módulo de Democracia Digital : Gestión de asambleas con votaciones en línea en tiempo real, cálculos 
-automáticos de quórum y generación de reportes dinámicos  
-• Sistema Financiero Avanzado : Engine de facturación automatizada, gestión de presupuestos, generación de 
-cuotas y integración con pasarelas de pago  
-• Dashboard Personalizado para Residentes : Portal intuitivo con gestión de pagos, registro de visitantes, reservas 
-de espacios comunes y centro de notificaciones  
-• Sistema de Comunicación Integrado : Citofonía virtual vía WhatsApp/Telegram, correspondencia digital y alertas 
-de seguridad  
-• Portal de Seguridad IoT -Ready : Integración con cámaras IP, gestión de accesos biométricos y minutas digitales  
-Modelo de Negocio Freemium : Implementar sistema de prueba gratuita (25 inmuebles/2 meses) con escalabilidad 
-automática a planes básico, estándar y premium.  
+excepcional que comunique valor desde el primer segundo.  
+• Motor de Gestión Integral: Sistema complejo de inventarios (propietarios, inmuebles, vehículos, mascotas) con relaciones de datos eficientes.  
+• Módulo de Democracia Digital: Gestión de asambleas con votaciones en línea en tiempo real, cálculos 
+automáticos de quórum y generación de reportes dinámicos.  
+• Sistema Financiero Avanzado: Engine de facturación automatizada, gestión de presupuestos, generación de 
+cuotas regulares y extraordinarias e integración con pasarelas de pago para los residentes. 
+• Dashboard Personalizado para Residentes: Portal intuitivo con gestión de pagos, registro de visitantes, reservas de espacios comunes, acceso a la citofonia virtual, participación en asambleas y centro de notificaciones de correspondencia y alertas.
+• Sistema de Comunicación Integrado: Citofonía virtual vía WhatsApp/Telegram, correspondencia digital y alertas 
+de seguridad.  
+• Portal de Seguridad IoT -Ready: Integración con cámaras IP, gestión de accesos biométricos y minutas digitales  
+
+Modelo de Negocio Freemium : Implementar sistema de prueba gratuita (hasta 25 inmuebles/ por 2 meses) con escalabilidad automática a planes básico, estándar y premium.  
 Este proyecto demanda excelencia técnica, arquitectura limpia, seguridad robusta y experiencia de usuario excepcional. 
 Cada línea de código que escriban impactará directamente la calidad de vida de miles de familias.  
  
 1.2 Modelo de Negocio  
 La aplicación seguirá un modelo Freemium con los siguientes planes:  
 - Plan Básico (Gratuito)  
-o Hasta 30 unidades residenciales  
+o Hasta 25 unidades residenciales  
 o Gestión de propiedades y residentes  
 o Portal básico de comunicaciones  
-o Limitado a 1 año de históricos  
-- Plan Estándar ($USD 25/mes por  conjunto ) 
-o Hasta 30 unidades residenciales  
+o Limitado a 1 año de históricos
 
+- Plan Estándar ($USD 25/mes por  conjunto ) 
+o Hasta 40 unidades residenciales  
 o $USD 1/mes por unidad residencial adicional.  
 o Todas las funcionalidades básicas  
 o Gestión completa de asambleas y votaciones  
 o Sistema de PQR avanzado  
-o Históricos de hasta 3 años  
-- Plan Premium ($USD 5 0/mes por conjunto)  
-o Hasta 80 Unidades residenciales  
+o Históricos de hasta 3 años 
+
+- Plan Premium ($USD 50/mes por conjunto)  
+o Hasta 90 Unidades residenciales  
 o $USD 1/mes por unidad residencial adicional.  
 o Todas las funcionalidades estándar  
-o Módulo financiero avanzado con generación automática de recibos  
-o Personalización de la plataforma con logo y colores corporativos  
-o Históricos completos e ilimitados  
+o Módulo financiero avanzado con generación automática de recibos.  
+o Personalización de la plataforma con logo y colores corporativos del conjunto residencial. 
+o Históricos completos hasta 5 años.
 o API para integración con otros sistemas  
-o Soporte prioritario 24/7  
+o Soporte prioritario 24/7.
+
 1.3 Objetivos del Proyecto  
 - Proporcionar una plataforma moderna, intuitiva y completamente responsiva para la gestión eficiente de 
 conjuntos residenciales.  
@@ -66,9 +65,9 @@ conjuntos residenciales.
 - Ofrecer una escalabilidad técnica para soportar desde pequeños conjuntos hasta grandes urbanizaciones.  
 2. Arquitectura del Sistema  
 2.1 Stack Tecnológico  
-- Frontend : Next.js 1 5 o superior , React 1 9 o superior , TypeScript, Tailwind CSS, Shadcn/UI  
+- Frontend : Next.js 15.3.3 o superior , React 19.1 o superior , TypeScript, Tailwind CSS, Shadcn/UI  
 - Backend : Next.js API Routes, Serverless Functions  
-- Base de Datos : PostgreSQL 17 o superior , con enfoque multi -tenant basado en esquemas  
+- Base de Datos : PostgreSQL 17.5 o superior , con enfoque multi -tenant basado en esquemas  
 - ORM : Prisma 6.5.0 o superior  
 - Autenticación : JWT (JSON Web Tokens), bcrypt para el hash de contraseñas  
 - Almacenamiento : PostgreSQL para datos binarios (documentos) con posibilidad de migrar a almacenamiento en 
@@ -296,7 +295,7 @@ Mas las necesarias para el buen funcionamiento  de la solución Armonía .
 7.1 Estrategia de Pruebas  
 - Pruebas unitarias para componentes y servicios críticos  
 - Pruebas de integración para flujos principales  
-- Pruebas e2e con Cypress  
+- Pruebas E2E de las funcionalidades para cada portal   
 - Pruebas de rendimiento y carga  
 - Pruebas de compatibilidad con navegadores  
 7.2 Control de Calidad  
@@ -366,7 +365,7 @@ Nombrado
 - Constantes : UPPER_SNAKE_CASE (ej. API_BASE_URL)  
 - Interfaces/Types : PascalCase con prefijo I para interfaces (ej. IUserData)  
 - Endpoints API : kebab -case (ej. /api/user -profile)  
-Estructura de portales 
+Estructura de portales (Ejemplo)
 src/app/
 ├── (admin)/          # Portal de administración
 ├── (resident)/       # Portal de residentes  
@@ -384,4 +383,5 @@ Estilo de Código
 - Usar React Hooks para gestión de estado  
 - Documentar funciones y componentes complejos  
 - Mantener componentes pequeños y con responsabilidad única  
-- Usar Prettier y ESLint para formateo y calidad de código
+- Usar Prettier y ESLint para formateo y calidad de código.
+Fin de especificaciones.
