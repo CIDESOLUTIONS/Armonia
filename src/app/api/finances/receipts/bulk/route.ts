@@ -5,12 +5,17 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { ServerLogger } from '@/lib/logging/server-logger';
 import { getSchemaFromHeaders } from '@/lib/multi-tenant/schema-resolver';
+import { withValidation } from '@/lib/validation';
+import { 
+  BulkReceiptsSchema,
+  type BulkReceiptsRequest 
+} from '@/validators/finances/bulk-receipts.validator';
 
 /**
  * POST /api/finances/receipts/bulk
  * Genera recibos masivamente para un conjunto de propiedades
  */
-export async function POST(req: NextRequest) {
+async function bulkReceiptsHandler(validatedData: BulkReceiptsRequest, req: NextRequest) {
   try {
     // Verificar autenticación
     const session = await getServerSession(authOptions);
@@ -26,27 +31,17 @@ export async function POST(req: NextRequest) {
     // Obtener esquema del tenant
     const schema = getSchemaFromHeaders(req.headers);
     
-    // Obtener datos del cuerpo
-    const body = await req.json();
-    const { month, year, feeType, type } = body;
-    
-    // Validar datos requeridos
-    if (!month || !year) {
-      return NextResponse.json(
-        { error: 'Mes y año son requeridos' },
-        { status: 400 }
-      );
-    }
-    
     // Inicializar servicio financiero
     const financialService = new FinancialService(schema);
     
-    // Generar recibos masivamente
+    // Generar recibos masivamente con datos validados
     const result = await financialService.generateBulkReceipts({
-      month,
-      year,
-      feeType,
-      type: type || 'STANDARD',
+      month: validatedData.month,
+      year: validatedData.year,
+      feeType: validatedData.feeType,
+      type: validatedData.type,
+      description: validatedData.description,
+      dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : undefined,
       issuedById: session.user.id
     });
     
@@ -59,3 +54,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+// Exportar POST con validación
+export const POST = withValidation(BulkReceiptsSchema, bulkReceiptsHandler);

@@ -5,6 +5,12 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { ServerLogger } from '@/lib/logging/server-logger';
 import { getSchemaFromHeaders } from '@/lib/multi-tenant/schema-resolver';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { 
+  GetReceiptsSchema, 
+  CreateReceiptSchema,
+  type CreateReceiptRequest 
+} from '@/validators/finances/receipts.validator';
 
 /**
  * GET /api/finances/receipts
@@ -23,24 +29,34 @@ export async function GET(req: NextRequest) {
     
     // Obtener parámetros de consulta
     const { searchParams } = new URL(req.url);
-    const propertyId = searchParams.get('propertyId');
-    const status = searchParams.get('status');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-    const page = searchParams.get('page');
-    const limit = searchParams.get('limit');
+    const queryParams = {
+      propertyId: searchParams.get('propertyId'),
+      status: searchParams.get('status'),
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate'),
+      page: searchParams.get('page'),
+      limit: searchParams.get('limit')
+    };
+    
+    // Validar parámetros
+    const validation = validateRequest(GetReceiptsSchema, queryParams);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const validatedParams = validation.data;
     
     // Inicializar servicio financiero
     const financialService = new FinancialService(schema);
     
     // Construir filtros
     const filters: any = {};
-    if (propertyId) filters.propertyId = parseInt(propertyId);
-    if (status) filters.status = status;
-    if (startDate) filters.startDate = new Date(startDate);
-    if (endDate) filters.endDate = new Date(endDate);
-    if (page) filters.page = parseInt(page);
-    if (limit) filters.limit = parseInt(limit);
+    if (validatedParams.propertyId) filters.propertyId = validatedParams.propertyId;
+    if (validatedParams.status) filters.status = validatedParams.status;
+    if (validatedParams.startDate) filters.startDate = new Date(validatedParams.startDate);
+    if (validatedParams.endDate) filters.endDate = new Date(validatedParams.endDate);
+    if (validatedParams.page) filters.page = validatedParams.page;
+    if (validatedParams.limit) filters.limit = validatedParams.limit;
     
     // Obtener recibos
     const receipts = await financialService.getReceipts(filters);
@@ -59,7 +75,7 @@ export async function GET(req: NextRequest) {
  * POST /api/finances/receipts
  * Genera un nuevo recibo
  */
-export async function POST(req: NextRequest) {
+async function createReceiptHandler(validatedData: CreateReceiptRequest, req: NextRequest) {
   try {
     // Verificar autenticación
     const session = await getServerSession(authOptions);
@@ -75,30 +91,20 @@ export async function POST(req: NextRequest) {
     // Obtener esquema del tenant
     const schema = getSchemaFromHeaders(req.headers);
     
-    // Obtener datos del cuerpo
-    const body = await req.json();
-    const { propertyId, feeIds, type } = body;
-    
-    // Validar datos requeridos
-    if (!propertyId || !feeIds || !Array.isArray(feeIds) || feeIds.length === 0) {
-      return NextResponse.json(
-        { error: 'Datos incompletos o inválidos' },
-        { status: 400 }
-      );
-    }
-    
     // Inicializar servicio financiero
     const financialService = new FinancialService(schema);
     
-    // Generar recibo
+    // Generar recibo con datos validados
     const receipt = await financialService.generateReceipt({
-      propertyId,
-      feeIds,
-      type: type || 'STANDARD',
+      propertyId: validatedData.propertyId,
+      feeIds: validatedData.feeIds,
+      type: validatedData.type,
+      description: validatedData.description,
+      dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : undefined,
       issuedById: session.user.id
     });
     
-    return NextResponse.json(receipt);
+    return NextResponse.json(receipt, { status: 201 });
   } catch (error) {
     ServerLogger.error('Error al generar recibo:', error);
     return NextResponse.json(
@@ -107,3 +113,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+// Exportar POST con validación
+export const POST = withValidation(CreateReceiptSchema, createReceiptHandler);

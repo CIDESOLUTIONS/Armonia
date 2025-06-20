@@ -3,7 +3,12 @@ import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { serverLogger } from '@/lib/logging/server-logger';
-import { ReservationStatus } from '@prisma/client';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { 
+  GetReservationsSchema, 
+  CreateReservationSchema,
+  type CreateReservationRequest 
+} from '@/validators/reservations/reservations.validator';
 
 /**
  * GET /api/reservations
@@ -22,36 +27,22 @@ export async function GET(req: NextRequest) {
 
     // Obtener parámetros de consulta
     const searchParams = req.nextUrl.searchParams;
-    const userId = searchParams.get('userId') ? parseInt(searchParams.get('userId')!) : undefined;
-    const propertyId = searchParams.get('propertyId') ? parseInt(searchParams.get('propertyId')!) : undefined;
-    const commonAreaId = searchParams.get('commonAreaId') ? parseInt(searchParams.get('commonAreaId')!) : undefined;
-    const status = searchParams.get('status') as ReservationStatus | undefined;
-    const startDateParam = searchParams.get('startDate');
-    const endDateParam = searchParams.get('endDate');
+    const queryParams = {
+      userId: searchParams.get('userId'),
+      propertyId: searchParams.get('propertyId'),
+      commonAreaId: searchParams.get('commonAreaId'),
+      status: searchParams.get('status'),
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate')
+    };
 
-    // Validar y convertir fechas
-    let startDate: Date | undefined;
-    let endDate: Date | undefined;
-
-    if (startDateParam) {
-      startDate = new Date(startDateParam);
-      if (isNaN(startDate.getTime())) {
-        return NextResponse.json(
-          { error: 'Fecha de inicio inválida' },
-          { status: 400 }
-        );
-      }
+    // Validar parámetros
+    const validation = validateRequest(GetReservationsSchema, queryParams);
+    if (!validation.success) {
+      return validation.response;
     }
 
-    if (endDateParam) {
-      endDate = new Date(endDateParam);
-      if (isNaN(endDate.getTime())) {
-        return NextResponse.json(
-          { error: 'Fecha de fin inválida' },
-          { status: 400 }
-        );
-      }
-    }
+    const validatedParams = validation.data;
 
     // Si el usuario no es administrador, solo puede ver sus propias reservas
     if (session.user.role !== 'ADMIN') {
@@ -59,7 +50,7 @@ export async function GET(req: NextRequest) {
       const authenticatedUserId = session.user.id;
       
       // Si se especificó un userId diferente, verificar que sea el mismo
-      if (userId !== undefined && userId !== authenticatedUserId) {
+      if (validatedParams.userId !== undefined && validatedParams.userId !== authenticatedUserId) {
         return NextResponse.json(
           { error: 'No tiene permiso para ver reservas de otros usuarios' },
           { status: 403 }
@@ -69,11 +60,11 @@ export async function GET(req: NextRequest) {
       // Establecer userId al del usuario autenticado
       const filters = {
         userId: authenticatedUserId,
-        propertyId,
-        commonAreaId,
-        status,
-        startDate,
-        endDate,
+        propertyId: validatedParams.propertyId,
+        commonAreaId: validatedParams.commonAreaId,
+        status: validatedParams.status,
+        startDate: validatedParams.startDate ? new Date(validatedParams.startDate) : undefined,
+        endDate: validatedParams.endDate ? new Date(validatedParams.endDate) : undefined,
       };
       
       const reservations = await reservationService.getReservations(filters);
@@ -81,12 +72,12 @@ export async function GET(req: NextRequest) {
     } else {
       // Para administradores, permitir todos los filtros
       const filters = {
-        userId,
-        propertyId,
-        commonAreaId,
-        status,
-        startDate,
-        endDate,
+        userId: validatedParams.userId,
+        propertyId: validatedParams.propertyId,
+        commonAreaId: validatedParams.commonAreaId,
+        status: validatedParams.status,
+        startDate: validatedParams.startDate ? new Date(validatedParams.startDate) : undefined,
+        endDate: validatedParams.endDate ? new Date(validatedParams.endDate) : undefined,
       };
       
       const reservations = await reservationService.getReservations(filters);
@@ -105,7 +96,7 @@ export async function GET(req: NextRequest) {
  * POST /api/reservations
  * Crea una nueva solicitud de reserva
  */
-export async function POST(req: NextRequest) {
+async function createReservationHandler(validatedData: CreateReservationRequest, req: NextRequest) {
   try {
     // Verificar autenticación
     const session = await getServerSession(authOptions);
@@ -116,41 +107,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Obtener datos del cuerpo de la solicitud
-    const data = await req.json();
-
-    // Validar datos requeridos
-    if (!data.commonAreaId || !data.propertyId || !data.title || !data.startDateTime || !data.endDateTime) {
-      return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
-        { status: 400 }
-      );
-    }
-
     // Convertir fechas
-    data.startDateTime = new Date(data.startDateTime);
-    data.endDateTime = new Date(data.endDateTime);
-
-    // Validar fechas
-    if (isNaN(data.startDateTime.getTime()) || isNaN(data.endDateTime.getTime())) {
-      return NextResponse.json(
-        { error: 'Fechas inválidas' },
-        { status: 400 }
-      );
-    }
-
-    if (data.startDateTime >= data.endDateTime) {
-      return NextResponse.json(
-        { error: 'La fecha de fin debe ser posterior a la fecha de inicio' },
-        { status: 400 }
-      );
-    }
+    const startDateTime = new Date(validatedData.startDateTime);
+    const endDateTime = new Date(validatedData.endDateTime);
 
     // Establecer userId al del usuario autenticado
-    data.userId = session.user.id;
+    const reservationData = {
+      ...validatedData,
+      startDateTime,
+      endDateTime,
+      userId: session.user.id
+    };
 
     // Crear reserva
-    const reservation = await reservationService.createReservation(data);
+    const reservation = await reservationService.createReservation(reservationData);
 
     return NextResponse.json(reservation, { status: 201 });
   } catch (error) {
@@ -173,3 +143,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+// Exportar POST con validación
+export const POST = withValidation(CreateReservationSchema, createReservationHandler);
