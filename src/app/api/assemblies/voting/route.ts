@@ -1,19 +1,34 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-;
+import { verifyToken } from '@/lib/auth';
+import { validateRequest } from '@/lib/validation';
+import { 
+  GetVotingQuestionsSchema,
+  CreateVotingQuestionSchema,
+  type CreateVotingQuestionRequest
+} from '@/validators/assemblies/voting.validator';
 
-// Variable JWT_SECRET eliminada por lint
-
-export async function GET(_req: unknown) {
-  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function GET(req: Request) {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { searchParams } = new URL(req.url);
-  // Variable assemblyId eliminada por lint
+  const queryParams = {
+    assemblyId: searchParams.get('assemblyId')
+  };
 
-  if (!token || !assemblyId) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
+  // Validar parámetros
+  const validation = validateRequest(GetVotingQuestionsSchema, queryParams);
+  if (!validation.success) {
+    return validation.response;
+  }
+
+  const validatedParams = validation.data;
+  const assemblyId = parseInt(validatedParams.assemblyId);
+
+  if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    // Variable decoded eliminada por lint
-    const _schemaName = decoded.schemaName.toLowerCase();
+    const decoded = await verifyToken(token);
+    const schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     const questions = await prisma.$queryRawUnsafe(
@@ -26,15 +41,23 @@ export async function GET(_req: unknown) {
   }
 }
 
-export async function POST(_req: unknown) {
-  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
-  const { assemblyId, text } = await req.json();
-
-  if (!token || !assemblyId || !text) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
+export async function POST(req: Request) {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+  if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    // Variable decoded eliminada por lint
-    const _schemaName = decoded.schemaName.toLowerCase();
+    const body = await req.json();
+    
+    // Validar datos
+    const validation = validateRequest(CreateVotingQuestionSchema, body);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const validatedData: CreateVotingQuestionRequest = validation.data;
+    
+    const decoded = await verifyToken(token);
+    const schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     const questionExists = await prisma.$queryRawUnsafe(
@@ -51,14 +74,22 @@ export async function POST(_req: unknown) {
           "noVotes" INTEGER DEFAULT 0,
           "nrVotes" INTEGER DEFAULT 0,
           "isOpen" BOOLEAN DEFAULT false,
-          "votingEndTime" TIMESTAMP
+          "votingEndTime" TIMESTAMP,
+          "options" JSONB
         )`
       );
     }
 
-    const _result = await prisma.$queryRawUnsafe(
-      `INSERT INTO "${schemaName}"."Question" ("assemblyId", text) VALUES ($1, $2) RETURNING id`,
-      assemblyId, text
+    // Preparar datos adicionales si existen
+    const options = validatedData.options ? JSON.stringify(validatedData.options) : null;
+    const votingEndTime = validatedData.votingTime ? 
+      new Date(Date.now() + validatedData.votingTime * 60000).toISOString() : 
+      null;
+
+    const result = await prisma.$queryRawUnsafe(
+      `INSERT INTO "${schemaName}"."Question" ("assemblyId", text, options, "votingEndTime") 
+       VALUES ($1, $2, $3, $4) RETURNING id`,
+      validatedData.assemblyId, validatedData.text, options, votingEndTime
     );
     return NextResponse.json({ questionId: result[0].id }, { status: 201 });
   } catch (error) {

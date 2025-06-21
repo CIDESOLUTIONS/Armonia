@@ -5,20 +5,19 @@ import { csrfProtection } from '@/lib/security/csrf-protection';
 import { xssProtection } from '@/lib/security/xss-protection';
 import { auditMiddleware, AuditActionType } from '@/lib/security/audit-trail';
 import { verifyToken } from '@/lib/auth';
+import { withValidation } from '@/lib/validation';
+import { 
+  CreateAssemblySchema,
+  type CreateAssemblyRequest 
+} from '@/validators/assemblies/assembly.validator';
 
-export async function POST(req: Request) {
+async function createAssemblyHandler(validatedData: CreateAssemblyRequest, req: Request) {
   const token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
     const decoded = await verifyToken(token);
     console.log('[API Assemblies/Create] Token:', decoded);
-
-    const body = await req.json();
-    const { title, type, date, description, agenda } = body;
-    if (!title || !type || !date || !agenda || !Array.isArray(agenda)) {
-      return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
-    }
 
     const schemaName = decoded.schemaName || `schema_${decoded.complexId}`;
     const prisma = getPrisma(schemaName);
@@ -51,14 +50,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Crear la asamblea usando el método manual
+    // Crear la asamblea usando el método manual con datos validados
     const assembly = await prisma.manualAssembly.create({
       data: {
-        title,
-        type,
-        date: new Date(date), // Convertir la cadena ISO a un objeto Date
-        description: description || null,
-        agenda,
+        title: validatedData.title,
+        type: validatedData.type,
+        date: new Date(validatedData.date),
+        description: validatedData.description || null,
+        agenda: validatedData.agenda,
         organizerId: decoded.id,
         complexId: decoded.complexId,
       },
@@ -71,6 +70,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Error al crear la asamblea', error: String(error) }, { status: 500 });
   }
 }
+
+// Exportar POST con validación
+export const POST = withValidation(CreateAssemblySchema, createAssemblyHandler);
 
 // Aplicar middlewares de seguridad
 export const POST_handler = csrfProtection(

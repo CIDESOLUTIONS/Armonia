@@ -1,19 +1,33 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-;
+import { verifyToken } from '@/lib/auth';
+import { validateRequest } from '@/lib/validation';
+import { 
+  GetAgendaSchema,
+  UpdateAgendaSchema
+} from '@/validators/assemblies/agenda.validator';
 
-// Variable JWT_SECRET eliminada por lint
-
-export async function GET(_req: unknown) {
-  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function GET(req: Request) {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { searchParams } = new URL(req.url);
-  // Variable assemblyId eliminada por lint
+  const queryParams = {
+    assemblyId: searchParams.get('assemblyId')
+  };
 
-  if (!token || !assemblyId) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
+  // Validar parámetros
+  const validation = validateRequest(GetAgendaSchema, queryParams);
+  if (!validation.success) {
+    return validation.response;
+  }
+
+  const validatedParams = validation.data;
+  const assemblyId = parseInt(validatedParams.assemblyId);
+
+  if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    // Variable decoded eliminada por lint
-    const _schemaName = decoded.schemaName.toLowerCase();
+    const decoded = await verifyToken(token);
+    const schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     const agenda = await prisma.$queryRawUnsafe(
@@ -26,22 +40,36 @@ export async function GET(_req: unknown) {
   }
 }
 
-export async function PUT(_req: unknown) {
-  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function PUT(req: Request) {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
   const { searchParams } = new URL(req.url);
-  const id = parseInt(searchParams.get('id') || '');
-  const { notes, completed } = await req.json();
+  const body = await req.json();
+  
+  // Combinar parámetros de consulta y cuerpo para validación
+  const dataToValidate = {
+    id: searchParams.get('id'),
+    ...body
+  };
 
-  if (!token || !id) return NextResponse.json({ message: 'Faltan parámetros' }, { status: 400 });
+  // Validar datos
+  const validation = validateRequest(UpdateAgendaSchema, dataToValidate);
+  if (!validation.success) {
+    return validation.response;
+  }
+
+  const validatedData = validation.data;
+  const id = parseInt(validatedData.id);
+
+  if (!token) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
 
   try {
-    // Variable decoded eliminada por lint
-    const _schemaName = decoded.schemaName.toLowerCase();
+    const decoded = await verifyToken(token);
+    const schemaName = decoded.schemaName.toLowerCase();
     prisma.setTenantSchema(schemaName);
 
     await prisma.$queryRawUnsafe(
       `UPDATE "${schemaName}"."AgendaItem" SET notes = $1, completed = $2 WHERE id = $3`,
-      notes, completed, id
+      validatedData.notes, validatedData.completed, id
     );
     return NextResponse.json({ message: 'Agenda actualizada' }, { status: 200 });
   } catch (error) {
