@@ -112,13 +112,6 @@ export async function middleware(request: NextRequest) {
   try {
     const pathname = request.nextUrl.pathname;
     
-    // Registrar solicitud HTTP
-    //ServerLogger.httpRequest({
-     // method: request.method,
-      //url: pathname,
-      //ip: request.ip || 'unknown'
-    });
-
     // Aplicar headers de seguridad a todas las respuestas
     const securityHeaders = {
       'X-XSS-Protection': '1; mode=block',
@@ -288,3 +281,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico).*)'
   ]
 };
+
