@@ -1,111 +1,35 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ServerLogger } from '@/lib/logging/server-logger';
 import { verifyToken } from '@/lib/auth';
-import { FreemiumService, FEATURES } from '@/lib/freemium-service';
-import { getPrisma } from '@/lib/prisma';
 
 // Rutas públicas que no requieren autenticación
-const PUBLIC_ROUTES = [
+const publicRoutes = [
   '/',
-  '/login',
-  '/register-complex',
   '/portal-selector',
-  '/checkout',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
   '/api/auth/login',
-  '/api/register-complex',
-  '/api/contact',
+  '/api/auth/register',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/health',
   '/_next',
   '/favicon.ico',
-  '/images',
-  '/videos'
+  '/static'
 ];
 
-// Rutas que requieren roles específicos
-const ROLE_ROUTES = {
-  '/(admin)': ['ADMIN', 'COMPLEX_ADMIN'],
-  '/(resident)': ['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT'],
-  '/(reception)': ['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'],
-  '/api/admin': ['ADMIN'],
-  '/api/complex': ['ADMIN', 'COMPLEX_ADMIN'],
-  '/api/dashboard': ['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT', 'RECEPTION']
-};
-
-// Mapeo de rutas a funcionalidades freemium
-const FEATURE_ROUTES = {
-  '/api/assemblies': FEATURES.ASSEMBLY_MANAGEMENT,
-  '/(admin)/assemblies': FEATURES.ASSEMBLY_MANAGEMENT,
-  '/api/finances': FEATURES.ADVANCED_FINANCIAL,
-  '/api/financial': FEATURES.ADVANCED_FINANCIAL,
-  '/(admin)/finances': FEATURES.ADVANCED_FINANCIAL,
-  '/api/reservations': FEATURES.COMMON_AREAS_RESERVATIONS,
-  '/api/common-areas': FEATURES.COMMON_AREAS_RESERVATIONS,
-  '/api/correspondence': FEATURES.DIGITAL_CORRESPONDENCE,
-  '/api/communications/whatsapp': FEATURES.VIRTUAL_INTERCOM,
-  '/api/communications/telegram': FEATURES.VIRTUAL_INTERCOM
-};
-
+// Función para verificar si una ruta es pública
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some(route => 
-    pathname.startsWith(route) || pathname === route
-  );
-}
-
-function hasRequiredRole(pathname: string, userRole: string): boolean {
-  for (const [route, allowedRoles] of Object.entries(ROLE_ROUTES)) {
-    if (pathname.startsWith(route)) {
-      return allowedRoles.includes(userRole);
+  return publicRoutes.some(route => {
+    if (route === pathname) return true;
+    if (route.endsWith('*')) {
+      return pathname.startsWith(route.slice(0, -1));
     }
-  }
-  return true; // Si no está en rutas restringidas, permitir acceso
-}
-
-function getRequiredFeature(pathname: string): string | null {
-  for (const [route, feature] of Object.entries(FEATURE_ROUTES)) {
-    if (pathname.startsWith(route)) {
-      return feature;
-    }
-  }
-  return null;
-}
-
-async function hasFeatureAccess(complexId: number, requiredFeature: string): Promise<boolean> {
-  try {
-    const prisma = getPrisma();
-    const complex = await prisma.residentialComplex.findUnique({
-      where: { id: complexId },
-      select: { 
-        planType: true, 
-        trialEndDate: true, 
-        planEndDate: true,
-        isTrialActive: true 
-      }
-    });
-
-    if (!complex) return false;
-
-    // Verificar si la suscripción está vencida
-    const isExpired = FreemiumService.isSubscriptionExpired(
-      complex.planEndDate, 
-      complex.planType
-    );
-    
-    if (isExpired) return false;
-
-    // Verificar si el trial está activo y permite la funcionalidad
-    const isTrialActive = FreemiumService.isTrialActive(complex.trialEndDate);
-    
-    // Durante el trial, permitir funcionalidades estándar
-    if (isTrialActive) {
-      return FreemiumService.hasFeatureAccess('STANDARD', requiredFeature);
-    }
-
-    // Verificar según el plan actual
-    return FreemiumService.hasFeatureAccess(complex.planType, requiredFeature);
-  } catch (error) {
-    console.error('[MIDDLEWARE] Error verificando acceso a funcionalidad:', error);
+    if (pathname.startsWith(route + '/')) return true;
     return false;
-  }
+  });
 }
 
 export async function middleware(request: NextRequest) {
@@ -134,7 +58,7 @@ export async function middleware(request: NextRequest) {
 
     // Verificar autenticación para rutas protegidas
     const authHeader = request.headers.get('authorization');
-    const cookieToken = request.cookies.get('auth-token')?.value;
+    const cookieToken = request.cookies.get('token')?.value;
     
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
 
@@ -149,136 +73,71 @@ export async function middleware(request: NextRequest) {
         );
       }
       
-      // Si es página web, redirigir a login
-      return NextResponse.redirect(new URL('/login', request.url));
+      // Si es página web, redirigir al login
+      return NextResponse.redirect(new URL('/portal-selector', request.url));
     }
 
-    // Verificar y decodificar token
-    try {
-      const payload = await verifyToken(token);
+    // Verificar validez del token
+    const payload = await verifyToken(token);
+    
+    if (!payload) {
+      console.log(`[MIDDLEWARE] Token inválido para ruta: ${pathname}`);
       
-      if (!payload || !payload.role) {
-        throw new Error('Token inválido o sin rol');
-      }
-
-      // Verificar autorización por rol
-      if (!hasRequiredRole(pathname, payload.role)) {
-        console.log(`[MIDDLEWARE] Acceso denegado para rol ${payload.role} en ruta ${pathname}`);
-        
-        if (pathname.startsWith('/api/')) {
-          return NextResponse.json(
-            { message: 'Permisos insuficientes para acceder a este recurso' },
-            { status: 403 }
-          );
-        }
-        
-        // Redirigir a dashboard apropiado según rol
-        const redirectUrl = payload.role === 'RESIDENT' ? '/dashboard' : 
-                           payload.role === 'RECEPTION' ? '/reception' : '/admin';
-        return NextResponse.redirect(new URL(redirectUrl, request.url));
-      }
-
-      // Verificar acceso a funcionalidades freemium
-      const requiredFeature = getRequiredFeature(pathname);
-      if (requiredFeature && payload.complexId) {
-        const hasAccess = await hasFeatureAccess(payload.complexId, requiredFeature);
-        
-        if (!hasAccess) {
-          console.log(`[MIDDLEWARE] Acceso denegado a funcionalidad ${requiredFeature} para complejo ${payload.complexId}`);
-          
-          if (pathname.startsWith('/api/')) {
-            return NextResponse.json(
-              { 
-                message: 'Esta funcionalidad no está disponible en su plan actual',
-                requiredFeature,
-                upgradeRequired: true
-              },
-              { status: 402 } // Payment Required
-            );
-          }
-          
-          // Para páginas web, redirigir a upgrade
-          return NextResponse.redirect(new URL('/upgrade?feature=' + requiredFeature, request.url));
-        }
-      }
-
-      // Agregar información del usuario a headers para las APIs
-      const response = NextResponse.next();
-      
-      // Headers de seguridad
-      Object.entries(securityHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      
-      // Headers de usuario para APIs
-      if (pathname.startsWith('/api/')) {
-        response.headers.set('X-User-Id', payload.id.toString());
-        response.headers.set('X-User-Role', payload.role);
-        response.headers.set('X-User-Email', payload.email);
-        if (payload.complexId) {
-          response.headers.set('X-Complex-Id', payload.complexId.toString());
-          response.headers.set('X-Schema-Name', payload.schemaName || '');
-        }
-      }
-
-      return response;
-
-    } catch (error) {
-      console.error(`[MIDDLEWARE] Error verificando token:`, error);
-      
+      // Si es API, retornar 401
       if (pathname.startsWith('/api/')) {
         return NextResponse.json(
-          { message: 'Token inválido' },
+          { message: 'Token inválido o expirado' },
           { status: 401 }
         );
       }
       
-      return NextResponse.redirect(new URL('/login', request.url));
+      // Si es página web, redirigir al login
+      return NextResponse.redirect(new URL('/portal-selector', request.url));
     }
 
-  } catch (error) {
-    console.error('[MIDDLEWARE] Error general:', error);
-    
-    // En caso de error, aplicar headers de seguridad mínimos y continuar
+    // Token válido, continuar con headers de seguridad
     const response = NextResponse.next();
-    response.headers.set('X-Content-Type-Options', 'nosniff');
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    // Agregar información del usuario a los headers para las APIs
+    response.headers.set('x-user-id', payload.id.toString());
+    response.headers.set('x-user-role', payload.role);
+    if (payload.complexId) {
+      response.headers.set('x-complex-id', payload.complexId.toString());
+    }
+    
+    return response;
+
+  } catch (error) {
+    console.error('[MIDDLEWARE] Error:', error);
+    
+    // En caso de error, aplicar headers de seguridad y continuar
+    const response = NextResponse.next();
+    const securityHeaders = {
+      'X-XSS-Protection': '1; mode=block',
+      'X-Frame-Options': 'DENY',
+      'X-Content-Type-Options': 'nosniff'
+    };
+    
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
     return response;
   }
 }
 
 export const config = {
   matcher: [
-    // Páginas protegidas (nuevos grupos de rutas)
-    '/(admin)/:path*',
-    '/(resident)/:path*', 
-    '/(reception)/:path*',
-    '/profile/:path*',
-    // APIs protegidas
-    '/api/dashboard/:path*',
-    '/api/admin/:path*',
-    '/api/complex/:path*',
-    '/api/pqr/:path*',
-    '/api/finances/:path*',
-    '/api/financial/:path*',
-    '/api/assemblies/:path*',
-    '/api/reservations/:path*',
-    '/api/common-areas/:path*',
-    '/api/visitors/:path*',
-    '/api/incidents/:path*',
-    '/api/communications/:path*',
-    '/api/correspondence/:path*',
-    '/api/cameras/:path*',
-    '/api/inventory/:path*',
-    '/api/projects/:path*',
-    '/api/payments/:path*',
-    '/api/payment/:path*',
-    '/api/services/:path*',
-    '/api/common-services/:path*',
-    '/api/notifications/:path*',
-    '/api/user/:path*',
-    '/api/verify-session/:path*',
-    // Rutas públicas que necesitan headers de seguridad
-    '/((?!_next/static|_next/image|favicon.ico).*)'
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 };
 
