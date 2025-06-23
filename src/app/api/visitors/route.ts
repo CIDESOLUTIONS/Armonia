@@ -3,6 +3,15 @@ import { visitorService } from '@/services/visitorService';
 import { validateCsrfToken } from '@/lib/security/csrf-protection';
 import { sanitizeInput } from '@/lib/security/xss-protection';
 import { logAuditEvent } from '@/lib/security/audit-trail';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { 
+  GetVisitorsSchema,
+  CreateVisitorSchema,
+  GetVisitorStatsSchema,
+  type GetVisitorsRequest,
+  type CreateVisitorRequest,
+  type GetVisitorStatsRequest
+} from '@/validators/visitors/visitor.validator';
 
 /**
  * GET /api/visitors
@@ -12,22 +21,25 @@ export async function GET(request: NextRequest) {
   try {
     // Extraer parámetros de consulta
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const status = searchParams.get('status') || undefined;
-    const search = searchParams.get('search') || undefined;
-    const startDate = searchParams.get('startDate') || undefined;
-    const endDate = searchParams.get('endDate') || undefined;
+    const queryParams = {
+      page: searchParams.get('page'),
+      limit: searchParams.get('limit'),
+      status: searchParams.get('status'),
+      search: searchParams.get('search'),
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate')
+    };
+
+    // Validar parámetros
+    const validation = validateRequest(GetVisitorsSchema, queryParams);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const validatedParams = validation.data;
 
     // Obtener visitantes
-    const result = await visitorService.getAllVisitors({
-      page,
-      limit,
-      status,
-      search,
-      startDate,
-      endDate
-    });
+    const result = await visitorService.getAllVisitors(validatedParams);
 
     return NextResponse.json(result);
   } catch (error: any) {
@@ -43,7 +55,7 @@ export async function GET(request: NextRequest) {
  * POST /api/visitors
  * Crea un nuevo registro de visitante
  */
-export async function POST(request: NextRequest) {
+async function createVisitorHandler(validatedData: CreateVisitorRequest, request: NextRequest) {
   try {
     // Validar token CSRF
     const csrfValidation = await validateCsrfToken(request);
@@ -54,24 +66,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obtener y sanitizar datos
-    const requestData = await request.json();
+    // Sanitizar datos
     const sanitizedData = {
-      name: sanitizeInput(requestData.name),
-      documentType: sanitizeInput(requestData.documentType),
-      documentNumber: sanitizeInput(requestData.documentNumber),
-      destination: sanitizeInput(requestData.destination),
-      residentName: sanitizeInput(requestData.residentName),
-      plate: sanitizeInput(requestData.plate),
-      photoUrl: sanitizeInput(requestData.photoUrl),
-      purpose: sanitizeInput(requestData.purpose),
-      company: sanitizeInput(requestData.company),
-      temperature: requestData.temperature,
-      belongings: requestData.belongings,
-      signature: sanitizeInput(requestData.signature),
-      registeredBy: requestData.registeredBy,
-      preRegisterId: requestData.preRegisterId,
-      accessPassId: requestData.accessPassId
+      ...validatedData,
+      name: sanitizeInput(validatedData.name),
+      documentType: validatedData.documentType,
+      documentNumber: sanitizeInput(validatedData.documentNumber),
+      destination: sanitizeInput(validatedData.destination),
+      residentName: sanitizeInput(validatedData.residentName),
+      plate: validatedData.plate ? sanitizeInput(validatedData.plate) : undefined,
+      photoUrl: validatedData.photoUrl ? sanitizeInput(validatedData.photoUrl) : undefined,
+      purpose: validatedData.purpose ? sanitizeInput(validatedData.purpose) : undefined,
+      company: validatedData.company ? sanitizeInput(validatedData.company) : undefined,
+      signature: validatedData.signature ? sanitizeInput(validatedData.signature) : undefined,
     };
 
     // Crear visitante
@@ -108,14 +115,21 @@ export async function GET_STATS(request: NextRequest) {
   try {
     // Extraer parámetros de consulta
     const searchParams = request.nextUrl.searchParams;
-    const startDate = searchParams.get('startDate') || undefined;
-    const endDate = searchParams.get('endDate') || undefined;
+    const queryParams = {
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate')
+    };
+
+    // Validar parámetros
+    const validation = validateRequest(GetVisitorStatsSchema, queryParams);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const validatedParams = validation.data;
 
     // Obtener estadísticas
-    const stats = await visitorService.getVisitorStats({
-      startDate,
-      endDate
-    });
+    const stats = await visitorService.getVisitorStats(validatedParams);
 
     return NextResponse.json(stats);
   } catch (error: any) {
@@ -126,3 +140,6 @@ export async function GET_STATS(request: NextRequest) {
     );
   }
 }
+
+// Exportar POST con validación
+export const POST = withValidation(CreateVisitorSchema, createVisitorHandler);
