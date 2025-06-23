@@ -4,6 +4,15 @@ import { validateCsrfToken } from '@/lib/security/csrf-protection';
 import { sanitizeInput } from '@/lib/security/xss-protection';
 import { logAuditEvent } from '@/lib/security/audit-trail';
 import { getServerSession } from '@/lib/auth';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { 
+  IncidentIdSchema,
+  UpdateIncidentSchema,
+  CancelIncidentSchema,
+  type IncidentIdRequest,
+  type UpdateIncidentRequest,
+  type CancelIncidentRequest
+} from '@/validators/incidents/incident-id.validator';
 
 /**
  * GET /api/incidents/[id]
@@ -23,13 +32,14 @@ export async function GET(
       );
     }
 
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'ID de incidente inválido' },
-        { status: 400 }
-      );
+    // Validar parámetros de ruta
+    const validation = validateRequest(IncidentIdSchema, params);
+    if (!validation.success) {
+      return validation.response;
     }
+
+    const validatedParams = validation.data;
+    const id = parseInt(validatedParams.id);
 
     // Determinar si se deben incluir datos internos según el rol
     const includeInternal = session.user.role === 'ADMIN' || 
@@ -90,7 +100,8 @@ export async function GET(
  * PUT /api/incidents/[id]
  * Actualiza la información de un incidente
  */
-export async function PUT(
+async function updateIncidentHandler(
+  validatedData: UpdateIncidentRequest,
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -113,13 +124,14 @@ export async function PUT(
       );
     }
 
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'ID de incidente inválido' },
-        { status: 400 }
-      );
+    // Validar parámetros de ruta
+    const routeValidation = validateRequest(IncidentIdSchema, params);
+    if (!routeValidation.success) {
+      return routeValidation.response;
     }
+
+    const validatedParams = routeValidation.data;
+    const id = parseInt(validatedParams.id);
 
     // Obtener incidente actual para verificar permisos
     const currentIncident = await incidentService.getIncidentById(id, true);
@@ -138,40 +150,37 @@ export async function PUT(
       );
     }
 
-    // Obtener datos del cuerpo de la solicitud
-    const requestData = await request.json();
-
     // Sanitizar datos de entrada
     const sanitizedData: any = {};
     
     // Residentes solo pueden actualizar campos limitados
     if (isOwner && !isAdmin && !isStaff) {
-      if (requestData.title !== undefined) sanitizedData.title = sanitizeInput(requestData.title);
-      if (requestData.description !== undefined) sanitizedData.description = sanitizeInput(requestData.description);
-      if (requestData.location !== undefined) sanitizedData.location = sanitizeInput(requestData.location);
-      if (requestData.mainPhotoUrl !== undefined) sanitizedData.mainPhotoUrl = sanitizeInput(requestData.mainPhotoUrl);
-      if (requestData.attachments !== undefined) sanitizedData.attachments = requestData.attachments;
+      if (validatedData.title !== undefined) sanitizedData.title = sanitizeInput(validatedData.title);
+      if (validatedData.description !== undefined) sanitizedData.description = sanitizeInput(validatedData.description);
+      if (validatedData.location !== undefined) sanitizedData.location = sanitizeInput(validatedData.location);
+      if (validatedData.mainPhotoUrl !== undefined) sanitizedData.mainPhotoUrl = sanitizeInput(validatedData.mainPhotoUrl);
+      if (validatedData.attachments !== undefined) sanitizedData.attachments = validatedData.attachments;
     } else {
       // Staff y admins pueden actualizar todos los campos
-      if (requestData.title !== undefined) sanitizedData.title = sanitizeInput(requestData.title);
-      if (requestData.description !== undefined) sanitizedData.description = sanitizeInput(requestData.description);
-      if (requestData.category !== undefined) sanitizedData.category = sanitizeInput(requestData.category);
-      if (requestData.subcategory !== undefined) sanitizedData.subcategory = sanitizeInput(requestData.subcategory);
-      if (requestData.priority !== undefined) sanitizedData.priority = sanitizeInput(requestData.priority);
-      if (requestData.impact !== undefined) sanitizedData.impact = sanitizeInput(requestData.impact);
-      if (requestData.location !== undefined) sanitizedData.location = sanitizeInput(requestData.location);
-      if (requestData.unitId !== undefined) sanitizedData.unitId = parseInt(requestData.unitId);
-      if (requestData.unitNumber !== undefined) sanitizedData.unitNumber = sanitizeInput(requestData.unitNumber);
-      if (requestData.area !== undefined) sanitizedData.area = sanitizeInput(requestData.area);
-      if (requestData.isPublic !== undefined) sanitizedData.isPublic = Boolean(requestData.isPublic);
-      if (requestData.isEmergency !== undefined) sanitizedData.isEmergency = Boolean(requestData.isEmergency);
-      if (requestData.requiresFollowUp !== undefined) sanitizedData.requiresFollowUp = Boolean(requestData.requiresFollowUp);
-      if (requestData.tags !== undefined) sanitizedData.tags = requestData.tags.map((tag: string) => sanitizeInput(tag));
-      if (requestData.mainPhotoUrl !== undefined) sanitizedData.mainPhotoUrl = sanitizeInput(requestData.mainPhotoUrl);
-      if (requestData.attachments !== undefined) sanitizedData.attachments = requestData.attachments;
-      if (requestData.relatedIncidentIds !== undefined) sanitizedData.relatedIncidentIds = requestData.relatedIncidentIds;
-      if (requestData.visitorId !== undefined) sanitizedData.visitorId = parseInt(requestData.visitorId);
-      if (requestData.packageId !== undefined) sanitizedData.packageId = parseInt(requestData.packageId);
+      if (validatedData.title !== undefined) sanitizedData.title = sanitizeInput(validatedData.title);
+      if (validatedData.description !== undefined) sanitizedData.description = sanitizeInput(validatedData.description);
+      if (validatedData.category !== undefined) sanitizedData.category = sanitizeInput(validatedData.category);
+      if (validatedData.subcategory !== undefined) sanitizedData.subcategory = sanitizeInput(validatedData.subcategory);
+      if (validatedData.priority !== undefined) sanitizedData.priority = validatedData.priority;
+      if (validatedData.impact !== undefined) sanitizedData.impact = sanitizeInput(validatedData.impact);
+      if (validatedData.location !== undefined) sanitizedData.location = sanitizeInput(validatedData.location);
+      if (validatedData.unitId !== undefined) sanitizedData.unitId = validatedData.unitId;
+      if (validatedData.unitNumber !== undefined) sanitizedData.unitNumber = sanitizeInput(validatedData.unitNumber);
+      if (validatedData.area !== undefined) sanitizedData.area = sanitizeInput(validatedData.area);
+      if (validatedData.isPublic !== undefined) sanitizedData.isPublic = validatedData.isPublic;
+      if (validatedData.isEmergency !== undefined) sanitizedData.isEmergency = validatedData.isEmergency;
+      if (validatedData.requiresFollowUp !== undefined) sanitizedData.requiresFollowUp = validatedData.requiresFollowUp;
+      if (validatedData.tags !== undefined) sanitizedData.tags = validatedData.tags.map((tag: string) => sanitizeInput(tag));
+      if (validatedData.mainPhotoUrl !== undefined) sanitizedData.mainPhotoUrl = sanitizeInput(validatedData.mainPhotoUrl);
+      if (validatedData.attachments !== undefined) sanitizedData.attachments = validatedData.attachments;
+      if (validatedData.relatedIncidentIds !== undefined) sanitizedData.relatedIncidentIds = validatedData.relatedIncidentIds;
+      if (validatedData.visitorId !== undefined) sanitizedData.visitorId = validatedData.visitorId;
+      if (validatedData.packageId !== undefined) sanitizedData.packageId = validatedData.packageId;
     }
 
     // Agregar información del usuario que actualiza
@@ -218,7 +227,8 @@ export async function PUT(
  * DELETE /api/incidents/[id]
  * Cancela un incidente (no lo elimina físicamente)
  */
-export async function DELETE(
+async function cancelIncidentHandler(
+  validatedData: CancelIncidentRequest,
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -241,13 +251,14 @@ export async function DELETE(
       );
     }
 
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'ID de incidente inválido' },
-        { status: 400 }
-      );
+    // Validar parámetros de ruta
+    const routeValidation = validateRequest(IncidentIdSchema, params);
+    if (!routeValidation.success) {
+      return routeValidation.response;
     }
+
+    const validatedParams = routeValidation.data;
+    const id = parseInt(validatedParams.id);
 
     // Obtener incidente actual para verificar permisos
     const currentIncident = await incidentService.getIncidentById(id, true);
@@ -273,9 +284,7 @@ export async function DELETE(
       );
     }
 
-    // Obtener datos del cuerpo de la solicitud
-    const requestData = await request.json();
-    const reason = requestData.reason ? sanitizeInput(requestData.reason) : 'Cancelado por el usuario';
+    const reason = validatedData.reason ? sanitizeInput(validatedData.reason) : 'Cancelado por el usuario';
 
     // Cambiar estado a CANCELLED
     const cancelledIncident = await incidentService.changeIncidentStatus(id, {
@@ -319,3 +328,7 @@ export async function DELETE(
     );
   }
 }
+
+// Exportar PUT y DELETE con validación
+export const PUT = withValidation(UpdateIncidentSchema, updateIncidentHandler);
+export const DELETE = withValidation(CancelIncidentSchema, cancelIncidentHandler);

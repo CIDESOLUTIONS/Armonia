@@ -21,13 +21,7 @@ export const LoginSchema = z.object({
     .max(50, 'Nombre del esquema no puede exceder 50 caracteres')
     .regex(/^[a-z0-9_]+$/, 'Nombre del esquema solo puede contener letras minúsculas, números y guiones bajos')
     .optional()
-}).refine(
-  (data) => data.complexId !== undefined || data.schemaName !== undefined,
-  {
-    message: "Debe proporcionar complexId o schemaName",
-    path: ["complexId", "schemaName"]
-  }
-);
+});
 
 export type LoginRequest = z.infer<typeof LoginSchema>;
 

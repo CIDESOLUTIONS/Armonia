@@ -4,6 +4,13 @@ import { validateCsrfToken } from '@/lib/security/csrf-protection';
 import { sanitizeInput } from '@/lib/security/xss-protection';
 import { logAuditEvent } from '@/lib/security/audit-trail';
 import { getServerSession } from '@/lib/auth';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { 
+  GetIncidentsSchema,
+  CreateIncidentSchema,
+  type GetIncidentsRequest,
+  type CreateIncidentRequest
+} from '@/validators/incidents/incident.validator';
 
 /**
  * GET /api/incidents
@@ -22,87 +29,55 @@ export async function GET(request: NextRequest) {
 
     // Obtener parámetros de consulta
     const searchParams = request.nextUrl.searchParams;
-    const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 10;
-    const status = searchParams.get('status') || undefined;
-    const category = searchParams.get('category') || undefined;
-    const priority = searchParams.get('priority') || undefined;
-    const search = searchParams.get('search') || undefined;
-    const startDate = searchParams.get('startDate') || undefined;
-    const endDate = searchParams.get('endDate') || undefined;
-    const unitNumber = searchParams.get('unitNumber') || undefined;
-    const reportedById = searchParams.get('reportedById') ? parseInt(searchParams.get('reportedById')!) : undefined;
-    const assignedToId = searchParams.get('assignedToId') ? parseInt(searchParams.get('assignedToId')!) : undefined;
-    const isPublic = searchParams.get('isPublic') ? searchParams.get('isPublic') === 'true' : undefined;
-    const isEmergency = searchParams.get('isEmergency') ? searchParams.get('isEmergency') === 'true' : undefined;
-    const tags = searchParams.get('tags') ? searchParams.get('tags')!.split(',') : undefined;
-    
-    // Usar const en lugar de let para queryParams ya que nunca se reasigna
     const queryParams = {
-      page,
-      limit,
-      status,
-      category,
-      priority,
-      search,
-      startDate,
-      endDate,
-      unitNumber,
-      tags
+      page: searchParams.get('page'),
+      limit: searchParams.get('limit'),
+      status: searchParams.get('status'),
+      category: searchParams.get('category'),
+      priority: searchParams.get('priority'),
+      search: searchParams.get('search'),
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate'),
+      unitNumber: searchParams.get('unitNumber'),
+      reportedById: searchParams.get('reportedById'),
+      assignedToId: searchParams.get('assignedToId'),
+      isPublic: searchParams.get('isPublic'),
+      isEmergency: searchParams.get('isEmergency'),
+      tags: searchParams.get('tags')
     };
 
+    // Validar parámetros
+    const validation = validateRequest(GetIncidentsSchema, queryParams);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const validatedParams = validation.data;
+    
     // Filtrar acceso según rol
     const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'COMPLEX_ADMIN';
     const isStaff = session.user.role === 'STAFF';
     const isResident = session.user.role === 'RESIDENT';
 
     // Aplicar restricciones según rol
+    const finalParams: any = { ...validatedParams };
 
     // Residentes solo ven sus propios incidentes o los públicos
     if (isResident) {
-      queryParams.reportedById = session.user.id;
+      finalParams.reportedById = session.user.id;
       // O incidentes públicos si no se especifica filtro
-      if (isPublic === undefined) {
-        queryParams.isPublic = true;
-      } else {
-        queryParams.isPublic = isPublic;
+      if (finalParams.isPublic === undefined) {
+        finalParams.isPublic = true;
       }
     }
 
-    // Staff puede ver todos pero con filtros específicos
-    if (isStaff) {
-      if (assignedToId !== undefined) {
-        queryParams.assignedToId = assignedToId;
-      }
-      if (reportedById !== undefined) {
-        queryParams.reportedById = reportedById;
-      }
-      if (isPublic !== undefined) {
-        queryParams.isPublic = isPublic;
-      }
-      if (isEmergency !== undefined) {
-        queryParams.isEmergency = isEmergency;
-      }
-    }
-
-    // Admins pueden ver todo sin restricciones
-    if (isAdmin) {
-      if (assignedToId !== undefined) {
-        queryParams.assignedToId = assignedToId;
-      }
-      if (reportedById !== undefined) {
-        queryParams.reportedById = reportedById;
-      }
-      if (isPublic !== undefined) {
-        queryParams.isPublic = isPublic;
-      }
-      if (isEmergency !== undefined) {
-        queryParams.isEmergency = isEmergency;
-      }
+    // Staff y admins pueden ver con filtros específicos
+    if (isStaff || isAdmin) {
+      // Mantener los filtros proporcionados
     }
 
     // Obtener incidentes
-    const result = await incidentService.getAllIncidents(queryParams);
+    const result = await incidentService.getAllIncidents(finalParams);
 
     // Registrar evento de auditoría
     await logAuditEvent({
@@ -111,7 +86,7 @@ export async function GET(request: NextRequest) {
       entityId: 'LIST',
       action: 'INCIDENT_LIST_VIEWED',
       details: JSON.stringify({
-        filters: queryParams,
+        filters: finalParams,
         resultCount: result.pagination.total
       })
     });
@@ -130,7 +105,7 @@ export async function GET(request: NextRequest) {
  * POST /api/incidents
  * Crea un nuevo incidente
  */
-export async function POST(request: NextRequest) {
+async function createIncidentHandler(validatedData: CreateIncidentRequest, request: NextRequest) {
   try {
     // Obtener sesión del usuario
     const session = await getServerSession();
@@ -150,33 +125,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obtener datos del cuerpo de la solicitud
-    const requestData = await request.json();
-
     // Sanitizar datos de entrada
     const sanitizedData = {
-      title: sanitizeInput(requestData.title),
-      description: sanitizeInput(requestData.description),
-      category: sanitizeInput(requestData.category),
-      subcategory: requestData.subcategory ? sanitizeInput(requestData.subcategory) : undefined,
-      priority: sanitizeInput(requestData.priority),
-      impact: requestData.impact ? sanitizeInput(requestData.impact) : undefined,
-      location: sanitizeInput(requestData.location),
-      unitId: requestData.unitId ? parseInt(requestData.unitId) : undefined,
-      unitNumber: requestData.unitNumber ? sanitizeInput(requestData.unitNumber) : undefined,
-      area: requestData.area ? sanitizeInput(requestData.area) : undefined,
+      ...validatedData,
+      title: sanitizeInput(validatedData.title),
+      description: sanitizeInput(validatedData.description),
+      category: sanitizeInput(validatedData.category),
+      subcategory: validatedData.subcategory ? sanitizeInput(validatedData.subcategory) : undefined,
+      priority: validatedData.priority,
+      impact: validatedData.impact ? sanitizeInput(validatedData.impact) : undefined,
+      location: sanitizeInput(validatedData.location),
+      unitNumber: validatedData.unitNumber ? sanitizeInput(validatedData.unitNumber) : undefined,
+      area: validatedData.area ? sanitizeInput(validatedData.area) : undefined,
       reportedById: session.user.id,
       reportedByName: session.user.name || 'Usuario',
       reportedByRole: session.user.role,
-      isPublic: requestData.isPublic !== undefined ? Boolean(requestData.isPublic) : false,
-      isEmergency: requestData.isEmergency !== undefined ? Boolean(requestData.isEmergency) : false,
-      requiresFollowUp: requestData.requiresFollowUp !== undefined ? Boolean(requestData.requiresFollowUp) : false,
-      tags: requestData.tags ? requestData.tags.map((tag: string) => sanitizeInput(tag)) : [],
-      mainPhotoUrl: requestData.mainPhotoUrl ? sanitizeInput(requestData.mainPhotoUrl) : undefined,
-      attachments: requestData.attachments || undefined,
-      relatedIncidentIds: requestData.relatedIncidentIds || [],
-      visitorId: requestData.visitorId ? parseInt(requestData.visitorId) : undefined,
-      packageId: requestData.packageId ? parseInt(requestData.packageId) : undefined
+      tags: validatedData.tags ? validatedData.tags.map((tag: string) => sanitizeInput(tag)) : [],
+      mainPhotoUrl: validatedData.mainPhotoUrl ? sanitizeInput(validatedData.mainPhotoUrl) : undefined,
     };
 
     // Crear incidente
@@ -204,3 +169,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Exportar POST con validación
+export const POST = withValidation(CreateIncidentSchema, createIncidentHandler);

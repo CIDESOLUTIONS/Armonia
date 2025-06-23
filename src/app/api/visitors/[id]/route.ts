@@ -3,6 +3,17 @@ import { visitorService } from '@/services/visitorService';
 import { validateCsrfToken } from '@/lib/security/csrf-protection';
 import { sanitizeInput } from '@/lib/security/xss-protection';
 import { logAuditEvent } from '@/lib/security/audit-trail';
+import { withValidation, validateRequest } from '@/lib/validation';
+import { 
+  VisitorIdSchema,
+  UpdateVisitorSchema,
+  RegisterExitSchema,
+  DeleteVisitorSchema,
+  type VisitorIdRequest,
+  type UpdateVisitorRequest,
+  type RegisterExitRequest,
+  type DeleteVisitorRequest
+} from '@/validators/visitors/visitor-id.validator';
 
 /**
  * GET /api/visitors/[id]
@@ -13,14 +24,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'ID de visitante inválido' },
-        { status: 400 }
-      );
+    // Validar parámetros de ruta
+    const validation = validateRequest(VisitorIdSchema, params);
+    if (!validation.success) {
+      return validation.response;
     }
+
+    const validatedParams = validation.data;
+    const id = parseInt(validatedParams.id);
     
     const visitor = await visitorService.getVisitorById(id);
     
@@ -38,7 +49,8 @@ export async function GET(
  * PUT /api/visitors/[id]
  * Actualiza la información de un visitante
  */
-export async function PUT(
+async function updateVisitorHandler(
+  validatedData: UpdateVisitorRequest,
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -52,27 +64,26 @@ export async function PUT(
       );
     }
     
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'ID de visitante inválido' },
-        { status: 400 }
-      );
+    // Validar parámetros de ruta
+    const routeValidation = validateRequest(VisitorIdSchema, params);
+    if (!routeValidation.success) {
+      return routeValidation.response;
     }
+
+    const validatedParams = routeValidation.data;
+    const id = parseInt(validatedParams.id);
     
-    // Obtener y sanitizar datos
-    const requestData = await request.json();
+    // Sanitizar datos
     const sanitizedData = {
-      name: sanitizeInput(requestData.name),
-      destination: sanitizeInput(requestData.destination),
-      residentName: sanitizeInput(requestData.residentName),
-      plate: sanitizeInput(requestData.plate),
-      photoUrl: sanitizeInput(requestData.photoUrl),
-      purpose: sanitizeInput(requestData.purpose),
-      company: sanitizeInput(requestData.company),
-      belongings: requestData.belongings,
-      notes: sanitizeInput(requestData.notes)
+      ...validatedData,
+      name: validatedData.name ? sanitizeInput(validatedData.name) : undefined,
+      destination: validatedData.destination ? sanitizeInput(validatedData.destination) : undefined,
+      residentName: validatedData.residentName ? sanitizeInput(validatedData.residentName) : undefined,
+      plate: validatedData.plate ? sanitizeInput(validatedData.plate) : undefined,
+      photoUrl: validatedData.photoUrl ? sanitizeInput(validatedData.photoUrl) : undefined,
+      purpose: validatedData.purpose ? sanitizeInput(validatedData.purpose) : undefined,
+      company: validatedData.company ? sanitizeInput(validatedData.company) : undefined,
+      notes: validatedData.notes ? sanitizeInput(validatedData.notes) : undefined
     };
     
     // Actualizar visitante
@@ -80,7 +91,7 @@ export async function PUT(
     
     // Registrar evento de auditoría
     await logAuditEvent({
-      userId: requestData.updatedBy || 0,
+      userId: validatedData.updatedBy || 0,
       entityType: 'VISITOR',
       entityId: id.toString(),
       action: 'VISITOR_UPDATED',
@@ -103,78 +114,8 @@ export async function PUT(
  * POST /api/visitors/[id]/exit
  * Registra la salida de un visitante
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  // Verificar si es una solicitud de registro de salida
-  const url = new URL(request.url);
-  const isExitRequest = url.pathname.endsWith('/exit');
-  
-  if (isExitRequest) {
-    try {
-      // Validar token CSRF
-      const csrfValidation = await validateCsrfToken(request);
-      if (!csrfValidation.valid) {
-        return NextResponse.json(
-          { error: 'Token CSRF inválido' },
-          { status: 403 }
-        );
-      }
-      
-      const id = parseInt(params.id);
-      
-      if (isNaN(id)) {
-        return NextResponse.json(
-          { error: 'ID de visitante inválido' },
-          { status: 400 }
-        );
-      }
-      
-      // Obtener y sanitizar datos
-      const requestData = await request.json();
-      const sanitizedData = {
-        notes: sanitizeInput(requestData.notes),
-        registeredBy: requestData.registeredBy
-      };
-      
-      // Registrar salida
-      const visitor = await visitorService.registerExit(id, sanitizedData);
-      
-      // Registrar evento de auditoría
-      await logAuditEvent({
-        userId: sanitizedData.registeredBy,
-        entityType: 'VISITOR',
-        entityId: id.toString(),
-        action: 'VISITOR_EXIT',
-        details: JSON.stringify({
-          exitTime: visitor.exitTime,
-          notes: sanitizedData.notes
-        })
-      });
-      
-      return NextResponse.json(visitor);
-    } catch (error: any) {
-      console.error(`Error al registrar salida de visitante ${params.id}:`, error);
-      return NextResponse.json(
-        { error: 'Error al registrar salida', message: error.message },
-        { status: error.message === 'Visitante no encontrado' ? 404 : 400 }
-      );
-    }
-  }
-  
-  // Si no es una solicitud de salida, devolver error
-  return NextResponse.json(
-    { error: 'Método no permitido' },
-    { status: 405 }
-  );
-}
-
-/**
- * DELETE /api/visitors/[id]
- * Elimina un registro de visitante (solo para propósitos administrativos)
- */
-export async function DELETE(
+async function registerExitHandler(
+  validatedData: RegisterExitRequest,
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -188,19 +129,76 @@ export async function DELETE(
       );
     }
     
-    const id = parseInt(params.id);
+    // Validar parámetros de ruta
+    const routeValidation = validateRequest(VisitorIdSchema, params);
+    if (!routeValidation.success) {
+      return routeValidation.response;
+    }
+
+    const validatedParams = routeValidation.data;
+    const id = parseInt(validatedParams.id);
     
-    if (isNaN(id)) {
+    // Sanitizar datos
+    const sanitizedData = {
+      notes: validatedData.notes ? sanitizeInput(validatedData.notes) : undefined,
+      registeredBy: validatedData.registeredBy
+    };
+    
+    // Registrar salida
+    const visitor = await visitorService.registerExit(id, sanitizedData);
+    
+    // Registrar evento de auditoría
+    await logAuditEvent({
+      userId: sanitizedData.registeredBy,
+      entityType: 'VISITOR',
+      entityId: id.toString(),
+      action: 'VISITOR_EXIT',
+      details: JSON.stringify({
+        exitTime: visitor.exitTime,
+        notes: sanitizedData.notes
+      })
+    });
+    
+    return NextResponse.json(visitor);
+  } catch (error: any) {
+    console.error(`Error al registrar salida de visitante ${params.id}:`, error);
+    return NextResponse.json(
+      { error: 'Error al registrar salida', message: error.message },
+      { status: error.message === 'Visitante no encontrado' ? 404 : 400 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/visitors/[id]
+ * Elimina un registro de visitante (solo para propósitos administrativos)
+ */
+async function deleteVisitorHandler(
+  validatedData: DeleteVisitorRequest,
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Validar token CSRF
+    const csrfValidation = await validateCsrfToken(request);
+    if (!csrfValidation.valid) {
       return NextResponse.json(
-        { error: 'ID de visitante inválido' },
-        { status: 400 }
+        { error: 'Token CSRF inválido' },
+        { status: 403 }
       );
     }
     
-    // Obtener información del usuario que realiza la eliminación
-    const requestData = await request.json();
-    const adminId = requestData.adminId;
-    const reason = sanitizeInput(requestData.reason || 'No especificado');
+    // Validar parámetros de ruta
+    const routeValidation = validateRequest(VisitorIdSchema, params);
+    if (!routeValidation.success) {
+      return routeValidation.response;
+    }
+
+    const validatedParams = routeValidation.data;
+    const id = parseInt(validatedParams.id);
+    
+    const adminId = validatedData.adminId;
+    const reason = validatedData.reason ? sanitizeInput(validatedData.reason) : 'No especificado';
     
     // Verificar que el visitante exista
     const visitor = await visitorService.getVisitorById(id);
@@ -230,3 +228,38 @@ export async function DELETE(
     );
   }
 }
+
+// Exportar PUT con validación
+export const PUT = withValidation(UpdateVisitorSchema, updateVisitorHandler);
+
+// Verificar si es una solicitud de registro de salida y aplicar el handler correspondiente
+export async function POST(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  const url = new URL(request.url);
+  const isExitRequest = url.pathname.endsWith('/exit');
+  
+  if (isExitRequest) {
+    // Clonar la solicitud para poder leer el cuerpo
+    const clonedRequest = request.clone();
+    const body = await clonedRequest.json().catch(() => ({}));
+    
+    // Validar el cuerpo con el esquema de registro de salida
+    const validation = validateRequest(RegisterExitSchema, body);
+    if (!validation.success) {
+      return validation.response;
+    }
+    
+    return registerExitHandler(validation.data, request, context);
+  }
+  
+  // Si no es una solicitud de salida, devolver error
+  return NextResponse.json(
+    { error: 'Método no permitido' },
+    { status: 405 }
+  );
+}
+
+// Exportar DELETE con validación
+export const DELETE = withValidation(DeleteVisitorSchema, deleteVisitorHandler);

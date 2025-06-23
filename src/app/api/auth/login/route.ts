@@ -38,6 +38,7 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
       
       whereClause.complexId = complex.id;
     }
+    // Si no se proporciona complexId ni schemaName, buscar usuario sin filtro de complejo
     
     const user = await prisma.user.findFirst({
       where: whereClause,
