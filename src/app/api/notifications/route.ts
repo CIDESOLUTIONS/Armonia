@@ -3,6 +3,11 @@ import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { serverLogger } from '@/lib/logging/server-logger';
+import { validateRequest } from '@/lib/validation';
+import { 
+  GetNotificationsSchema,
+  type GetNotificationsRequest
+} from '@/validators/notifications/notification.validator';
 
 /**
  * GET /api/notifications
@@ -21,14 +26,23 @@ export async function GET(req: NextRequest) {
 
     // Obtener parámetros de consulta
     const searchParams = req.nextUrl.searchParams;
-    const isRead = searchParams.get('isRead') === 'true' ? true : 
-                  searchParams.get('isRead') === 'false' ? false : undefined;
-    const type = searchParams.get('type') || undefined;
+    const queryParams = {
+      isRead: searchParams.get('isRead'),
+      type: searchParams.get('type')
+    };
+
+    // Validar parámetros
+    const validation = validateRequest(GetNotificationsSchema, queryParams);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const validatedParams = validation.data;
 
     // Obtener notificaciones del usuario
     const notifications = await reservationService.getUserNotifications(
       session.user.id,
-      { isRead, type }
+      validatedParams
     );
 
     return NextResponse.json(notifications);

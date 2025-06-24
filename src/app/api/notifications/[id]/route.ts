@@ -3,6 +3,14 @@ import reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { serverLogger } from '@/lib/logging/server-logger';
+import { validateRequest, withValidation } from '@/lib/validation';
+import { 
+  NotificationIdSchema,
+  MarkNotificationSchema,
+  type NotificationIdRequest,
+  type MarkNotificationRequest
+} from '@/validators/notifications/notification.validator';
+import prisma from '@/lib/prisma';
 
 /**
  * GET /api/notifications/[id]
@@ -22,13 +30,14 @@ export async function GET(
       );
     }
 
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'ID inválido' },
-        { status: 400 }
-      );
+    // Validar parámetros de ruta
+    const validation = validateRequest(NotificationIdSchema, params);
+    if (!validation.success) {
+      return validation.response;
     }
+
+    const validatedParams = validation.data;
+    const id = parseInt(validatedParams.id);
 
     // Obtener notificación
     const notification = await prisma.reservationNotification.findUnique({
@@ -64,7 +73,8 @@ export async function GET(
  * PUT /api/notifications/[id]/read
  * Marca una notificación como leída
  */
-export async function PUT(
+async function markNotificationHandler(
+  validatedData: MarkNotificationRequest,
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -78,13 +88,14 @@ export async function PUT(
       );
     }
 
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: 'ID inválido' },
-        { status: 400 }
-      );
+    // Validar parámetros de ruta
+    const routeValidation = validateRequest(NotificationIdSchema, params);
+    if (!routeValidation.success) {
+      return routeValidation.response;
     }
+
+    const validatedParams = routeValidation.data;
+    const id = parseInt(validatedParams.id);
 
     // Marcar notificación como leída
     const updatedNotification = await reservationService.markNotificationAsRead(
@@ -113,3 +124,6 @@ export async function PUT(
     );
   }
 }
+
+// Exportar PUT con validación
+export const PUT = withValidation(MarkNotificationSchema, markNotificationHandler);
