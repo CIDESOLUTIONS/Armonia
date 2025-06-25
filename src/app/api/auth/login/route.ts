@@ -1,6 +1,6 @@
 // src/app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth';
 import { withValidation } from '@/lib/validation';
 import { LoginSchema, type LoginRequest } from '@/validators/auth/login.validator';
@@ -11,7 +11,7 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
     const { email, password, complexId, schemaName } = validatedData;
     console.log(`[LOGIN] Intento de login para: ${email} en complejo: ${complexId || schemaName}`);
 
-    const prisma = getPrismaClient();
+    const prisma = getPrisma();
     
     // Construir la consulta con filtro multi-tenant
     const whereClause: any = {
