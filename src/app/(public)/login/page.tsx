@@ -99,7 +99,7 @@ export default function LoginPage() {
       case 'admin':
         setFormData({
           email: 'admin@armonia.com',
-          password: 'Admin123!'  // Usar la contraseña correcta
+          password: 'Admin123'  // Usar la contraseña correcta
         });
         break;
       default:
