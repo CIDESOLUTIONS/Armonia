@@ -8,6 +8,7 @@ const publicRoutes = [
   '/portal-selector',
   '/login',
   '/register',
+  '/register-complex',
   '/forgot-password',
   '/reset-password',
   '/api/auth/login',
