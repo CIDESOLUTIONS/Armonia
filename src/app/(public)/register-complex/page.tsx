@@ -469,10 +469,16 @@ export default function RegisterComplex() {
         planCode: requestData.planCode,
         transactionId: requestData.transactionId
       });
-      
       // Enviar datos al API
-      // Variable response eliminada por lint
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
       
+      const data = await response.json();
       const _data = await response.json();
       
       if (!response.ok) {
