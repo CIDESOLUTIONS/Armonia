@@ -87,19 +87,19 @@ export default function LoginPage() {
       case 'resident':
         setFormData({
           email: 'resident@armonia.com',
-          password: 'Resident123!'
+          password: 'Resident123'
         });
         break;
       case 'reception':
         setFormData({
           email: 'reception@armonia.com',
-          password: 'Reception123!'
+          password: 'Reception123'
         });
         break;
       case 'admin':
         setFormData({
           email: 'admin@armonia.com',
-          password: 'Admin123'  // Usar la contraseña correcta
+          password: 'Admin123'
         });
         break;
       default:
