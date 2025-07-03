@@ -19,7 +19,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'COMPLEX_ADMIN')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
