@@ -479,7 +479,6 @@ export default function RegisterComplex() {
       });
       
       const data = await response.json();
-      const _data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Error al registrar el conjunto');
