@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
 
-export async function POST(_req: unknown) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { complexName, 
       totalUnits, 
-      _adminName, 
+      adminName, 
       adminEmail, 
       adminPassword, 
       adminPhone, 

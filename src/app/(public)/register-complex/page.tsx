@@ -404,7 +404,7 @@ export default function RegisterComplex() {
 
   // Actualizamos para conectar con el API y procesar la respuesta
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, _setError] = useState("");
+  const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {

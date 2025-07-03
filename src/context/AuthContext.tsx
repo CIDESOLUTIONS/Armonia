@@ -199,11 +199,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Redirección según el rol del usuario
       if (data.user.role === 'RECEPTION') {
-        router.push('/reception');
+        router.push('/(reception)');
       } else if (data.user.role === 'ADMIN') {
-        router.push('/admin');
+        router.push('/(admin)/admin-dashboard');
       } else if (data.user.role === 'RESIDENT') {
-        router.push('/dashboard');
+        router.push('/(resident)/dashboard');
       } else {
         router.push('/dashboard');
       }
