@@ -81,32 +81,6 @@ export default function LoginPage() {
 
   const portalInfo = getPortalInfo();
 
-  // Rellenar credenciales de prueba
-  const fillTestCredentials = () => {
-    switch (portalParam) {
-      case 'resident':
-        setFormData({
-          email: 'resident@armonia.com',
-          password: 'Resident123'
-        });
-        break;
-      case 'reception':
-        setFormData({
-          email: 'reception@armonia.com',
-          password: 'Reception123'
-        });
-        break;
-      case 'admin':
-        setFormData({
-          email: 'admin@armonia.com',
-          password: 'Admin123'
-        });
-        break;
-      default:
-        break;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -225,55 +199,6 @@ export default function LoginPage() {
               </div>
             </form>
           </div>
-        </div>
-
-        {/* Credenciales de prueba */}
-        <div className="mt-6 p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
-          <h3 className="text-lg font-medium mb-2">Credenciales de prueba:</h3>
-          {portalParam === 'resident' && (
-            <div>
-              <p><strong>Residente:</strong> resident@armonia.com</p>
-              <p><strong>Contraseña:</strong> Resident123!</p>
-              <Button 
-                className={`mt-2 ${portalInfo.color} hover:opacity-90 text-white`}
-                onClick={fillTestCredentials}
-                size="sm"
-              >
-                Usar credenciales de prueba
-              </Button>
-            </div>
-          )}
-          {portalParam === 'reception' && (
-            <div>
-              <p><strong>Recepción:</strong> reception@armonia.com</p>
-              <p><strong>Contraseña:</strong> Reception123!</p>
-              <Button 
-                className={`mt-2 ${portalInfo.color} hover:opacity-90 text-white`}
-                onClick={fillTestCredentials}
-                size="sm"
-              >
-                Usar credenciales de prueba
-              </Button>
-            </div>
-          )}
-          {portalParam === 'admin' && (
-            <div>
-              <p><strong>Admin:</strong> admin@armonia.com</p>
-              <p><strong>Contraseña:</strong> Admin123!</p>
-              <Button 
-                className={`mt-2 ${portalInfo.color} hover:opacity-90 text-white`}
-                onClick={fillTestCredentials}
-                size="sm"
-              >
-                Usar credenciales de prueba
-              </Button>
-            </div>
-          )}
-          {!portalParam && (
-            <div>
-              <p>Seleccione un portal específico para ver credenciales de prueba.</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
