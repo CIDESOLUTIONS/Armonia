@@ -1,5 +1,6 @@
 // src/app/(admin)/layout.tsx
 import { Metadata } from 'next';
+import AuthLayout from '@/app/(auth)/layout';
 
 export const metadata: Metadata = {
   title: 'Administración - Armonía',
@@ -12,8 +13,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="admin-portal">
+    <AuthLayout>
       {children}
-    </div>
+    </AuthLayout>
   );
 }

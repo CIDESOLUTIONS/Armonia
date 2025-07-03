@@ -46,16 +46,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Función para almacenar el token y los datos de usuario
   const storeAuthData = (authToken: string, userData: User) => {
+    console.log('[AuthContext] storeAuthData llamado con:', { token: !!authToken, user: userData });
+    
     // Guardar en localStorage como respaldo
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', authToken);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      // También guardar en cookie para el middleware
+      document.cookie = `token=${authToken}; path=/; max-age=86400; SameSite=Lax`;
+      console.log('[AuthContext] Token guardado en cookie y localStorage');
     }
     
     // Actualizar el estado
     setToken(authToken);
     setUser(userData);
     setIsLoggedIn(true);
+    
+    console.log('[AuthContext] Estados actualizados - isLoggedIn:', true);
     
     // Establecer datos del usuario
     setAdminName(userData.name || null);
@@ -193,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.user.role === 'RECEPTION') {
         router.push('/reception');
       } else if (data.user.role === 'ADMIN') {
-        router.push('/dashboard');
+        router.push('/admin');
       } else if (data.user.role === 'RESIDENT') {
         router.push('/dashboard');
       } else {
