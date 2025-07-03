@@ -1,0 +1,594 @@
+{
+  "metadata": {
+    "timestamp": "2025-07-03T16:18:28.635762",
+    "project_path": "C:\\Users\\meciz\\Documents\\armonia",
+    "evaluator_version": "2.0.0-armonia-specialized",
+    "specifications_version": "v15"
+  },
+  "compliance_analysis": {},
+  "architecture_evaluation": {
+    "structure": {
+      "src_structure": {
+        "src/app": {
+          "exists": true,
+          "type": "directory",
+          "content": {
+            "expected_items": {
+              "(admin)": [
+                "page.tsx",
+                "dashboard/",
+                "inventory/",
+                "assemblies/",
+                "financial/",
+                "pqr/"
+              ],
+              "(resident)": [
+                "page.tsx",
+                "dashboard/",
+                "payments/",
+                "reservations/",
+                "assemblies/",
+                "pqr/"
+              ],
+              "(reception)": [
+                "page.tsx",
+                "dashboard/",
+                "visitors/",
+                "packages/",
+                "incidents/"
+              ],
+              "(public)": [
+                "page.tsx",
+                "landing/",
+                "blog/",
+                "testimonials/"
+              ],
+              "(auth)": [
+                "login/",
+                "register/",
+                "forgot-password/"
+              ]
+            },
+            "actual_items": [
+              "(admin)",
+              "(auth)",
+              "(public)",
+              "(reception)",
+              "(resident)",
+              "admin",
+              "api",
+              "favicon.ico",
+              "globals.css",
+              "layout.tsx"
+            ],
+            "missing_items": [],
+            "extra_items": [
+              "admin",
+              "api",
+              "favicon.ico",
+              "globals.css",
+              "layout.tsx"
+            ]
+          }
+        },
+        "src/components": {
+          "exists": true,
+          "type": "directory",
+          "content": {
+            "expected_items": {
+              "ui/": [
+                "shadcn components"
+              ],
+              "charts/": [
+                "recharts components"
+              ],
+              "forms/": [
+                "form components"
+              ],
+              "layout/": [
+                "layout components"
+              ]
+            },
+            "actual_items": [
+              "admin",
+              "assemblies",
+              "assembly",
+              "auth",
+              "cameras",
+              "common",
+              "communications",
+              "dashboard",
+              "finances",
+              "financial",
+              "intercom",
+              "inventory",
+              "landing",
+              "layout",
+              "Loading.tsx",
+              "monitoring",
+              "notifications",
+              "pqr",
+              "providers.tsx",
+              "reservations",
+              "resident",
+              "security",
+              "tables",
+              "ui"
+            ],
+            "missing_items": [
+              "ui/",
+              "charts/",
+              "forms/",
+              "layout/"
+            ],
+            "extra_items": [
+              "admin",
+              "assemblies",
+              "assembly",
+              "auth",
+              "cameras",
+              "common",
+              "communications",
+              "dashboard",
+              "finances",
+              "financial",
+              "intercom",
+              "inventory",
+              "landing",
+              "layout",
+              "Loading.tsx",
+              "monitoring",
+              "notifications",
+              "pqr",
+              "providers.tsx",
+              "reservations",
+              "resident",
+              "security",
+              "tables",
+              "ui"
+            ]
+          }
+        },
+        "src/lib": {
+          "exists": true,
+          "type": "directory",
+          "content": {
+            "expected_items": [
+              "auth.ts",
+              "db.ts",
+              "utils.ts",
+              "validations.ts"
+            ],
+            "actual_items": [
+              "api",
+              "api-client.ts",
+              "auth",
+              "auth.test.ts",
+              "auth.ts",
+              "biometrics",
+              "communications",
+              "constants",
+              "constants.js",
+              "db.ts",
+              "email",
+              "financial",
+              "freemium-service.ts",
+              "i18n",
+              "logging",
+              "manual-prisma-client.ts",
+              "marketing",
+              "metadata",
+              "migrations",
+              "multi-tenant",
+              "notifications",
+              "pdf",
+              "pqr",
+              "prisma.ts",
+              "scheduler.js",
+              "security",
+              "services",
+              "services.ts",
+              "templates",
+              "utils",
+              "utils.ts",
+              "validation.ts"
+            ],
+            "missing_items": [
+              "validations.ts"
+            ],
+            "extra_items": [
+              "api",
+              "api-client.ts",
+              "auth",
+              "auth.test.ts",
+              "biometrics",
+              "communications",
+              "constants",
+              "constants.js",
+              "email",
+              "financial",
+              "freemium-service.ts",
+              "i18n",
+              "logging",
+              "manual-prisma-client.ts",
+              "marketing",
+              "metadata",
+              "migrations",
+              "multi-tenant",
+              "notifications",
+              "pdf",
+              "pqr",
+              "prisma.ts",
+              "scheduler.js",
+              "security",
+              "services",
+              "services.ts",
+              "templates",
+              "utils",
+              "validation.ts"
+            ]
+          }
+        },
+        "prisma": {
+          "exists": true,
+          "type": "directory",
+          "content": {
+            "expected_items": [
+              "schema.prisma",
+              "migrations/"
+            ],
+            "actual_items": [
+              "migrations",
+              "schema.prisma",
+              "schema.prisma.backup",
+              "schema_assembly.prisma",
+              "schema_cameras.prisma",
+              "schema_communications.prisma",
+              "schema_correspondence.prisma",
+              "schema_financial.prisma",
+              "schema_incidents.prisma",
+              "schema_incidents_complete.prisma",
+              "schema_intercom.prisma",
+              "schema_monitoring.prisma",
+              "schema_payments.prisma",
+              "schema_pqr_advanced.prisma",
+              "schema_reservations.prisma",
+              "schema_security.prisma",
+              "schema_updates.prisma",
+              "schema_visitors.prisma",
+              "seed.js",
+              "seed.ts"
+            ],
+            "missing_items": [
+              "migrations/"
+            ],
+            "extra_items": [
+              "migrations",
+              "schema.prisma.backup",
+              "schema_assembly.prisma",
+              "schema_cameras.prisma",
+              "schema_communications.prisma",
+              "schema_correspondence.prisma",
+              "schema_financial.prisma",
+              "schema_incidents.prisma",
+              "schema_incidents_complete.prisma",
+              "schema_intercom.prisma",
+              "schema_monitoring.prisma",
+              "schema_payments.prisma",
+              "schema_pqr_advanced.prisma",
+              "schema_reservations.prisma",
+              "schema_security.prisma",
+              "schema_updates.prisma",
+              "schema_visitors.prisma",
+              "seed.js",
+              "seed.ts"
+            ]
+          }
+        },
+        "docs": {
+          "exists": true,
+          "type": "directory",
+          "content": {
+            "expected_items": [
+              "README.md",
+              "API.md",
+              "DEPLOYMENT.md"
+            ],
+            "actual_items": [
+              "consolidacion_rutas_autenticacion.md",
+              "Especificaciones_Tecnicas_Armonia_Ver.15.pdf",
+              "implementacion_validadores_zod_documentacion.md",
+              "old",
+              "refactorizacion_endpoints_inseguros.md",
+              "reporte_correcciones_sistematicas_final.md",
+              "reporte_fase1_autenticacion.md",
+              "reporte_flujo_completo_final.md",
+              "reporte_tarea_principal_final.md"
+            ],
+            "missing_items": [
+              "README.md",
+              "API.md",
+              "DEPLOYMENT.md"
+            ],
+            "extra_items": [
+              "consolidacion_rutas_autenticacion.md",
+              "Especificaciones_Tecnicas_Armonia_Ver.15.pdf",
+              "implementacion_validadores_zod_documentacion.md",
+              "old",
+              "refactorizacion_endpoints_inseguros.md",
+              "reporte_correcciones_sistematicas_final.md",
+              "reporte_fase1_autenticacion.md",
+              "reporte_flujo_completo_final.md",
+              "reporte_tarea_principal_final.md"
+            ]
+          }
+        }
+      },
+      "portal_structure": {},
+      "compliance_score": 0,
+      "missing_directories": [],
+      "extra_directories": []
+    }
+  },
+  "technology_stack_compliance": {
+    "package_json_analysis": {
+      "next": {
+        "installed": true,
+        "version": "^15.3.3",
+        "meets_requirement": true
+      },
+      "react": {
+        "installed": true,
+        "version": "^19.1.0",
+        "meets_requirement": true
+      },
+      "typescript": {
+        "installed": true,
+        "version": "^5.8.2",
+        "meets_requirement": true
+      },
+      "tailwindcss": {
+        "installed": true,
+        "version": "^3.4.17",
+        "meets_requirement": true
+      },
+      "prisma": {
+        "installed": true,
+        "version": "^6.5.0",
+        "meets_requirement": true
+      },
+      "zod": {
+        "installed": true,
+        "version": "^3.24.2",
+        "meets_requirement": true
+      },
+      "recharts": {
+        "installed": true,
+        "version": "^2.15.1",
+        "meets_requirement": true
+      },
+      "bcrypt": {
+        "installed": true,
+        "version": "^5.1.1",
+        "meets_requirement": true
+      },
+      "jsonwebtoken": {
+        "installed": true,
+        "version": "^9.0.2",
+        "meets_requirement": true
+      }
+    },
+    "typescript_usage": true,
+    "next_js_version": null,
+    "react_version": null,
+    "database_config": {
+      "error": "'charmap' codec can't decode byte 0x81 in position 3547: character maps to <undefined>"
+    },
+    "auth_implementation": {},
+    "compliance_score": 0,
+    "missing_technologies": []
+  },
+  "feature_implementation_status": {
+    "landing_page": {
+      "implemented": [
+        "seo_optimization",
+        "pricing_plans",
+        "registration_form"
+      ],
+      "partially_implemented": [],
+      "not_implemented": [
+        "blog",
+        "testimonials"
+      ],
+      "score": 60.0
+    },
+    "authentication": {
+      "implemented": [
+        "multi_role",
+        "jwt",
+        "password_recovery",
+        "session_management",
+        "login_history"
+      ],
+      "partially_implemented": [],
+      "not_implemented": [],
+      "score": 100.0
+    },
+    "admin_panel": {
+      "implemented": [
+        "dashboard",
+        "kpis",
+        "inventory_management",
+        "assemblies",
+        "financial_management",
+        "pqr_system"
+      ],
+      "partially_implemented": [],
+      "not_implemented": [],
+      "score": 100.0
+    },
+    "resident_panel": {
+      "implemented": [],
+      "partially_implemented": [],
+      "not_implemented": [
+        "personal_dashboard",
+        "payment_status",
+        "service_reservations",
+        "assembly_participation",
+        "pqr_creation"
+      ],
+      "score": 0.0
+    },
+    "reception_panel": {
+      "implemented": [],
+      "partially_implemented": [],
+      "not_implemented": [
+        "visitor_management",
+        "correspondence_control",
+        "virtual_intercom",
+        "incident_reports",
+        "digital_minutes"
+      ],
+      "score": 0.0
+    },
+    "app_admin_panel": {
+      "implemented": [],
+      "partially_implemented": [],
+      "not_implemented": [
+        "tenant_management",
+        "revenue_tracking",
+        "usage_monitoring",
+        "license_management"
+      ],
+      "score": 0.0
+    },
+    "multi_tenant": {
+      "implemented": [],
+      "partially_implemented": [],
+      "not_implemented": [
+        "schema_based",
+        "data_isolation",
+        "export_import"
+      ],
+      "score": 0.0
+    },
+    "freemium_model": {
+      "implemented": [],
+      "partially_implemented": [],
+      "not_implemented": [
+        "basic_plan",
+        "standard_plan",
+        "premium_plan",
+        "usage_limits"
+      ],
+      "score": 0.0
+    }
+  },
+  "ui_ux_evaluation": {
+    "tailwind_usage": true,
+    "shadcn_components": true,
+    "responsive_design": true,
+    "dark_mode_support": true,
+    "accessibility_features": false,
+    "component_structure": {
+      "ui_components": [
+        "alert.tsx",
+        "avatar.tsx",
+        "badge.tsx",
+        "button.tsx",
+        "calendar.tsx",
+        "card.tsx",
+        "checkbox.tsx",
+        "data-table.tsx",
+        "date-picker.tsx",
+        "dialog.tsx",
+        "index.ts",
+        "input.tsx",
+        "label.tsx",
+        "popover.tsx",
+        "progress.tsx",
+        "scroll-area.tsx",
+        "section-card.tsx",
+        "select.tsx",
+        "skeleton.tsx",
+        "table.tsx",
+        "tabs.tsx",
+        "textarea.tsx",
+        "toast.tsx",
+        "use-toast.tsx"
+      ]
+    },
+    "design_system_compliance": 0
+  },
+  "security_compliance": {
+    "authentication_security": {
+      "bcrypt_usage": true,
+      "jwt_implementation": true,
+      "input_validation": true,
+      "csrf_protection": true,
+      "rate_limiting": true
+    },
+    "data_protection": {},
+    "input_validation": {},
+    "api_security": {},
+    "security_score": 0,
+    "vulnerabilities": [],
+    "recommendations": []
+  },
+  "performance_analysis": {},
+  "deployment_readiness": {},
+  "business_model_implementation": {
+    "freemium_plans": {
+      "basic": true,
+      "standard": true,
+      "premium": true,
+      "freemium": true,
+      "subscription": true
+    },
+    "pricing_structure": {
+      "payment": true,
+      "billing": true,
+      "price": true,
+      "stripe": true
+    },
+    "usage_limitations": {},
+    "payment_integration": {},
+    "subscription_management": {},
+    "implementation_score": 0
+  },
+  "code_quality_armonia": {},
+  "missing_requirements": {
+    "critical_missing": [
+      "Next.js 15.3.3+",
+      "PostgreSQL 17.5+",
+      "Multi-tenant architecture",
+      "Admin dashboard",
+      "Resident portal",
+      "Reception portal"
+    ],
+    "important_missing": [
+      "Shadcn/UI",
+      "Landing page",
+      "PQR system",
+      "Assembly management",
+      "Financial management"
+    ],
+    "nice_to_have_missing": [],
+    "implementation_priority": {}
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "Implementar: Next.js 15.3.3+",
+      "Implementar: PostgreSQL 17.5+",
+      "Implementar: Multi-tenant architecture",
+      "Implementar: Admin dashboard",
+      "Implementar: Resident portal",
+      "Implementar: Reception portal"
+    ],
+    "short_term_improvements": [],
+    "long_term_enhancements": [],
+    "architecture_suggestions": [],
+    "performance_optimizations": [],
+    "security_enhancements": []
+  }
+}
