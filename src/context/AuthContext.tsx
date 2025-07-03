@@ -193,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.user.role === 'RECEPTION') {
         router.push('/reception');
       } else if (data.user.role === 'ADMIN') {
-        router.push('/dashboard');
+        router.push('/admin');
       } else if (data.user.role === 'RESIDENT') {
         router.push('/dashboard');
       } else {

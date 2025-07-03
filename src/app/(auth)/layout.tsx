@@ -27,8 +27,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
     if (!loading) {
       if (!isLoggedIn) {
-        console.log('[AuthLayout] No autenticado, redirigiendo a login');
-        router.push(ROUTES.LOGIN);
+        console.log('[AuthLayout] No autenticado, redirigiendo a portal selector');
+        router.push(ROUTES.PORTAL_SELECTOR);
       } else {
         console.log('[AuthLayout] Autenticado, mostrando layout');
         setIsLoading(false);
