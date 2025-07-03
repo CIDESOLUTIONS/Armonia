@@ -15,6 +15,10 @@ export default function Dashboard() {
     }
   }, [router]);
 
+  const navigateToModule = (path: string) => {
+    router.push(path);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow">
@@ -41,7 +45,10 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* Gestión de Propiedades */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+              onClick={() => navigateToModule('/admin/properties')}
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -64,7 +71,10 @@ export default function Dashboard() {
             </div>
 
             {/* Gestión de Residentes */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+              onClick={() => navigateToModule('/admin/residents')}
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -87,7 +97,10 @@ export default function Dashboard() {
             </div>
 
             {/* Administración Financiera */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+              onClick={() => navigateToModule('/admin/finance')}
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -110,7 +123,10 @@ export default function Dashboard() {
             </div>
 
             {/* Gestión de Asambleas */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+              onClick={() => navigateToModule('/admin/assemblies')}
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -133,7 +149,10 @@ export default function Dashboard() {
             </div>
 
             {/* Control de Seguridad */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+              onClick={() => navigateToModule('/admin/security')}
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -156,7 +175,10 @@ export default function Dashboard() {
             </div>
 
             {/* Configuración */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+              onClick={() => navigateToModule('/admin/settings')}
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
