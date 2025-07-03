@@ -22,8 +22,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   useEffect(() => {
+    console.log('[AuthLayout] useEffect ejecutado');
     console.log('[AuthLayout] Estado de autenticación:', isLoggedIn);
     console.log('[AuthLayout] Estado de carga:', loading);
+    console.log('[AuthLayout] URL actual:', window.location.pathname);
 
     if (!loading) {
       if (!isLoggedIn) {
@@ -33,6 +35,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         console.log('[AuthLayout] Autenticado, mostrando layout');
         setIsLoading(false);
       }
+    } else {
+      console.log('[AuthLayout] Aún cargando, esperando...');
     }
   }, [isLoggedIn, loading, router]);
 
