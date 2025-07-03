@@ -41,10 +41,7 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
     // Si no se proporciona complexId ni schemaName, buscar usuario sin filtro de complejo
     
     const user = await prisma.user.findFirst({
-      where: whereClause,
-      include: {
-        complex: true // Incluir información del complejo
-      }
+      where: whereClause
     });
     
     console.log(`[LOGIN] Usuario encontrado:`, !!user);
@@ -68,7 +65,7 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
       );
     }
 
-    console.log(`[LOGIN] Login exitoso para: ${email}, rol: ${user.role}, complejo: ${user.complex?.name}`);
+    console.log(`[LOGIN] Login exitoso para: ${email}, rol: ${user.role}`);
     
     const payload = {
       id: user.id,
@@ -76,8 +73,6 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
       role: user.role,
       name: user.name,
       complexId: user.complexId,
-      complexName: user.complex?.name,
-      schemaName: user.complex?.schemaName,
       isGlobalAdmin: user.role === 'ADMIN',
       isReception: user.role === 'RECEPTION',
       isComplexAdmin: user.role === 'COMPLEX_ADMIN',

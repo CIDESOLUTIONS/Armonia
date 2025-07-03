@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { PrismaClient } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth';
-
-const prisma = new PrismaClient();
 
 // Esquema de validación para el registro de conjunto residencial
 const RegisterComplexSchema = z.object({
@@ -29,6 +27,7 @@ const RegisterComplexSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const prisma = getPrisma();
     const body = await request.json();
     
     // Validar datos de entrada

@@ -113,7 +113,7 @@ export async function PUT(request: Request) { // Agregué ': Request' para tipad
     const tenant = await prismaGlobal.tenant.findUnique({ where: { id: parseInt(tenantId) } });
     if (!tenant) return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 });
 
-    const prisma = getPrismaClient(tenant.schemaName);
+    const prisma = getPrisma();
     const { id } = data;
     const complex = await prisma.residentialComplex.findUnique({ where: { id: data.complexId } });
     if (!complex) throw new Error('Conjunto residencial no encontrado');
