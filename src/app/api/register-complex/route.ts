@@ -284,7 +284,7 @@ export async function POST(req: Request) {
       // Si no podemos contar, asumimos que es el primero
     }
     
-    const _schemaName = `tenant_cj${String(complexCount + 1).padStart(4, '0')}`;
+    const schemaName = `tenant_cj${String(complexCount + 1).padStart(4, '0')}`;
     console.log('[API Register-Complex] SchemaName generado:', schemaName);
 
     // Prepare propertyTypes as proper JSONB
@@ -350,7 +350,7 @@ export async function POST(req: Request) {
       // Crear el usuario administrador en el esquema 'armonia'
       console.log('[API Register-Complex] Creando usuario administrador...');
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      const _user = await prisma.$queryRawUnsafe(
+      const user = await prisma.$queryRawUnsafe(
         `INSERT INTO "armonia"."User" (
           email, name, password, "complexId", role, "createdAt", "updatedAt"
         ) VALUES ($1, $2, $3, $4, 'COMPLEX_ADMIN', NOW(), NOW()) RETURNING *`,

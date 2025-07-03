@@ -485,15 +485,10 @@ export default function RegisterComplex() {
       }
       
       // Registro exitoso
-      alert(`${t.successMessage}`);
+      alert('¡Conjunto registrado exitosamente! Ahora puede iniciar sesión.');
       
-      // Limpiar datos almacenados en localStorage
-      localStorage.removeItem("complexFormData");
-      localStorage.removeItem("selectedPlan");
-      localStorage.removeItem("paymentCompleted");
-      localStorage.removeItem("transactionId");
-      localStorage.removeItem("tempComplexId");
-      router.push(ROUTES.PORTAL_SELECTOR);
+      // Redirigir al portal selector
+      router.push('/portal-selector');
     } catch (err: unknown) {
       console.error('Error de registro:', err);
       setError(err.message || 'Ocurrió un error durante el registro. Por favor, inténtelo de nuevo.');

@@ -200,12 +200,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Redirección según el rol del usuario
       if (data.user.role === 'RECEPTION') {
         router.push('/(reception)');
-      } else if (data.user.role === 'ADMIN') {
-        router.push('/(admin)/admin-dashboard');
+      } else if (data.user.role === 'COMPLEX_ADMIN') {
+        router.push('/admin/admin-dashboard');
       } else if (data.user.role === 'RESIDENT') {
-        router.push('/(resident)/dashboard');
+        router.push('/resident');
       } else {
-        router.push('/dashboard');
+        router.push('/admin/admin-dashboard');
       }
     } catch (err) {
       console.error('[AuthContext] Error en login:', err);
