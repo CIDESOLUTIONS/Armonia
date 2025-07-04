@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { UserPlus, Package, ShieldAlert, Calendar, Clock, AlertCircle, AlertTriangle, CheckCircle, Search, Info, ArrowRight, LogOut } from 'lucide-react';
 import NotificationCenterThemed from '@/components/communications/NotificationCenterThemed';
-import { useRealTimeCommunication } from '@/lib/communications/real-time-context';
+// import { useRealTimeCommunication } from '@/lib/communications/real-time-context';
 import { translate, Language, ThemeMode } from '@/lib/communications/theme-config';
 
 interface Visitor {
