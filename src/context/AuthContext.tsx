@@ -199,13 +199,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Redirección según el rol del usuario
       if (data.user.role === 'RECEPTION') {
-        router.push('/reception');
-      } else if (data.user.role === 'ADMIN') {
-        router.push('/admin');
+        router.push('/reception-dashboard');
+      } else if (data.user.role === 'COMPLEX_ADMIN') {
+        router.push('/admin/admin-dashboard');
       } else if (data.user.role === 'RESIDENT') {
-        router.push('/dashboard');
+        router.push('/resident-dashboard');
       } else {
-        router.push('/dashboard');
+        router.push('/admin/admin-dashboard');
       }
     } catch (err) {
       console.error('[AuthContext] Error en login:', err);

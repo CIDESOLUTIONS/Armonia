@@ -404,7 +404,7 @@ export default function RegisterComplex() {
 
   // Actualizamos para conectar con el API y procesar la respuesta
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, _setError] = useState("");
+  const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -479,22 +479,16 @@ export default function RegisterComplex() {
       });
       
       const data = await response.json();
-      const _data = await response.json();
       
       if (!response.ok) {
         throw new Error(data.message || 'Error al registrar el conjunto');
       }
       
       // Registro exitoso
-      alert(`${t.successMessage}`);
+      alert('¡Conjunto registrado exitosamente! Ahora puede iniciar sesión.');
       
-      // Limpiar datos almacenados en localStorage
-      localStorage.removeItem("complexFormData");
-      localStorage.removeItem("selectedPlan");
-      localStorage.removeItem("paymentCompleted");
-      localStorage.removeItem("transactionId");
-      localStorage.removeItem("tempComplexId");
-      router.push(ROUTES.PORTAL_SELECTOR);
+      // Redirigir al portal selector
+      router.push('/portal-selector');
     } catch (err: unknown) {
       console.error('Error de registro:', err);
       setError(err.message || 'Ocurrió un error durante el registro. Por favor, inténtelo de nuevo.');

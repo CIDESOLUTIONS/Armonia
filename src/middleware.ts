@@ -15,6 +15,7 @@ const publicRoutes = [
   '/api/auth/register',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/register-complex',
   '/api/health',
   '/api/test-db',
   '/api/test-register',

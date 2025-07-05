@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2025-07-03T09:52:25.040912",
+    "timestamp": "2025-07-03T16:18:28.635762",
     "project_path": "C:\\Users\\meciz\\Documents\\armonia",
     "evaluator_version": "2.0.0-armonia-specialized",
     "specifications_version": "v15"
@@ -55,16 +55,16 @@
               "(public)",
               "(reception)",
               "(resident)",
+              "admin",
               "api",
-              "dashboard",
               "favicon.ico",
               "globals.css",
               "layout.tsx"
             ],
             "missing_items": [],
             "extra_items": [
+              "admin",
               "api",
-              "dashboard",
               "favicon.ico",
               "globals.css",
               "layout.tsx"
@@ -299,7 +299,11 @@
               "Especificaciones_Tecnicas_Armonia_Ver.15.pdf",
               "implementacion_validadores_zod_documentacion.md",
               "old",
-              "refactorizacion_endpoints_inseguros.md"
+              "refactorizacion_endpoints_inseguros.md",
+              "reporte_correcciones_sistematicas_final.md",
+              "reporte_fase1_autenticacion.md",
+              "reporte_flujo_completo_final.md",
+              "reporte_tarea_principal_final.md"
             ],
             "missing_items": [
               "README.md",
@@ -311,7 +315,11 @@
               "Especificaciones_Tecnicas_Armonia_Ver.15.pdf",
               "implementacion_validadores_zod_documentacion.md",
               "old",
-              "refactorizacion_endpoints_inseguros.md"
+              "refactorizacion_endpoints_inseguros.md",
+              "reporte_correcciones_sistematicas_final.md",
+              "reporte_fase1_autenticacion.md",
+              "reporte_flujo_completo_final.md",
+              "reporte_tarea_principal_final.md"
             ]
           }
         }

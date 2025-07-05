@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && next build",
-    "start": "next start",
+    "start": "node server.js",
     "lint": "eslint . --config eslint.config.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
