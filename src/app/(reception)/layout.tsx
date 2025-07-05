@@ -1,6 +1,5 @@
 // src/app/(reception)/layout.tsx
 import { Metadata } from 'next';
-import { RealTimeCommunicationProvider } from '@/lib/communications/real-time-context';
 
 export const metadata: Metadata = {
   title: 'Recepción - Armonía',
@@ -13,10 +12,8 @@ export default function ReceptionLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RealTimeCommunicationProvider>
-      <div className="reception-portal">
-        {children}
-      </div>
-    </RealTimeCommunicationProvider>
+    <div className="reception-portal">
+      {children}
+    </div>
   );
 }

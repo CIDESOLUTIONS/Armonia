@@ -117,6 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             const parsedUser = JSON.parse(userData);
             
+            // Establecer token inmediatamente
+            setToken(storedToken);
+            
             // Verificar que el usuario tenga todos los campos necesarios
             if (!parsedUser.id || !parsedUser.email || !parsedUser.role) {
               console.error('[AuthContext] Datos de usuario incompletos');
