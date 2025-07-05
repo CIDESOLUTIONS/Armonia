@@ -8,48 +8,18 @@ import * as bcrypt from "bcrypt";
 
 async function loginHandler(validatedData: LoginRequest, req: Request) {
   try {
-    const { email, password, complexId, schemaName } = validatedData;
-    console.log(`[LOGIN] Intento de login para: ${email} en complejo: ${complexId || schemaName}`);
+    const { email, password } = validatedData;
+    console.log(`[LOGIN] Intento de login para: ${email}`);
 
     const prisma = getPrisma();
     
-    // Construir la consulta con filtro multi-tenant
-    const whereClause: any = {
-      email: email,
-      active: true
-    };
+    // Buscar usuario directamente en esquema armonia
+    const user = await prisma.$queryRawUnsafe(
+      `SELECT * FROM "armonia"."User" WHERE email = $1 AND active = true`,
+      email
+    );
 
-    // Si se proporciona complexId, usarlo directamente
-    if (complexId) {
-      whereClause.complexId = complexId;
-    } else if (schemaName) {
-      // Si se proporciona schemaName, primero buscar el complex
-      const complex = await prisma.residentialComplex.findUnique({
-        where: { schemaName: schemaName }
-      });
-      
-      if (!complex) {
-        console.log(`[LOGIN] Complejo no encontrado: ${schemaName}`);
-        return NextResponse.json(
-          { message: "Complejo residencial no encontrado" },
-          { status: 404 }
-        );
-      }
-      
-      whereClause.complexId = complex.id;
-    }
-    // Si no se proporciona complexId ni schemaName, buscar usuario sin filtro de complejo
-    
-    const user = await prisma.user.findFirst({
-      where: whereClause,
-      include: {
-        complex: true // Incluir información del complejo
-      }
-    });
-    
-    console.log(`[LOGIN] Usuario encontrado:`, !!user);
-
-    if (!user) {
+    if (!user || user.length === 0) {
       console.log(`[LOGIN] Usuario no encontrado: ${email}`);
       return NextResponse.json(
         { message: "Credenciales inválidas" },
@@ -57,10 +27,14 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
       );
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log(`[LOGIN] Contraseña válida:`, passwordMatch);
-    
-    if (!passwordMatch) {
+    const userData = user[0];
+    console.log(`[LOGIN] Usuario encontrado:`, userData.email);
+
+    // Verificar contraseña
+    const isValidPassword = await bcrypt.compare(password, userData.password);
+    console.log(`[LOGIN] Contraseña válida:`, isValidPassword);
+
+    if (!isValidPassword) {
       console.log(`[LOGIN] Contraseña incorrecta para: ${email}`);
       return NextResponse.json(
         { message: "Credenciales inválidas" },
@@ -68,33 +42,27 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
       );
     }
 
-    console.log(`[LOGIN] Login exitoso para: ${email}, rol: ${user.role}, complejo: ${user.complex?.name}`);
-    
+    // Generar token
     const payload = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-      complexId: user.complexId,
-      complexName: user.complex?.name,
-      schemaName: user.complex?.schemaName,
-      isGlobalAdmin: user.role === 'ADMIN',
-      isReception: user.role === 'RECEPTION',
-      isComplexAdmin: user.role === 'COMPLEX_ADMIN',
-      isResident: user.role === 'RESIDENT'
+      id: userData.id,
+      email: userData.email,
+      role: userData.role,
+      name: userData.name,
+      complexId: userData.complexId,
+      isComplexAdmin: userData.role === 'COMPLEX_ADMIN'
     };
 
     const token = await generateToken(payload);
-    
-    console.log(`[LOGIN] Token generado para: ${email}`);
-    
-    return NextResponse.json({ 
-      token, 
-      user: payload 
+    console.log(`[LOGIN] Login exitoso para: ${email}`);
+
+    return NextResponse.json({
+      message: "Login exitoso",
+      token,
+      user: payload
     });
 
   } catch (error) {
-    console.error('[LOGIN] Error en API:', error);
+    console.error('[LOGIN] Error:', error);
     return NextResponse.json(
       { message: "Error interno del servidor" },
       { status: 500 }
@@ -102,6 +70,5 @@ async function loginHandler(validatedData: LoginRequest, req: Request) {
   }
 }
 
-// Exportar el handler con validación
 export const POST = withValidation(LoginSchema, loginHandler);
 
