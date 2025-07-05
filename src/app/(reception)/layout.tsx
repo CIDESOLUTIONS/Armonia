@@ -1,5 +1,6 @@
 // src/app/(reception)/layout.tsx
 import { Metadata } from 'next';
+import ReceptionSidebar from '@/components/reception/layout/ReceptionSidebar';
 
 export const metadata: Metadata = {
   title: 'Recepción - Armonía',
@@ -12,8 +13,11 @@ export default function ReceptionLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="reception-portal">
-      {children}
+    <div className="flex h-screen bg-gray-50">
+      <ReceptionSidebar />
+      <main className="flex-1 overflow-auto">
+        {children}
+      </main>
     </div>
   );
 }
