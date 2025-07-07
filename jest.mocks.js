@@ -291,8 +291,10 @@ const mockPrismaClient = createPrismaClientMock({
 });
 
 // Configurar mock para getSchemaFromRequest
-jest.mock('./src/lib/prisma', () => ({
-  getSchemaFromRequest: jest.fn().mockReturnValue(mockPrismaClient)
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  getPrisma: () => mockPrisma,
+  default: () => mockPrisma, // Mock the default export as well
 }));
 
 // Configuración global para pruebas

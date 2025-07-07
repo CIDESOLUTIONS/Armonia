@@ -1,7 +1,11 @@
-import { Loading as UILoading } from '@/components/ui/loading';
+import React from 'react';
 
-export function Loading(props: unknown) {
-  return <UILoading {...props} />;
+export function Loading() {
+  return (
+    <div data-testid="loading-spinner">
+      <p>Loading...</p>
+    </div>
+  );
 }
 
 export default Loading;
