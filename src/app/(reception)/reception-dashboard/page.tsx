@@ -75,7 +75,7 @@ export default function ReceptionDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { notifications, unreadNotificationsCount } = useRealTimeCommunication();
+  // const { notifications, unreadNotificationsCount } = useRealTimeCommunication();
 
   // Datos de ejemplo para desarrollo y pruebas
   const mockData: DashboardData = {
