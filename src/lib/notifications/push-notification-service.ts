@@ -53,6 +53,424 @@ export interface NotificationResponse {
   errors?: Array<{
     token: string;
     error: string;
-  }>;\n}
+  }>;
+}
 
-/**\n * Servicio principal para gestión de notificaciones push\n */\nexport class PushNotificationService {\n  private static instance: PushNotificationService;\n  private isInitialized = false;\n  private fcmEnabled = false;\n\n  private constructor() {}\n\n  static getInstance(): PushNotificationService {\n    if (!PushNotificationService.instance) {\n      PushNotificationService.instance = new PushNotificationService();\n    }\n    return PushNotificationService.instance;\n  }\n\n  /**\n   * Inicializa el servicio FCM\n   */\n  async initialize(): Promise<void> {\n    try {\n      // Verificar si las credenciales de Firebase están configuradas\n      if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY) {\n        console.warn('[PUSH] Firebase no configurado - funcionando en modo simulación');\n        this.fcmEnabled = false;\n        this.isInitialized = true;\n        return;\n      }\n\n      // En producción aquí iría la inicialización real de Firebase Admin SDK\n      // const admin = require('firebase-admin');\n      // if (!admin.apps.length) {\n      //   admin.initializeApp({\n      //     credential: admin.credential.cert({\n      //       projectId: process.env.FIREBASE_PROJECT_ID,\n      //       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\\\n/g, '\\n'),\n      //       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,\n      //     }),\n      //   });\n      // }\n\n      this.fcmEnabled = true;\n      this.isInitialized = true;\n      console.log('[PUSH] Servicio de notificaciones inicializado');\n    } catch (error) {\n      console.error('[PUSH] Error inicializando servicio:', error);\n      this.fcmEnabled = false;\n      this.isInitialized = true; // Continuar en modo simulación\n    }\n  }\n\n  /**\n   * Envía notificación push\n   */\n  async sendNotification(request: SendNotificationRequest): Promise<NotificationResponse> {\n    if (!this.isInitialized) {\n      await this.initialize();\n    }\n\n    try {\n      // Validar request\n      this.validateRequest(request);\n\n      // Obtener tokens de dispositivos\n      const tokens = await this.resolveTargetTokens(request.target);\n      \n      if (tokens.length === 0) {\n        return {\n          success: false,\n          errors: [{ token: 'none', error: 'No se encontraron dispositivos de destino' }]\n        };\n      }\n\n      // Si está programada, delegar al scheduler\n      if (request.scheduleAt) {\n        return this.scheduleNotification(request, tokens);\n      }\n\n      // Enviar inmediatamente\n      return this.sendImmediateNotification(request, tokens);\n\n    } catch (error) {\n      console.error('[PUSH] Error enviando notificación:', error);\n      return {\n        success: false,\n        errors: [{ token: 'unknown', error: error instanceof Error ? error.message : 'Error desconocido' }]\n      };\n    }\n  }\n\n  /**\n   * Envía notificación inmediata\n   */\n  private async sendImmediateNotification(\n    request: SendNotificationRequest,\n    tokens: string[]\n  ): Promise<NotificationResponse> {\n    if (!this.fcmEnabled) {\n      // Modo simulación para desarrollo\n      console.log('[PUSH SIMULACIÓN] Enviando notificación:', {\n        title: request.payload.title,\n        body: request.payload.body,\n        targets: tokens.length,\n        complexId: request.complexId\n      });\n      \n      // Registrar en base de datos\n      await this.logNotification(request, tokens, 'simulated');\n      \n      return {\n        success: true,\n        messageId: `sim_${Date.now()}`,\n        successCount: tokens.length,\n        failureCount: 0\n      };\n    }\n\n    // En producción, aquí iría el envío real con Firebase Admin SDK\n    // const admin = require('firebase-admin');\n    // const messaging = admin.messaging();\n    // \n    // const message = {\n    //   notification: {\n    //     title: request.payload.title,\n    //     body: request.payload.body,\n    //     icon: request.payload.icon,\n    //     image: request.payload.image,\n    //   },\n    //   data: request.payload.data || {},\n    //   tokens: tokens,\n    //   android: {\n    //     priority: request.options?.priority || 'normal',\n    //     ttl: request.options?.timeToLive || 3600000, // 1 hora por defecto\n    //   },\n    //   webpush: {\n    //     notification: {\n    //       icon: request.payload.icon,\n    //       badge: request.payload.badge,\n    //       actions: request.payload.actions,\n    //       requireInteraction: request.options?.requireInteraction,\n    //       silent: request.options?.silent,\n    //       tag: request.options?.tag,\n    //     },\n    //     fcmOptions: {\n    //       link: request.options?.clickAction,\n    //     },\n    //   },\n    // };\n    //\n    // const response = await messaging.sendEachForMulticast(message);\n    \n    // Simular respuesta exitosa para desarrollo\n    await this.logNotification(request, tokens, 'sent');\n    \n    return {\n      success: true,\n      messageId: `fcm_${Date.now()}`,\n      successCount: tokens.length,\n      failureCount: 0\n    };\n  }\n\n  /**\n   * Programa notificación para envío posterior\n   */\n  private async scheduleNotification(\n    request: SendNotificationRequest,\n    tokens: string[]\n  ): Promise<NotificationResponse> {\n    // Aquí se integraría con un sistema de cola/scheduler\n    // Por ahora, registraremos en BD para procesamiento posterior\n    \n    await this.logNotification(request, tokens, 'scheduled');\n    \n    console.log('[PUSH] Notificación programada para:', request.scheduleAt);\n    \n    return {\n      success: true,\n      messageId: `scheduled_${Date.now()}`,\n      successCount: 0, // Aún no enviado\n      failureCount: 0\n    };\n  }\n\n  /**\n   * Resuelve tokens de dispositivos basado en el target\n   */\n  private async resolveTargetTokens(target: NotificationTarget): Promise<string[]> {\n    const { getPrisma } = await import('@/lib/prisma');\n    const prisma = getPrisma();\n    \n    let tokens: string[] = [];\n\n    try {\n      // Si se proporcionan tokens directamente\n      if (target.deviceTokens) {\n        return target.deviceTokens;\n      }\n\n      // Si es por tópico (grupos)\n      if (target.topic) {\n        // En FCM real, se manejaría con topics\n        // Por ahora, simular con tokens de usuarios del complejo\n        const users = await prisma.user.findMany({\n          where: {\n            complexId: target.complexId\n          },\n          select: {\n            deviceTokens: true\n          }\n        });\n        \n        tokens = users.flatMap(user => user.deviceTokens || []);\n      }\n      // Si es por usuario específico\n      else if (target.userId) {\n        const user = await prisma.user.findUnique({\n          where: { id: target.userId },\n          select: { deviceTokens: true }\n        });\n        \n        tokens = user?.deviceTokens || [];\n      }\n      // Si es por múltiples usuarios\n      else if (target.userIds) {\n        const users = await prisma.user.findMany({\n          where: {\n            id: { in: target.userIds }\n          },\n          select: {\n            deviceTokens: true\n          }\n        });\n        \n        tokens = users.flatMap(user => user.deviceTokens || []);\n      }\n      // Si es por rol\n      else if (target.role) {\n        const users = await prisma.user.findMany({\n          where: {\n            role: target.role,\n            ...(target.complexId && { complexId: target.complexId })\n          },\n          select: {\n            deviceTokens: true\n          }\n        });\n        \n        tokens = users.flatMap(user => user.deviceTokens || []);\n      }\n      // Si es por complejo\n      else if (target.complexId) {\n        const users = await prisma.user.findMany({\n          where: {\n            complexId: target.complexId\n          },\n          select: {\n            deviceTokens: true\n          }\n        });\n        \n        tokens = users.flatMap(user => user.deviceTokens || []);\n      }\n\n      // Filtrar tokens válidos y únicos\n      return [...new Set(tokens.filter(token => token && token.length > 0))];\n      \n    } catch (error) {\n      console.error('[PUSH] Error resolviendo tokens:', error);\n      return [];\n    }\n  }\n\n  /**\n   * Registra la notificación en base de datos\n   */\n  private async logNotification(\n    request: SendNotificationRequest,\n    tokens: string[],\n    status: 'sent' | 'scheduled' | 'simulated' | 'failed'\n  ): Promise<void> {\n    try {\n      const { getPrisma } = await import('@/lib/prisma');\n      const prisma = getPrisma();\n      \n      // Aquí se registraría en una tabla de notificaciones\n      // Por ahora, usar console.log para tracking\n      const logData = {\n        complexId: request.complexId,\n        title: request.payload.title,\n        body: request.payload.body,\n        targetCount: tokens.length,\n        status,\n        scheduledAt: request.scheduleAt,\n        createdAt: new Date()\n      };\n      \n      console.log('[PUSH LOG]', logData);\n      \n      // En futuras iteraciones, crear tabla notifications_log\n      // await prisma.notificationLog.create({ data: logData });\n      \n    } catch (error) {\n      console.error('[PUSH] Error registrando notificación:', error);\n    }\n  }\n\n  /**\n   * Valida el request de notificación\n   */\n  private validateRequest(request: SendNotificationRequest): void {\n    if (!request.payload.title || !request.payload.body) {\n      throw new Error('Título y cuerpo son requeridos');\n    }\n    \n    if (!request.complexId) {\n      throw new Error('Complex ID es requerido');\n    }\n    \n    if (!request.target || Object.keys(request.target).length === 0) {\n      throw new Error('Target de notificación es requerido');\n    }\n  }\n\n  /**\n   * Suscribe dispositivo a un tópico\n   */\n  async subscribeToTopic(tokens: string[], topic: string): Promise<boolean> {\n    if (!this.fcmEnabled) {\n      console.log(`[PUSH SIMULACIÓN] Suscribiendo ${tokens.length} dispositivos al tópico: ${topic}`);\n      return true;\n    }\n\n    // En producción:\n    // const admin = require('firebase-admin');\n    // const messaging = admin.messaging();\n    // await messaging.subscribeToTopic(tokens, topic);\n    \n    return true;\n  }\n\n  /**\n   * Desuscribe dispositivo de un tópico\n   */\n  async unsubscribeFromTopic(tokens: string[], topic: string): Promise<boolean> {\n    if (!this.fcmEnabled) {\n      console.log(`[PUSH SIMULACIÓN] Desuscribiendo ${tokens.length} dispositivos del tópico: ${topic}`);\n      return true;\n    }\n\n    // En producción:\n    // const admin = require('firebase-admin');\n    // const messaging = admin.messaging();\n    // await messaging.unsubscribeFromTopic(tokens, topic);\n    \n    return true;\n  }\n\n  /**\n   * Envía notificación de tipo específico con plantillas predefinidas\n   */\n  async sendTemplateNotification(\n    type: 'payment_reminder' | 'assembly_invitation' | 'incident_update' | 'pqr_response' | 'general_announcement',\n    data: Record<string, any>,\n    target: NotificationTarget\n  ): Promise<NotificationResponse> {\n    const templates = {\n      payment_reminder: {\n        title: '💰 Recordatorio de Pago',\n        body: `Tu cuota de ${data.amount} vence el ${data.dueDate}`,\n        icon: '/icons/payment.png'\n      },\n      assembly_invitation: {\n        title: '📋 Invitación a Asamblea',\n        body: `Asamblea programada para ${data.date} - ${data.topic}`,\n        icon: '/icons/assembly.png'\n      },\n      incident_update: {\n        title: '🚨 Actualización de Incidente',\n        body: `Incidente #${data.incidentId}: ${data.status}`,\n        icon: '/icons/incident.png'\n      },\n      pqr_response: {\n        title: '💬 Respuesta a tu PQR',\n        body: `Tu solicitud #${data.pqrId} ha sido ${data.status}`,\n        icon: '/icons/pqr.png'\n      },\n      general_announcement: {\n        title: `📢 ${data.title}`,\n        body: data.message,\n        icon: '/icons/announcement.png'\n      }\n    };\n\n    const template = templates[type];\n    if (!template) {\n      throw new Error(`Plantilla de notificación '${type}' no encontrada`);\n    }\n\n    return this.sendNotification({\n      payload: {\n        ...template,\n        data: { ...data, notificationType: type }\n      },\n      target,\n      complexId: target.complexId || data.complexId,\n      options: {\n        priority: 'high',\n        requireInteraction: true,\n        clickAction: `/dashboard/${type.split('_')[0]}`\n      }\n    });\n  }\n}\n\n// Instancia singleton\nexport const pushNotificationService = PushNotificationService.getInstance();\n
+/**
+ * Servicio principal para gestión de notificaciones push
+ */
+export class PushNotificationService {
+  private static instance: PushNotificationService;
+  private isInitialized = false;
+  private fcmEnabled = false;
+
+  private constructor() {}
+
+  static getInstance(): PushNotificationService {
+    if (!PushNotificationService.instance) {
+      PushNotificationService.instance = new PushNotificationService();
+    }
+    return PushNotificationService.instance;
+  }
+
+  /**
+   * Inicializa el servicio FCM
+   */
+  async initialize(): Promise<void> {
+    try {
+      // Verificar si las credenciales de Firebase están configuradas
+      if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY) {
+        console.warn('[PUSH] Firebase no configurado - funcionando en modo simulación');
+        this.fcmEnabled = false;
+        this.isInitialized = true;
+        return;
+      }
+
+      // En producción aquí iría la inicialización real de Firebase Admin SDK
+      // const admin = require('firebase-admin');
+      // if (!admin.apps.length) {
+      //   admin.initializeApp({
+      //     credential: admin.credential.cert({
+      //       projectId: process.env.FIREBASE_PROJECT_ID,
+      //       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      //       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      //     }),
+      //   });
+      // }
+
+      this.fcmEnabled = true;
+      this.isInitialized = true;
+      console.log('[PUSH] Servicio de notificaciones inicializado');
+    } catch (error) {
+      console.error('[PUSH] Error inicializando servicio:', error);
+      this.fcmEnabled = false;
+      this.isInitialized = true; // Continuar en modo simulación
+    }
+  }
+
+  /**
+   * Envía notificación push
+   */
+  async sendNotification(request: SendNotificationRequest): Promise<NotificationResponse> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    try {
+      // Validar request
+      this.validateRequest(request);
+
+      // Obtener tokens de dispositivos
+      const tokens = await this.resolveTargetTokens(request.target);
+      
+      if (tokens.length === 0) {
+        return {
+          success: false,
+          errors: [{ token: 'none', error: 'No se encontraron dispositivos de destino' }]
+        };
+      }
+
+      // Si está programada, delegar al scheduler
+      if (request.scheduleAt) {
+        return this.scheduleNotification(request, tokens);
+      }
+
+      // Enviar inmediatamente
+      return this.sendImmediateNotification(request, tokens);
+
+    } catch (error) {
+      console.error('[PUSH] Error enviando notificación:', error);
+      return {
+        success: false,
+        errors: [{ token: 'unknown', error: error instanceof Error ? error.message : 'Error desconocido' }]
+      };
+    }
+  }
+
+  /**
+   * Envía notificación inmediata
+   */
+  private async sendImmediateNotification(
+    request: SendNotificationRequest,
+    tokens: string[]
+  ): Promise<NotificationResponse> {
+    if (!this.fcmEnabled) {
+      // Modo simulación para desarrollo
+      console.log('[PUSH SIMULACIÓN] Enviando notificación:', {
+        title: request.payload.title,
+        body: request.payload.body,
+        targets: tokens.length,
+        complexId: request.complexId
+      });
+      
+      // Registrar en base de datos
+      await this.logNotification(request, tokens, 'simulated');
+      
+      return {
+        success: true,
+        messageId: `sim_${Date.now()}`,
+        successCount: tokens.length,
+        failureCount: 0
+      };
+    }
+
+    // En producción, aquí iría el envío real con Firebase Admin SDK
+    // const admin = require('firebase-admin');
+    // const messaging = admin.messaging();
+    // 
+    // const message = {
+    //   notification: {
+    //     title: request.payload.title,
+    //     body: request.payload.body,
+    //     icon: request.payload.icon,
+    //     image: request.payload.image,
+    //   },
+    //   data: request.payload.data || {},
+    //   tokens: tokens,
+    //   android: {
+    //     priority: request.options?.priority || 'normal',
+    //     ttl: request.options?.timeToLive || 3600000, // 1 hora por defecto
+    //   },
+    //   webpush: {
+    //     notification: {
+    //       icon: request.payload.icon,
+    //       badge: request.payload.badge,
+    //       actions: request.payload.actions,
+    //       requireInteraction: request.options?.requireInteraction,
+    //       silent: request.options?.silent,
+    //       tag: request.options?.tag,
+    //     },
+    //     fcmOptions: {
+    //       link: request.options?.clickAction,
+    //     },
+    //   },
+    // };
+    //
+    // const response = await messaging.sendEachForMulticast(message);
+    
+    // Simular respuesta exitosa para desarrollo
+    await this.logNotification(request, tokens, 'sent');
+    
+    return {
+      success: true,
+      messageId: `fcm_${Date.now()}`,
+      successCount: tokens.length,
+      failureCount: 0
+    };
+  }
+
+  /**
+   * Programa notificación para envío posterior
+   */
+  private async scheduleNotification(
+    request: SendNotificationRequest,
+    tokens: string[]
+  ): Promise<NotificationResponse> {
+    // Aquí se integraría con un sistema de cola/scheduler
+    // Por ahora, registraremos en BD para procesamiento posterior
+    
+    await this.logNotification(request, tokens, 'scheduled');
+    
+    console.log('[PUSH] Notificación programada para:', request.scheduleAt);
+    
+    return {
+      success: true,
+      messageId: `scheduled_${Date.now()}`,
+      successCount: 0, // Aún no enviado
+      failureCount: 0
+    };
+  }
+
+  /**
+   * Resuelve tokens de dispositivos basado en el target
+   */
+  private async resolveTargetTokens(target: NotificationTarget): Promise<string[]> {
+    const { getPrisma } = await import('@/lib/prisma');
+    const prisma = getPrisma();
+    
+    let tokens: string[] = [];
+
+    try {
+      // Si se proporcionan tokens directamente
+      if (target.deviceTokens) {
+        return target.deviceTokens;
+      }
+
+      // Si es por tópico (grupos)
+      if (target.topic) {
+        // En FCM real, se manejaría con topics
+        // Por ahora, simular con tokens de usuarios del complejo
+        const users = await prisma.user.findMany({
+          where: {
+            complexId: target.complexId
+          },
+          select: {
+            deviceTokens: true
+          }
+        });
+        
+        tokens = users.flatMap(user => user.deviceTokens || []);
+      }
+      // Si es por usuario específico
+      else if (target.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: target.userId },
+          select: { deviceTokens: true }
+        });
+        
+        tokens = user?.deviceTokens || [];
+      }
+      // Si es por múltiples usuarios
+      else if (target.userIds) {
+        const users = await prisma.user.findMany({
+          where: {
+            id: { in: target.userIds }
+          },
+          select: {
+            deviceTokens: true
+          }
+        });
+        
+        tokens = users.flatMap(user => user.deviceTokens || []);
+      }
+      // Si es por rol
+      else if (target.role) {
+        const users = await prisma.user.findMany({
+          where: {
+            role: target.role,
+            ...(target.complexId && { complexId: target.complexId })
+          },
+          select: {
+            deviceTokens: true
+          }
+        });
+        
+        tokens = users.flatMap(user => user.deviceTokens || []);
+      }
+      // Si es por complejo
+      else if (target.complexId) {
+        const users = await prisma.user.findMany({
+          where: {
+            complexId: target.complexId
+          },
+          select: {
+            deviceTokens: true
+          }
+        });
+        
+        tokens = users.flatMap(user => user.deviceTokens || []);
+      }
+
+      // Filtrar tokens válidos y únicos
+      return [...new Set(tokens.filter(token => token && token.length > 0))];
+      
+    } catch (error) {
+      console.error('[PUSH] Error resolviendo tokens:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Registra la notificación en base de datos
+   */
+  private async logNotification(
+    request: SendNotificationRequest,
+    tokens: string[],
+    status: 'sent' | 'scheduled' | 'simulated' | 'failed'
+  ): Promise<void> {
+    try {
+      const { getPrisma } = await import('@/lib/prisma');
+      const prisma = getPrisma();
+      
+      // Aquí se registraría en una tabla de notificaciones
+      // Por ahora, usar console.log para tracking
+      const logData = {
+        complexId: request.complexId,
+        title: request.payload.title,
+        body: request.payload.body,
+        targetCount: tokens.length,
+        status,
+        scheduledAt: request.scheduleAt,
+        createdAt: new Date()
+      };
+      
+      console.log('[PUSH LOG]', logData);
+      
+      // En futuras iteraciones, crear tabla notifications_log
+      // await prisma.notificationLog.create({ data: logData });
+      
+    } catch (error) {
+      console.error('[PUSH] Error registrando notificación:', error);
+    }
+  }
+
+  /**
+   * Valida el request de notificación
+   */
+  private validateRequest(request: SendNotificationRequest): void {
+    if (!request.payload.title || !request.payload.body) {
+      throw new Error('Título y cuerpo son requeridos');
+    }
+    
+    if (!request.complexId) {
+      throw new Error('Complex ID es requerido');
+    }
+    
+    if (!request.target || Object.keys(request.target).length === 0) {
+      throw new Error('Target de notificación es requerido');
+    }
+  }
+
+  /**
+   * Suscribe dispositivo a un tópico
+   */
+  async subscribeToTopic(tokens: string[], topic: string): Promise<boolean> {
+    if (!this.fcmEnabled) {
+      console.log(`[PUSH SIMULACIÓN] Suscribiendo ${tokens.length} dispositivos al tópico: ${topic}`);
+      return true;
+    }
+
+    // En producción:
+    // const admin = require('firebase-admin');
+    // const messaging = admin.messaging();
+    // await messaging.subscribeToTopic(tokens, topic);
+    
+    return true;
+  }
+
+  /**
+   * Desuscribe dispositivo de un tópico
+   */
+  async unsubscribeFromTopic(tokens: string[], topic: string): Promise<boolean> {
+    if (!this.fcmEnabled) {
+      console.log(`[PUSH SIMULACIÓN] Desuscribiendo ${tokens.length} dispositivos del tópico: ${topic}`);
+      return true;
+    }
+
+    // En producción:
+    // const admin = require('firebase-admin');
+    // const messaging = admin.messaging();
+    // await messaging.unsubscribeFromTopic(tokens, topic);
+    
+    return true;
+  }
+
+  /**
+   * Envía notificación de tipo específico con plantillas predefinidas
+   */
+  async sendTemplateNotification(
+    type: 'payment_reminder' | 'assembly_invitation' | 'incident_update' | 'pqr_response' | 'general_announcement',
+    data: Record<string, any>,
+    target: NotificationTarget
+  ): Promise<NotificationResponse> {
+    const templates = {
+      payment_reminder: {
+        title: '💰 Recordatorio de Pago',
+        body: `Tu cuota de ${data.amount} vence el ${data.dueDate}`,
+        icon: '/icons/payment.png'
+      },
+      assembly_invitation: {
+        title: '📋 Invitación a Asamblea',
+        body: `Asamblea programada para ${data.date} - ${data.topic}`,
+        icon: '/icons/assembly.png'
+      },
+      incident_update: {
+        title: '🚨 Actualización de Incidente',
+        body: `Incidente #${data.incidentId}: ${data.status}`,
+        icon: '/icons/incident.png'
+      },
+      pqr_response: {
+        title: '💬 Respuesta a tu PQR',
+        body: `Tu solicitud #${data.pqrId} ha sido ${data.status}`,
+        icon: '/icons/pqr.png'
+      },
+      general_announcement: {
+        title: `📢 ${data.title}`,
+        body: data.message,
+        icon: '/icons/announcement.png'
+      }
+    };
+
+    const template = templates[type];
+    if (!template) {
+      throw new Error(`Plantilla de notificación '${type}' no encontrada`);
+    }
+
+    return this.sendNotification({
+      payload: {
+        ...template,
+        data: { ...data, notificationType: type }
+      },
+      target,
+      complexId: target.complexId || data.complexId,
+      options: {
+        priority: 'high',
+        requireInteraction: true,
+        clickAction: `/dashboard/${type.split('_')[0]}`
+      }
+    });
+  }
+}
+
+// Instancia singleton
+export const pushNotificationService = PushNotificationService.getInstance();

@@ -1,0 +1,180 @@
+Gemini CLI
+prompt
+ estas ubicado en el directorio raíz del proyecto llamado armonía, es el desarrollo de una aplicación para ser usada en  web y móvil, las especificaciones técnicas  se encuentran ubicadas en la carpeta docs, revisa en profundidad las especificaciones y compara con los desarrollos que se encuentra en este directorio del proyecto armonía. genera un resumen técnico y funcional  de lo que entendiste, revisa lo que se debe ajustar, si se requiere desarrollar se debe buscar primero en la carpeta .git debido a que mucho código fue elaborado pero su pudo haber descartado por error, si definitivamente no esta, se debe desarrollar teniendo en cuenta las especificaciones y el estilo que se viene manejando, luego se debe realizar las pruebas individuales y luego las pruebas e2e, luego se debe preparar para el despliegue en producción. por ultimo, genera un plan de ajuste con todas las tareas detalladas que se deban realizar para alcanzar el objetivo,  si es necesario incluye la reorganizar de la estructura del proyecto para que sea organizado y eficiente y eliminar funciones como flask sino se necesitan. debes mantener en la memoria el plan para       ejecutarlo todo.  cada vez que hagas un arreglo avísame para sincronizar con el repositorio de GitHub.
+
+resumen
+ Resumen Técnico y Funcional del Proyecto "Armonía"
+
+
+  Descripción General:
+  "Armonía" es una plataforma integral web y móvil para la gestión de conjuntos residenciales, diseñada para conectar administradores, residentes y personal de recepción/vigilancia. Su objetivo es transformar la gestión comunitaria a través de la tecnología, ofreciendo una solución robusta, escalable y de alto rendimiento.
+
+  Modelo de Negocio:
+  Implementa un modelo "Freemium" con planes Básico (gratuito hasta 25 unidades), Estándar (pago, hasta 40 unidades, con funcionalidades avanzadas como gestión de asambleas y PQR) y Premium
+  (pago, hasta 90 unidades, con módulo financiero avanzado, personalización y API).
+
+  Objetivos Clave:
+   * Proporcionar una plataforma moderna, intuitiva y responsiva.
+   * Mejorar la comunicación entre todos los actores.
+   * Simplificar procesos administrativos y reducir el trabajo manual.
+   * Integrar todos los aspectos de la administración en una única plataforma.
+   * Promover la transparencia y facilitar el acceso a la información.
+   * Ofrecer escalabilidad técnica para diversos tamaños de conjuntos.
+
+  Stack Tecnológico:
+   * Frontend: Next.js 15.3.3+, React 19.1+, TypeScript, Tailwind CSS, Shadcn/UI.
+   * Backend: Next.js API Routes, Serverless Functions.
+   * Base de Datos: PostgreSQL 17.5+ (multi-tenant por esquemas tenant_cjXXXX).
+   * ORM: Prisma 6.5.0+.
+   * Autenticación: JWT, bcrypt.
+   * Validación: Zod.
+   * Gráficos: Recharts.
+   * Generación de PDFs: pdfkit.
+   * CI/CD: GitHub Actions, Vercel.
+   * Pruebas: Playwright.
+
+  Arquitectura del Sistema:
+   * Multi-tenant: Cada conjunto residencial tiene un esquema dedicado en PostgreSQL.
+   * Componentes: Capa de Presentación (Frontend con portales para diferentes roles), Capa de Aplicación (API RESTful, lógica de negocio modular), Capa de Datos (modelo relacional
+     optimizado).
+   * Diagrama Básico: Cliente Web/Móvil -> Next.js Frontend -> Next.js API Routes -> PostgreSQL.
+
+  Funcionalidades Principales:
+
+   1. Landing Page Comercial: Optimizada para SEO, con explicación de planes, formulario de registro, blog, testimonios y diseño atractivo.
+   2. Sistema de Autenticación y Autorización: Registro/login multi-rol (administrador, residente, recepción/vigilancia), recuperación de contraseña, JWT, autorización granular, protección
+      contra ataques comunes.
+   3. Menú de Control Global: Selector de idioma/moneda, modo oscuro/claro, selector de rol, notificaciones en tiempo real, barra de búsqueda global.
+   4. Panel Administrador del Conjunto:
+       * Dashboard: KPIs principales (propiedades, residentes, cartera, presupuesto, PQRs).
+       * Gestión de Inventario: Registro de conjunto, propiedades, propietarios, residentes, vehículos, mascotas, amenidades.
+       * Gestión de Asambleas: Programación, quórum, votaciones en línea, actas digitales.
+       * Gestión de Servicios Comunes: Reserva de amenidades, calendario, pagos.
+       * Gestión Financiera: Presupuestos, cuotas, pagos, recibos, integración con pasarelas.
+       * Sistema de PQR: Creación, seguimiento, categorización, notificaciones.
+       * Comunicaciones: Cartelera digital, mensajería (WhatsApp/Telegram), notificaciones, comunicados.
+       * Configuración: Información legal, personalización visual, APIs.
+   5. Panel de Usuario Residente: Dashboard personalizado (KPIs, cartera, pagos), consulta de estado de cuenta, reserva de servicios, participación en asambleas, creación de PQR.
+   6. Panel de Recepción y Vigilancia: Dashboard (visitantes, servicios en uso, alertas, cámaras), gestión de visitantes/proveedores, correspondencia, citofonía virtual, incidentes de
+      seguridad, minuta digital.
+   7. Panel Administrador de la Aplicación (Superadmin): Gestión de conjuntos, ingresos, monitoreo de uso, gestión de licencias, soporte, configuración global.
+
+  Modelo de Datos:
+  Entidades principales: Usuario, Conjunto Residencial, Propiedad, Residente, Propietario, Asamblea, Servicio, Cuota, Pago, PQR, Documento, Visita, Personal.
+
+
+  Interfaces de Usuario:
+   * Diseño limpio y moderno, usabilidad, paleta de colores (índigo, blanco), modo oscuro/claro, responsive.
+   * Componentes reutilizables con Shadcn/UI, accesibilidad (WCAG 2.1 AA).
+   * Plantillas de páginas con layouts específicos y navegación intuitiva.
+
+  Seguridad y Privacidad:
+  Encriptación de datos, protección contra ataques (CSRF, XSS, SQL Injection), rate limiting, validación de datos, auditoría, backups automáticos, cumplimiento de regulaciones de datos.
+
+
+  Pruebas y Calidad:
+  Pruebas unitarias, de integración, E2E (Playwright), rendimiento, compatibilidad. Revisión de código, análisis estático, monitoreo de errores.
+
+
+  Despliegue y Operaciones:
+  Infraestructura en la nube (AWS, Azure, GCP), arquitectura serverless, PostgreSQL gestionado, CDN, balanceador de carga. CI/CD con GitHub Actions, despliegue continuo, rollbacks.
+  Monitoreo de disponibilidad, alertas, dashboards.
+
+
+  Consideraciones Especiales:
+  Accesibilidad (WCAG 2.1 AA), Internacionalización (español, inglés, soporte para múltiples monedas), Escalabilidad (horizontal, optimización de DB, caché, lazy loading).
+
+
+  Convenciones de Codificación:
+   * Nomenclatura: PascalCase para componentes React, camelCase para funciones/variables, UPPER_SNAKE_CASE para constantes, PascalCase con prefijo I para interfaces, kebab-case para endpoints
+     API.
+   * Estructura de Portales: src/app/(admin)/, src/app/(resident)/, src/app/(reception)/, src/app/(public)/.
+   * Estilo de Código: TypeScript estricto, funciones arrow, React Hooks, documentación, componentes pequeños, Prettier y ESLint.
+
+
+
+ Plan de Ajuste Detallado
+
+  Este plan aborda las desviaciones y áreas de mejora identificadas, siguiendo el flujo de trabajo de búsqueda en .git, desarrollo, pruebas y preparación para despliegue.
+
+  Fase 1: Preparación y Correcciones Críticas
+
+   * Tarea 1.1: Verificar y Configurar Variables de Entorno:
+       * Asegurar que process.env.JWT_SECRET y process.env.DATABASE_URL estén correctamente configurados en el entorno de desarrollo y producción.
+       * Verificar otras variables de entorno relacionadas con servicios externos (email, etc.).
+   * Tarea 1.2: Revisar y Ajustar `src/lib/prisma.ts` (Ya Realizado):
+       * Confirmar que la corrección aplicada para getSchemaFromRequest y getSchemaFromReq funciona como se espera.
+       * Acción: Realizar una prueba unitaria simple para getSchemaFromRequest para verificar que el schemaName se aplica correctamente.
+   * Tarea 1.3: Revisar y Ajustar `src/app/api/complex/update/route.ts` (Ya Realizado):
+       * Confirmar que la corrección aplicada permite la actualización del complejo con autenticación JWT.
+       * Acción: Realizar una prueba de integración para esta API.
+
+ 
+ Fase 2: Implementación de Funcionalidades Críticas (Reemplazo de Mocks)
+
+   * Tarea 2.1: Implementar Generación Real de PDFs:
+       * Búsqueda en `.git`: Buscar en el historial de .git si existe alguna implementación previa de pdfGenerator.ts que no sea un mock o si hay código relacionado con jspdf que haya sido
+         descartado.
+           * Comando: git log --all --full-history -S"generatePDF" -- src/lib/pdf/pdfGenerator.ts
+           * Comando: git log --all --full-history -S"jspdf" -- src/lib/pdf/
+       * Desarrollo: Si no se encuentra una implementación funcional, integrar la lógica de receipt-service.ts en pdfGenerator.ts para que genere PDFs reales.
+       * Pruebas Unitarias: Crear o actualizar pruebas unitarias para pdfGenerator.ts y financialService.ts para verificar la generación de PDFs.
+   * Tarea 2.2: Integrar Servicios de Notificaciones Reales (Push, SMS, WhatsApp):
+       * Búsqueda en `.git`: Buscar en el historial si hay intentos previos de integración con servicios reales o configuraciones de API.
+           * Comando: git log --all --full-history -S"FCM" -- src/lib/communications/
+           * Comando: git log --all --full-history -S"Twilio" -- src/lib/communications/
+           * Comando: git log --all --full-history -S"Meta Business API" -- src/lib/communications/
+       * Desarrollo:
+           * Investigar y seleccionar proveedores de servicios (ej. Firebase Cloud Messaging para Push, Twilio para SMS/WhatsApp).
+           * Implementar la lógica de integración en push-notification-service.js, sms-service.js y whatsapp-service.js.
+           * Refactorización: Convertir estos archivos a TypeScript (.ts) para mejorar la calidad del código.
+       * Pruebas Unitarias/Integración: Crear pruebas para verificar el envío de notificaciones a través de los servicios reales.
+
+  
+Fase 3: Conexión de UI con Servicios y Refinamiento
+
+   * Tarea 3.1: Conectar Dashboards con Datos Reales:
+       * Acción: Modificar src/app/(admin)/admin-dashboard/page.tsx y src/app/(resident)/resident-dashboard/page.tsx para que obtengan datos de los servicios de API correspondientes (KPIs,
+         notificaciones, acciones rápidas, etc.) en lugar de usar datos estáticos.
+       * Pruebas de Integración: Verificar que los dashboards muestren la información correcta.
+   * Tarea 3.2: Revisar y Estandarizar el Uso de Prisma en Servicios:
+       * Acción: Asegurar que todos los servicios que interactúan con Prisma utilicen la función getSchemaFromRequest (o getPrisma para el esquema armonia) de src/lib/prisma.ts para
+         garantizar la correcta aplicación del multi-tenancy.
+       * Acción: Evaluar el uso de $queryRawUnsafe en financialService.ts y pqrAssignmentService.ts. Si es posible, refactorizar a métodos ORM de Prisma para mayor seguridad y mantenibilidad.
+         Si no, asegurar que las consultas estén parametrizadas para prevenir inyecciones SQL.
+   * Tarea 3.3: Refactorizar Inconsistencias de Lenguaje:
+       * Acción: Convertir todos los archivos .js en src/services/ y src/lib/communications/ a .ts para una base de código más consistente y tipada.
+
+
+  Fase 4: Pruebas y Calidad
+
+   * Tarea 4.1: Ejecutar Pruebas Unitarias:
+       * Acción: Identificar el comando para ejecutar pruebas unitarias (probablemente npm test o jest).
+       * Acción: Ejecutar las pruebas existentes y corregir cualquier fallo.
+       * Acción: Aumentar la cobertura de pruebas unitarias en los módulos críticos (autenticación, servicios financieros, PQR, asambleas).
+   * Tarea 4.2: Ejecutar Pruebas E2E (Playwright):
+       * Acción: Identificar el comando para ejecutar pruebas E2E (probablemente npx playwright test o npm run cypress:run si Cypress también se usa).
+       * Acción: Ejecutar las pruebas E2E existentes y corregir cualquier fallo.
+       * Acción: Desarrollar nuevas pruebas E2E para cubrir las funcionalidades recién implementadas o corregidas.
+   * Tarea 4.3: Ejecutar Herramientas de Calidad de Código:
+       * Acción: Ejecutar el linter (npm run lint) y el type-checker (tsc --noEmit) para asegurar la calidad del código y la consistencia. Corregir todos los errores y advertencias.
+
+  Fase 5: Preparación para Despliegue en Producción
+
+   * Tarea 5.1: Optimización de Rendimiento:
+       * Acción: Revisar y optimizar consultas a la base de datos.
+       * Acción: Implementar estrategias de caché donde sea apropiado.
+       * Acción: Optimizar la carga de componentes y datos (lazy loading).
+   * Tarea 5.2: Configuración de CI/CD:
+       * Acción: Revisar los flujos de trabajo de GitHub Actions (.github/workflows/) para asegurar que incluyan pruebas, linting y despliegue automatizado.
+       * Acción: Configurar entornos de desarrollo, staging y producción.
+   * Tarea 5.3: Revisar Seguridad:
+       * Acción: Realizar una revisión de seguridad de las APIs y la autenticación.
+       * Acción: Asegurar que todas las entradas de usuario estén validadas y sanitizadas.
+   * Tarea 5.4: Documentación de Despliegue:
+       * Acción: Crear o actualizar la documentación de despliegue para producción, incluyendo requisitos de infraestructura y pasos.
+
+
+
+
+

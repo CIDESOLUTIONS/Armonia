@@ -30,19 +30,37 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
  * @returns Instancia de PrismaClient
  */
 export function getSchemaFromRequest(schema: string = 'public'): PrismaClient {
-  // En pruebas, simplemente devolvemos una nueva instancia de PrismaClient
-  // que ya estará mockeada por Jest
-  return getPrisma();
+  // Para entornos de producción, creamos una nueva instancia con el esquema especificado
+  // En desarrollo/pruebas, la instancia global puede ser mockeada o manejada de otra forma
+  if (process.env.NODE_ENV === 'production') {
+    return new PrismaClient({
+      datasources: {
+        db: {
+          url: `${process.env.DATABASE_URL}?schema=${schema}`
+        }
+      }
+    });
+  } else {
+    // En desarrollo, podemos usar la instancia global o una mockeada
+    // Asegúrate de que tu configuración de pruebas maneje esto adecuadamente
+    return prisma; // O una instancia mockeada si estás en un entorno de prueba
+  }
 }
 
 /**
  * Obtiene el esquema de base de datos a partir de un objeto de solicitud
- * @param req Objeto de solicitud
- * @returns Esquema de base de datos
+ * @param req Objeto de solicitud (NextRequest)
+ * @returns Esquema de base de datos o null si no se encuentra
  */
-export function getSchemaFromReq(req: any): string {
-  // En pruebas, simplemente devolvemos 'test_schema'
-  return 'test_schema';
+export function getSchemaFromReq(req: any): string | null {
+  // Asumimos que el schema viene en una cabecera 'X-Tenant-Schema'
+  const schemaName = req.headers.get('x-tenant-schema');
+  if (schemaName) {
+    return schemaName;
+  }
+  // Si no se encuentra en la cabecera, se podría buscar en el subdominio, etc.
+  // Por ahora, devolvemos null si no se encuentra
+  return null;
 }
 
 /**

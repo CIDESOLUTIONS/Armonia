@@ -1,19 +1,19 @@
 // C:\Users\meciz\Documents\armonia\frontend\src\app\api\complex\update\route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
 const prisma = getPrisma();
-// Variable JWT_SECRET eliminada por lint
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret'; // Asegúrate de que esta variable de entorno esté configurada
 
-export async function POST(_req: unknown) {
-  const _token = req.headers.get('Authorization')?.replace('Bearer ', '');
+export async function POST(req: NextRequest) {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '');
   if (!token) {
     return NextResponse.json({ message: 'No token provided' }, { status: 401 });
   }
 
   try {
-    // Variable decoded eliminada por lint complexId: number };
+    const decoded = jwt.verify(token, JWT_SECRET) as { complexId: number };
     console.log('[API Complex Update] Token decodificado:', decoded);
 
     const { name, address } = await req.json();
