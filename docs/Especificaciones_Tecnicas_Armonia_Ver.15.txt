@@ -1,0 +1,407 @@
+Proyecto Armonía
+Especificaciones Técnicas
+Sistema de Administración de Conjuntos Residenciales
+Introducción
+Descripción General:
+Armonía es una plataforma integral para la gestión de conjuntos residenciales, diseñada para facilitar la administración, comunicación y coordinación entre administradores, residentes y personal de recepción y vigilancia. La plataforma permite gestionar eficientemente todos los aspectos de la vida en comunidad, desde el inventario general del conjunto, administración de espacios y amenidades comunes, hasta la gestión de finanzas, asambleas, recepción, seguridad y solicitudes.
+
+Características Generales Solicitadas: 
+Transforma la Gestión Residencial a través de la Tecnología. Los desarrolladores, tienen en sus manos la oportunidad de crear una solución integral que revolucionará la administración de conjuntos residenciales. Armonía no es solo otra aplicación web/móvil; es un ecosistema tecnológico completo que conectará comunidades enteras.
+Su misión: Construir una plataforma robusta, escalable y de alto rendimiento que sirva simultáneamente a múltiples tipos de usuarios: empresas administradoras, administradores de conjuntos, residentes y personal de recepción/seguridad.
+
+El desafío técnico: Desarrollar una arquitectura que soporte:
+* Portal Público Inteligente: Landing page optimizada para SEO que convierta visitantes en usuarios, con UX/UI excepcional que comunique valor desde el primer segundo.
+* Motor de Gestión Integral: Sistema complejo de inventarios (propietarios, inmuebles, vehículos, mascotas) con relaciones de datos eficientes.
+* Módulo de Democracia Digital: Gestión de asambleas con votaciones en línea en tiempo real, cálculos automáticos de quórum y generación de reportes dinámicos.
+* Sistema Financiero Avanzado: Engine de facturación automatizada, gestión de presupuestos, generación de cuotas regulares y extraordinarias e integración con pasarelas de pago para los residentes. 
+* Dashboard Personalizado para Residentes: Portal intuitivo con gestión de pagos, registro de visitantes, reservas de espacios comunes, acceso a la citofonía virtual, participación en asambleas y centro de notificaciones de correspondencia y alertas. 
+* Sistema de Comunicación Integrado: Citofonía virtual vía WhatsApp/Telegram, correspondencia digital y alertas de seguridad.
+* Portal de Seguridad IoT -Ready: Integración con cámaras IP, gestión de accesos biométricos y minutas digitales
+* Este proyecto demanda excelencia técnica, arquitectura limpia, seguridad robusta y experiencia de usuario excepcional. Cada línea de código que escriban impactará directamente la calidad de vida de miles de familias.
+
+Modelo de Negocio Freemium: Implementar sistema de prueba gratuita (hasta 25 inmuebles/ por 2 meses) con escalabilidad automática a planes básico, estándar y premium.
+Plan Básico (Gratuito)
+* Hasta 25 unidades residenciales
+* Gestión de propiedades y residentes
+* Funcionalidad básica de comunicaciones (Citofonía Virtual mas Cartelera Digital)
+* Limitado a 1 año de históricos
+
+Plan Estándar ($USD 25/mes por conjunto) o Hasta 40 unidades residenciales
+* $USD 1/mes por unidad residencial adicional.
+* Todas las funcionalidades básicas
+* Gestión completa de asambleas y votaciones
+* Sistema de PQR avanzado
+* Históricos de hasta 3 años
+
+Plan Premium ($USD 50/mes por conjunto)
+* Hasta 90 Unidades residenciales
+* $USD 1/mes por unidad residencial adicional.
+* Todas las funcionalidades estándar
+* Módulo financiero avanzado con generación automática de recibos.
+* Personalización de la plataforma con logo y colores corporativos del conjunto residencial.
+* Históricos completos hasta 5 años. 
+* API para integración con otros sistemas
+* Soporte prioritario
+
+Objetivos del Proyecto
+* Proporcionar una plataforma moderna, intuitiva y completamente responsiva para la gestión eficiente de conjuntos residenciales.
+* Mejorar la comunicación entre administradores, residentes y personal.
+* Simplificar los procesos administrativos y reducir el trabajo manual.
+* Integrar todos los aspectos de la administración de conjuntos en una única plataforma.
+* Promover la transparencia en la gestión y facilitar el acceso a la información.
+* Ofrecer una escalabilidad técnica para soportar desde pequeños conjuntos hasta grandes urbanizaciones.
+
+Arquitectura del Sistema
+Stack Tecnológico
+* Frontend: Next.js 15.3.3 o superior, React 19.1 o superior, TypeScript, Tailwind CSS, Shadcn/UI
+* Backend : Next.js, API Routes, Serverless Functions
+* Base de Datos: PostgreSQL 17.5 o superior, con enfoque multi -tenant basado en esquemas
+* ORM: Prisma 6.5.0 o superior
+* Autenticación: JWT (JSON Web Tokens), bcrypt para el hash de contraseñas
+* Almacenamiento: PostgreSQL
+* Validación: Zod para validación de datos
+* Gráficos y Visualización: Recharts para gráficos y estadísticas
+* Generación de PDFs: pdfkit para reportes exportables
+* CI/CD: GitHub Actions, Vercel o similares
+* Pruebas: Playwright
+
+Arquitectura Multi -tenant
+Cada conjunto residencial tendrá un esquema dedicado en la base de datos PostgreSQL, siguiendo el formato tenant_cjXXXX donde XXXX es el ID del conjunto residencial con padding de ceros. La información de los conjuntos debe ser exportable e i importable desde un archivo .CSV.
+
+Componentes del Sistema
+* Capa de Presentación (Frontend)
+o Interfaces de usuario – Portales para diferentes roles (administrador, residente, Recepción/Vigilancia
+o Componentes reutilizables para garantizar consistencia
+o Diseño totalmente responsive (mobile -first)
+* Capa de Aplicación (Backend)
+o API RESTful para todas las operaciones
+o Lógica de negocio modular y extensible
+o Servicios para autenticación, autorización y gestión de sesiones
+o Servicios para notificaciones y comunicaciones
+* Capa de Datos
+o Modelo de datos relacional optimizado
+o Estrategia multi -tenant por esquemas
+o Índices y optimizaciones para consultas frecuentes
+o Validación y consistencia de datos
+
+Diagrama de Arquitectura
+
+[Cliente Web/Móvil] 	[Next.js Frontend] 		[Next.js API Routes] 	 [PostgreSQL]
+			[Servicio de Autenticación]	[Servicio de Notificación]
+
+
+Funcionalidades Principales
+
+Landing Page Comercial
+* Presentación del producto con enfoque en beneficios e invitación a la acción de registro del conjunto residencial
+* Explicación clara de los tres planes disponibles (Básico, Estándar, Premium)
+* Formulario básico de registro del conjunto para ser completado en la funcionalidad de inventario.
+* Blog con contenido útil sobre administración de conjuntos.
+* Testimonios y casos de éxito.
+* Diseño atractivo con imágenes alusivas a las funcionalidades principales (asambleas digitales, carteleras digitales, comunicaciones vía mensajería, manejo de amenidades entre otros) y diferenciadoras y un video motivador con estas funcionalidades, con animaciones sutiles y micro interacciones
+* Optimizada para SEO
+
+Sistema de Autenticación y Autorización
+* Registro y login multi rol (administrador, residente, personal de recepción /Vigilancia)
+* Recuperación y cambio de contraseña seguro
+* Autenticación basada en JWT
+* Autorización granular basada en roles y permisos
+* Protección contra ataques comunes (CSRF, XSS, inyección SQL)
+* Sesiones con tiempo de expiración configurable
+* Historial de inicios de sesión
+
+Menú de Control Global - header
+* Selector de idioma (español, inglés)
+* Selector de moneda (COP, USD, EUR)
+* Modo oscuro/claro
+* Selector de rol (administrador, Residente, Recepción/Vigilancia)
+* Notificaciones en tiempo real
+* Barra de búsqueda global
+* Accesos rápidos personalizables
+
+Panel Administrador del Conjunto
+Dashboard personalizado del administrador: 
+
+KPIs principales
+o Total de propiedades (casas/apartamentos) o Total residentes registrados
+o Estado de cartera general y por propiedad 
+o Ejecución del presupuesto del conjunto
+o Ejecución de proyectos aprobados
+o Porcentaje de uso de servicios comunes
+o Gráficas de tendencias y comparativas
+o PQRs, total, atendidos, pendientes
+
+Gestión de Inventario
+o Registro del conjunto residencial (complemento a la información del formulario de inscripción)
+o Registro y seguimiento de propiedades
+o Registro de propietarios y residentes
+o Gestión de vehículos y parqueaderos
+o Registro y control de mascotas
+o Registro de Amenidades e inventario de bienes comunes
+
+Gestión de Asambleas
+o Programación y convocatoria de asambleas ordinarias y extraordinarias
+o Verificación de quórum y asistencia
+o Sistema de votaciones en línea con resultados en tiempo real
+o Elaboración y firma digital de actas
+o Repositorio de actas y documentos
+
+Gestión de Servicios Comunes
+o Reserva de amenidades y áreas comunes (salón comunal, BBQ, zonas deportivas)
+o Calendario de disponibilidad por cada uno de los servicios
+o Estadísticas de uso de servicios
+o Reglas y requisitos para cada servicio
+o Sistema de reservas con confirmación automática y pagos del servicio
+
+Gestión Financiera
+o Presupuestos anuales y seguimiento
+o Generación de cuotas ordinarias y extraordinarias
+o Registro y seguimiento de pagos
+o Generación de recibos y facturas
+o Reportes financieros personalizables
+o Integración con pasarelas de pago
+o Recordatorios automáticos de pagos pendientes
+
+Sistema de PQR (Peticiones, Quejas y Reclamos)
+o Creación y seguimiento de solicitudes de residentes
+o Categorización por tipo y prioridad
+o Asignación de responsables
+o Notificaciones de estado
+o Historial de comunicaciones
+o Indicadores de tiempo de respuesta
+o Encuestas de satisfacción
+
+Comunicaciones
+o Cartelera Digital de anuncios
+o Mensajería Digital interna (Uso de WhatsApp o Telegram)
+o Notificaciones por correo electrónico y mensajería Digital
+o Comunicados oficiales (correo y Mensajería)
+o Calendario de eventos comunitarios 
+
+Configuración
+o Información legal del conjunto
+o Logotipo y personalización visual
+o Datos bancarios y medios de pago
+o Certificaciones y documentos legales
+o Configuración de módulos y permisos
+o Configuración de APIs
+
+Panel de Usuario Residente (similar al administrador pero enfocado al residente y filtrado por el inmueble correspondiente)
+Dashboard con información relevante: 
+KPIs personalizados
+* Total residentes en la propiedad
+* Estado de cartera actual
+* Resumen de pagos del año en curso
+* Cuotas de administración
+* Cuotas Extraordinarias
+* Servicios adicionales
+* Gráfico de gastos mensuales
+* Próximos vencimientos
+* Uso de servicios comunes
+ 
+* PQRs de los residentes de su propiedad (todos, resuelto y pendientes)
+* Consulta de estado de cuenta
+* Historial de pagos realizados
+* Visualización de cuotas pendientes
+* Reserva de servicios comunes
+* Participación en asambleas virtuales
+* Creación y seguimiento de PQR
+* Directorio de residentes (opcional)
+* Notificaciones de eventos y comunicados
+
+Panel de Recepción y Vigilancia (Similar al del administrador, enfocado a los servicios de recepción, vigilancia, comunicaciones con residentes, seguridad de acceso, manejo de correspondencia y paquetería)
+
+Dashboard con información relevante: 
+KPIs personalizados con vista rápida de información crítica:
+* Visitantes actuales en el conjunto por inmueble
+* Servicios comunes en uso
+* Alertas pendientes
+* Estado de cámaras
+* Cantidad de novedades del turno anterior en la "minuta digital".
+
+PQRs asignados a recepción/y vigilancia
+Registro de visitantes y proveedores
+Gestión de correspondencia y paquetes de residentes
+Citofonía virtual para verificación de visitas (Uso de WhatsApp o Telegram)
+Registro de incidentes de seguridad
+Minuta Digital de novedades diarias
+* Alertas y notificaciones
+* Control de acceso a zonas restringidas
+* Reportes de vigilancia
+
+Panel Administrador de la Aplicación
+* Gestión de conjuntos residenciales (número de inscripciones por cada modelo freemium)
+* Ingresos mensuales y acumulados anuales 
+* Monitoreo de uso y rendimiento
+* Estadísticas y métricas de uso
+* Gestión de licencias y planes
+* Soporte y asistencia técnica
+* Gestión comercial de clientes básico para que tomen el modelo estándar o premium.
+* Configuración global del sistema
+
+Modelo de Datos
+Entidades Principales
+* Usuario: Datos de acceso y permisos
+* Conjunto Residencial: Información básica del conjunto
+* Propiedad: Unidades habitacionales y comerciales
+* Residente: Habitantes del conjunto
+* Propietario: Dueños de propiedades
+* Asamblea: Reuniones de copropietarios
+* Servicio: Áreas, amenidades y servicios comunes
+* Cuota: Pagos ordinarios y extraordinarios
+* Pago: Registro de transacciones
+* PQR: Peticiones, quejas y reclamos
+* Documento: Archivos y documentos del conjunto
+* Visita: Registro de visitantes
+* Personal: Empleados y contratistas
+* Mas las necesarias para el buen funcionamiento de la solución Armonía.
+
+ Relaciones Clave
+* Un conjunto tiene muchas propiedades
+* Una propiedad pertenece a uno o varios propietarios
+* Una propiedad puede tener muchos residentes
+* Un usuario puede estar asociado a uno o más conjuntos
+* Un residente puede crear múltiples PQR
+* Un conjunto puede programar múltiples asambleas
+* Una propiedad tiene asociadas múltiples cuotas
+* Un servicio pertenece a un conjunto
+
+Interfaces de Usuario
+Diseño General
+* Diseño limpio y moderno con enfoque en usabilidad
+* Paleta de colores principal: Índigo (#4f46e5) y blanco (#ffffff)
+* Soporte para modo oscuro/claro
+* Interfaz responsive para todos los dispositivos
+* Tiempo de carga optimizado (LCP < 2.5s)
+* Animaciones sutiles para mejorar la experiencia
+
+Componentes UI Reutilizables
+* Sistema de diseño basado en Shadcn/UI
+* Componentes altamente personalizables
+* Consistencia visual en toda la plataforma
+* Accesibilidad (WCAG 2.1 AA)
+
+Plantillas de Páginas
+* Layouts específicos para cada tipo de panel
+* Patrones de navegación intuitivos
+* Breadcrumbs para facilitar la navegación
+* Organización jerárquica de la información
+* Componentes de carga y estados vacíos diseñados
+
+Seguridad y Privacidad
+
+Prácticas de Seguridad
+* Encriptación de datos sensibles de cada conjunto residencial
+* Protección contra ataques CSRF, XSS y SQL Injection
+* Rate limiting para prevenir ataques de fuerza bruta
+* Validación de datos en cliente y servidor
+* Auditoría de accesos y cambios
+* Backups automáticos diarios
+
+Privacidad de Datos
+* Cumplimiento con regulaciones de protección de datos
+* Políticas claras de privacidad y términos de uso
+* Opción de convertir datos a datos anónimos al eliminar cuentas
+* Exportación de datos personales
+* Consentimiento explícito para uso de cookies
+
+Pruebas funcionales
+Estrategia de Pruebas
+* Pruebas unitarias para componentes y flujos de servicios
+* Pruebas de integración para flujos principales
+* Pruebas E2E de las funcionalidades para cada portal
+* Pruebas de rendimiento y carga
+* Pruebas de compatibilidad con navegadores
+
+Control de Calidad
+* Revisión de código mediante pull requests
+* Análisis estático de código
+* Monitoreo de errores en producción
+* Retroalimentación continua de usuarios
+* Métricas de calidad (cobertura de pruebas, complejidad ciclomática)
+
+Despliegue y Operaciones
+Definiciones de Infraestructura (panel administrador de la aplicación)
+* Definiciones y guía de despliegue en la nube (AWS, Azure o GCP)
+* Arquitectura serverless donde sea posible
+* Base de datos PostgreSQL gestionada
+* CDN para activos estáticos
+* Balanceador de carga para alta disponibilidad
+
+CI/CD (panel administrador de la aplicación)
+* Integración continua con GitHub Actions
+* Despliegue continuo en entornos de desarrollo y pruebas
+* Despliegue controlado en producción
+* Rollbacks automatizados en caso de fallos
+* Entornos de desarrollo, staging y producción
+
+Monitoreo (panel administrador de la aplicación)
+* Monitoreo de disponibilidad y tiempos de respuesta
+* Alertas automáticas para incidentes
+* Dashboard de métricas operativas
+* Análisis de logs centralizados
+* Monitoreo de experiencia del usuario real
+
+Mejoras Continuas
+* Optimización de rendimiento
+* Mejoras de usabilidad basadas en feedback
+* Nuevas funcionalidades según necesidades del mercado
+* Expansión internacional con soporte multilenguaje
+* Integraciones con sistemas externos (contabilidad, bancos, etc.)
+
+Consideraciones Especiales
+Accesibilidad
+* Conformidad con WCAG 2.1 nivel AA
+* Soporte para lectores de pantalla
+* Navegación por teclado
+* Alto contraste y fuentes ajustables
+* Textos alternativos para imágenes
+
+Internacionalización
+* Soporte inicial para español e inglés
+* Estructura preparada para fácil expansión a otros idiomas
+* Formatos de fecha y número según localización
+* Soporte para múltiples monedas
+
+Escalabilidad
+* Arquitectura diseñada para escalar horizontalmente
+* Optimización de consultas a base de datos
+* Caché estratégica para datos frecuentemente accedidos
+* Lazy loading de componentes y datos
+* Particionamiento de base de datos para grandes volúmenes
+
+Conclusión
+El proyecto Armonía tiene un enfoque en usabilidad, rendimiento y escalabilidad. La plataforma está diseñada para satisfacer las necesidades de diversos tipos de conjuntos residenciales, desde pequeñas comunidades hasta grandes urbanizaciones, ofreciendo una solución integral para la gestión eficiente de todos los aspectos relacionados con la administración de propiedades horizontales.
+
+
+
+Ejemplo: 
+Convenciones de Codificación Nombrado
+- Archivos: PascalCase para componentes React (.tsx), camelCase para utilidades (.ts)
+- Funciones: camelCase (ej. getUserData)
+- Componentes React : PascalCase (ej. UserProfile)
+- Variables: camelCase (ej. userData)
+- Constantes: UPPER_SNAKE_CASE (ej. API_BASE_URL)
+- Interfaces/Types: PascalCase con prefijo I para interfaces (ej. IUserData)
+- Endpoints API: kebab -case (ej. /api/user -profile)
+
+Estructura de portales (Ejemplo) 
+src/app/ 
+??? (admin)/          # Portal de administración 
+??? (resident)/       # Portal de residentes
+??? (reception)/      # Portal de recepción ?   
+??? page.tsx      # Dashboard principal ?   
+??? visitors/     # Gestión de visitantes ?   
+??? packages/     # Control de correspondencia ?   
+??? incidents/    # Registro de incidentes ?   
+??? dashboard/    # Componentes del dashboard 
+??? (public)/         # Páginas públicas 
+       ??? (auth)/           # Solo autenticación y gestión dueño de la aplicación
+
+Ejemplo de Estilo de Código
+- Usar TypeScript con tipos estrictos
+- Preferir funciones arrow para componentes
+- Usar React Hooks para gestión de estado
+- Documentar funciones y componentes complejos
+- Mantener componentes pequeños y con responsabilidad única
+- Usar Prettier y ESLint para formateo y calidad de código. Fin de especificaciones.
