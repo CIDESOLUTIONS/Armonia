@@ -43,11 +43,9 @@ export interface AssignmentResult {
  */
 export class PQRAssignmentService {
   private prisma: PrismaClient;
-  private schema: string;
 
-  constructor(schema: string) {
+  constructor() {
     this.prisma = getPrisma();
-    this.schema = schema;
   }
 
   /**
@@ -99,21 +97,18 @@ export class PQRAssignmentService {
 
     try {
       // Obtener configuración de categorización
-      const settings = await this.prisma.$queryRaw`
-        SELECT * FROM "${this.schema}"."PQRSettings" LIMIT 1
-      `;
+      const settings = await this.prisma.pQRSettings.findFirst();
 
       // Si la categorización automática está desactivada, usar categoría por defecto
-      if (settings && settings[0] && !settings[0].autoCategorizeEnabled) {
+      if (settings && !settings.autoCategorizeEnabled) {
         return { category: PQRCategory.OTHER };
       }
 
       // Obtener reglas de categorización
-      const rules = await this.prisma.$queryRaw`
-        SELECT * FROM "${this.schema}"."PQRAssignmentRule" 
-        WHERE "isActive" = true 
-        ORDER BY "priority" ASC
-      `;
+      const rules = await this.prisma.pQRAssignmentRule.findMany({
+        where: { isActive: true },
+        orderBy: { priority: 'asc' },
+      });
 
       // Texto combinado para análisis
       const combinedText = `${pqrData.title} ${pqrData.description}`.toLowerCase();
@@ -128,8 +123,8 @@ export class PQRAssignmentService {
           
           if (matchesKeyword && rule.categories && rule.categories.length > 0) {
             return { 
-              category: rule.categories[0],
-              subcategory: this.determineSubcategory(combinedText, rule.categories[0])
+              category: rule.categories[0] as PQRCategory,
+              subcategory: this.determineSubcategory(combinedText, rule.categories[0] as PQRCategory)
             };
           }
         }
@@ -220,11 +215,13 @@ export class PQRAssignmentService {
 
     try {
       // Obtener reglas de priorización
-      const rules = await this.prisma.$queryRaw`
-        SELECT * FROM "${this.schema}"."PQRAssignmentRule" 
-        WHERE "isActive" = true AND "categories" @> ARRAY[${category}]::text[]
-        ORDER BY "priority" ASC
-      `;
+      const rules = await this.prisma.pQRAssignmentRule.findMany({
+        where: {
+          isActive: true,
+          categories: { has: category },
+        },
+        orderBy: { priority: 'asc' },
+      });
 
       // Texto combinado para análisis
       const combinedText = `${pqrData.title} ${pqrData.description}`.toLowerCase();
@@ -238,7 +235,7 @@ export class PQRAssignmentService {
           );
           
           if (matchesKeyword) {
-            return { priority: rule.setPriority };
+            return { priority: rule.setPriority as PQRPriority };
           }
         }
       }
@@ -298,22 +295,21 @@ export class PQRAssignmentService {
   }> {
     try {
       // Verificar si la asignación automática está habilitada
-      const settings = await this.prisma.$queryRaw`
-        SELECT * FROM "${this.schema}"."PQRSettings" LIMIT 1
-      `;
+      const settings = await this.prisma.pQRSettings.findFirst();
 
-      if (settings && settings[0] && !settings[0].autoAssignEnabled) {
+      if (settings && !settings.autoAssignEnabled) {
         return {}; // No asignar automáticamente
       }
 
       // Buscar reglas de asignación específicas
-      const rules = await this.prisma.$queryRaw`
-        SELECT * FROM "${this.schema}"."PQRAssignmentRule" 
-        WHERE "isActive" = true 
-        AND "categories" @> ARRAY[${category}]::text[]
-        AND "priorities" @> ARRAY[${priority}]::text[]
-        ORDER BY "priority" ASC
-      `;
+      const rules = await this.prisma.pQRAssignmentRule.findMany({
+        where: {
+          isActive: true,
+          categories: { has: category },
+          priorities: { has: priority },
+        },
+        orderBy: { priority: 'asc' },
+      });
 
       // Si hay reglas específicas, aplicar la primera que coincida
       if (rules && rules.length > 0) {
@@ -321,41 +317,41 @@ export class PQRAssignmentService {
         
         // Si la regla asigna a un equipo
         if (rule.assignToTeamId) {
-          const team = await this.prisma.$queryRaw`
-            SELECT * FROM "${this.schema}"."PQRTeam" 
-            WHERE "id" = ${rule.assignToTeamId} AND "isActive" = true
-          `;
+          const team = await this.prisma.pQRTeam.findUnique({
+            where: { id: rule.assignToTeamId, isActive: true },
+          });
           
-          if (team && team[0]) {
+          if (team) {
             // Asignar al equipo
             return {
-              assignedTeamId: team[0].id
+              assignedTeamId: team.id
             };
           }
         }
         
         // Si la regla asigna a un usuario específico
         if (rule.assignToUserId) {
-          const user = await this.prisma.$queryRaw`
-            SELECT * FROM "armonia"."User" WHERE "id" = ${rule.assignToUserId}
-          `;
+          const user = await this.prisma.user.findUnique({
+            where: { id: rule.assignToUserId },
+          });
           
-          if (user && user[0]) {
+          if (user) {
             return {
-              assignedToId: user[0].id,
-              assignedToName: user[0].name || 'Usuario ' + user[0].id,
-              assignedToRole: user[0].role
+              assignedToId: user.id,
+              assignedToName: user.name || 'Usuario ' + user.id,
+              assignedToRole: user.role
             };
           }
         }
       }
 
       // Si no hay reglas específicas o no se pudo asignar, buscar equipos por categoría
-      const teams = await this.prisma.$queryRaw`
-        SELECT * FROM "${this.schema}"."PQRTeam" 
-        WHERE "isActive" = true 
-        AND "categories" @> ARRAY[${category}]::text[]
-      `;
+      const teams = await this.prisma.pQRTeam.findMany({
+        where: {
+          isActive: true,
+          categories: { has: category },
+        },
+      });
 
       if (teams && teams.length > 0) {
         // Seleccionar equipo con menos carga o por rotación
@@ -366,12 +362,13 @@ export class PQRAssignmentService {
       }
 
       // Si no hay equipos específicos, buscar administradores
-      const admins = await this.prisma.$queryRaw`
-        SELECT * FROM "armonia"."User" 
-        WHERE "role" = 'COMPLEX_ADMIN' 
-        AND "complexId" = ${pqrData.complexId}
-        AND "active" = true
-      `;
+      const admins = await this.prisma.user.findMany({
+        where: {
+          role: 'COMPLEX_ADMIN',
+          complexId: pqrData.complexId,
+          active: true,
+        },
+      });
 
       if (admins && admins.length > 0) {
         // Seleccionar administrador con menos carga o por rotación
@@ -397,20 +394,25 @@ export class PQRAssignmentService {
   private async calculateDueDate(category: PQRCategory, priority: PQRPriority): Promise<Date | undefined> {
     try {
       // Buscar SLA específico para esta categoría y prioridad
-      const sla = await this.prisma.$queryRaw`
-        SELECT * FROM "${this.schema}"."PQRSLA" 
-        WHERE "isActive" = true 
-        AND ("category" = ${category} OR "category" IS NULL)
-        AND ("priority" = ${priority} OR "priority" IS NULL)
-        LIMIT 1
-      `;
+      const sla = await this.prisma.pQRSLA.findFirst({
+        where: {
+          isActive: true,
+          OR: [
+            { category },
+            { category: null },
+          ],
+          AND: [
+            { OR: [{ priority }, { priority: null }] },
+          ],
+        },
+      });
 
-      if (sla && sla[0]) {
+      if (sla) {
         const now = new Date();
-        const resolutionTime = sla[0].resolutionTime || 0; // Tiempo en minutos
+        const resolutionTime = sla.resolutionTime || 0; // Tiempo en minutos
         
         // Si solo aplica en horario laboral, calcular considerando días hábiles
-        if (sla[0].businessHoursOnly) {
+        if (sla.businessHoursOnly) {
           // Implementación simplificada: solo añadir tiempo en minutos
           // En una implementación real, se considerarían días hábiles y horario laboral
           return new Date(now.getTime() + resolutionTime * 60000);

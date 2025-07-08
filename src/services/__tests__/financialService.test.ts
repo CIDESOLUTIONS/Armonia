@@ -1,14 +1,14 @@
 // src/services/__tests__/financialService.test.ts
 import { FinancialService } from '../financialService';
 import { generatePDF } from '@/lib/pdf/pdfGenerator';
-import { sendEmail } from '@/lib/email/emailSender';
+import { sendEmail } from '@/lib/communications/email-service';
 
 // Mock de dependencias
 jest.mock('@/lib/pdf/pdfGenerator', () => ({
   generatePDF: jest.fn().mockResolvedValue('/uploads/receipts/test-receipt.pdf')
 }));
 
-jest.mock('@/lib/email/emailSender', () => ({
+jest.mock('@/lib/communications/email-service', () => ({
   sendEmail: jest.fn().mockResolvedValue({ success: true })
 }));
 

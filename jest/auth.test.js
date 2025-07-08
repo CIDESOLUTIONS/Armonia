@@ -25,6 +25,6 @@ describe('Auth Service', () => {
   });
   
   test('verifyToken debe rechazar si el token es inválido', async () => {
-    await expect(verifyToken('invalid-token')).rejects.toThrow('Token inválido o expirado');
+    await expect(verifyToken('invalid-token')).rejects.toThrow('Invalid token');
   });
 });

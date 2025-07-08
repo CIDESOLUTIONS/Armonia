@@ -1,8 +1,22 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CommonAreaReservation from '../CommonAreaReservation';
 import { SessionProvider } from 'next-auth/react';
+import { useReservationsWithPayments } from '@/hooks/useReservationsWithPayments';
+
+jest.mock('@/hooks/useReservationsWithPayments', () => ({
+  useReservationsWithPayments: jest.fn(() => ({
+    commonAreas: [],
+    userReservations: [],
+    myReservations: [], // Added this line
+    isLoading: false,
+    error: null,
+    fetchCommonAreas: jest.fn(),
+    fetchUserReservations: jest.fn(),
+    handleNewReservation: jest.fn(),
+    handlePaymentComplete: jest.fn(),
+  })),
+}));
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -17,6 +31,14 @@ jest.mock('next-auth/react', () => ({
     }
   })),
   SessionProvider: ({ children }) => <div>{children}</div>
+}));
+
+// Mock toast function
+const mockToast = jest.fn();
+jest.mock('@/components/ui/use-toast', () => ({
+  useToast: () => ({
+    toast: mockToast
+  })
 }));
 
 // Mock fetch
@@ -253,13 +275,6 @@ describe('CommonAreaReservation Component', () => {
   });
 
   it('shows error toast when API call fails', async () => {
-    // Mock toast function
-    const mockToast = jest.fn();
-    jest.mock('@/components/ui/use-toast', () => ({
-      useToast: () => ({
-        toast: mockToast
-      })
-    }));
     
     // Mock failed API call
     global.fetch.mockImplementationOnce(() => Promise.resolve({

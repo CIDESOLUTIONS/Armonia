@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import AssemblyAdvancedService from '../../services/assembly-advanced-service';
 import { WebSocketService } from '../../communications/websocket-service';
-import { ActivityLogger } from '../../logging/activity-logger';
+import { ActivityLogger } from '../../lib/logging/activity-logger';
 import { getPrisma } from '@/lib/prisma';
 
 // Mock de dependencias

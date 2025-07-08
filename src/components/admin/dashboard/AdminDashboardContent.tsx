@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { getDashboardStats, getRecentActivity } from '@/services/dashboardService';
 
 interface DashboardStats {
   totalProperties: number;
@@ -53,49 +54,11 @@ export function AdminDashboardContent() {
 
   const fetchDashboardData = async () => {
     try {
-      // Simular datos mientras se conecta con las APIs reales
-      const mockStats: DashboardStats = {
-        totalProperties: 120,
-        totalResidents: 340,
-        pendingPayments: 15,
-        totalRevenue: 45000000,
-        upcomingAssemblies: 2,
-        pendingPQRs: 8,
-        resolvedPQRs: 45,
-        commonAreaUsage: 78,
-        budgetExecution: 65,
-        activeProjects: 3
-      };
+      const fetchedStats = await getDashboardStats();
+      const fetchedActivity = await getRecentActivity();
 
-      const mockActivity: RecentActivity[] = [
-        {
-          id: '1',
-          type: 'payment',
-          title: 'Pago recibido',
-          description: 'Apartamento 301 - Cuota de administración',
-          timestamp: '2025-06-10T10:30:00Z',
-          status: 'success'
-        },
-        {
-          id: '2',
-          type: 'pqr',
-          title: 'Nueva PQR',
-          description: 'Queja sobre ruido en área común',
-          timestamp: '2025-06-10T09:15:00Z',
-          status: 'warning'
-        },
-        {
-          id: '3',
-          type: 'assembly',
-          title: 'Asamblea programada',
-          description: 'Asamblea ordinaria - 15 de junio',
-          timestamp: '2025-06-10T08:00:00Z',
-          status: 'info'
-        }
-      ];
-
-      setStats(mockStats);
-      setRecentActivity(mockActivity);
+      setStats(fetchedStats);
+      setRecentActivity(fetchedActivity);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -409,4 +372,6 @@ export function AdminDashboardContent() {
     </div>
   );
 }
+
+
 

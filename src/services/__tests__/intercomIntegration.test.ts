@@ -4,33 +4,8 @@ import { prisma } from '../../lib/prisma';
 import { VisitStatus, NotificationChannel, NotificationStatus, ResponseType } from '@prisma/client';
 
 // Mock de Prisma
-jest.mock('../../lib/prisma', () => ({
-  prisma: {
-    $transaction: jest.fn(async (callback) => callback({
-      visitor: {
-        findFirst: jest.fn(),
-        create: jest.fn()
-      },
-      visit: {
-        create: jest.fn(),
-        findUnique: jest.fn(),
-        update: jest.fn()
-      },
-      unit: {
-        findUnique: jest.fn()
-      },
-      userIntercomPreference: {
-        findUnique: jest.fn()
-      },
-      virtualIntercomNotification: {
-        create: jest.fn(),
-        update: jest.fn(),
-        findFirst: jest.fn()
-      },
-      intercomSettings: {
-        findFirst: jest.fn()
-      }
-    })),
+jest.mock('@prisma/client', () => {
+  const mockPrismaClient = {
     visitor: {
       findFirst: jest.fn(),
       create: jest.fn()
@@ -38,35 +13,55 @@ jest.mock('../../lib/prisma', () => ({
     visit: {
       create: jest.fn(),
       findUnique: jest.fn(),
-      update: jest.fn(),
-      findMany: jest.fn(),
-      count: jest.fn()
+      update: jest.fn()
     },
     unit: {
       findUnique: jest.fn()
     },
     userIntercomPreference: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      create: jest.fn()
+      findUnique: jest.fn()
     },
     virtualIntercomNotification: {
       create: jest.fn(),
       update: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn()
+      findFirst: jest.fn()
     },
     intercomSettings: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-      create: jest.fn()
+      findFirst: jest.fn()
+    }
+  };
+
+  return {
+    PrismaClient: jest.fn(() => mockPrismaClient),
+    VisitStatus: {
+      PENDING: 'PENDING',
+      APPROVED: 'APPROVED',
+      REJECTED: 'REJECTED',
+      IN_PROGRESS: 'IN_PROGRESS',
+      COMPLETED: 'COMPLETED',
+      CANCELLED: 'CANCELLED'
     },
-    intercomActivityLog: {
-      create: jest.fn()
+    NotificationChannel: {
+      WHATSAPP: 'WHATSAPP',
+      TELEGRAM: 'TELEGRAM',
+      EMAIL: 'EMAIL',
+      SMS: 'SMS'
     },
-    $disconnect: jest.fn()
-  }
-}));
+    NotificationStatus: {
+      PENDING: 'PENDING',
+      SENT: 'SENT',
+      DELIVERED: 'DELIVERED',
+      READ: 'READ',
+      RESPONDED: 'RESPONDED',
+      FAILED: 'FAILED'
+    },
+    ResponseType: {
+      APPROVE: 'APPROVE',
+      REJECT: 'REJECT',
+      UNKNOWN: 'UNKNOWN'
+    }
+  };
+});
 
 // Mock de ActivityLogger
 jest.mock('../../lib/logging/activity-logger', () => ({

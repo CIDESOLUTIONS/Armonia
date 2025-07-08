@@ -4,6 +4,7 @@
 
 import { PQRAssignmentService } from '../pqrAssignmentService';
 import { PrismaClient, PQRCategory, PQRPriority } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
 // Mock de PrismaClient
 jest.mock('@prisma/client', () => {
@@ -16,6 +17,16 @@ jest.mock('@prisma/client', () => {
       update: jest.fn()
     },
     user: {
+      findUnique: jest.fn(),
+      findMany: jest.fn()
+    },
+    pQRSettings: {
+      findFirst: jest.fn()
+    },
+    pQRAssignmentRule: {
+      findMany: jest.fn()
+    },
+    pQRTeam: {
       findUnique: jest.fn(),
       findMany: jest.fn()
     }
@@ -38,10 +49,33 @@ jest.mock('@prisma/client', () => {
       LOW: 'LOW',
       MEDIUM: 'MEDIUM',
       HIGH: 'HIGH',
-      URGENT: 'URGENT'
+      URGENT: 'URGENT',
+      CRITICAL: 'CRITICAL'
     }
   };
 });
+
+jest.mock('@/lib/prisma', () => ({
+  getPrisma: jest.fn(() => ({
+    pQRSettings: {
+      findFirst: jest.fn(),
+    },
+    pQRAssignmentRule: {
+      findMany: jest.fn(),
+    },
+    pQRTeam: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+    },
+    user: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+    },
+    pQRSLA: {
+      findFirst: jest.fn(),
+    },
+  })),
+}));
 
 describe('PQRAssignmentService', () => {
   let service: PQRAssignmentService;
@@ -52,10 +86,10 @@ describe('PQRAssignmentService', () => {
     jest.clearAllMocks();
     
     // Crear instancia del servicio con schema de prueba
-    service = new PQRAssignmentService('test_schema');
+    service = new PQRAssignmentService();
     
     // Obtener la instancia de prisma para configurar mocks
-    prisma = (service as any).prisma;
+    prisma = getPrisma();
   });
   
   describe('processPQR', () => {

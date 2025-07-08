@@ -6,11 +6,11 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { getSchemaFromRequest } from '../../lib/prisma';
-import { sendEmail } from '../../lib/communications/email-service';
-import { sendPushNotification } from '../../lib/communications/push-notification-service';
-import { sendSMS } from '../../lib/communications/sms-service';
-import { PQRStatus, PQRNotificationTemplate } from '../../lib/constants/pqr-constants';
+import { getSchemaFromRequest } from '@/lib/prisma';
+import { sendEmail } from '@/lib/communications/email-service';
+import { sendPushNotification } from '@/lib/communications/push-notification-service';
+import { sendSMS } from '@/lib/communications/sms-service';
+import { PQRStatus, PQRNotificationTemplate } from '@/constants/pqr-constants';
 
 /**
  * Clase que implementa el servicio de notificaciones para PQRs
@@ -75,14 +75,16 @@ export class PQRNotificationService {
   ): Promise<boolean> {
     try {
       // Verificar si las notificaciones automáticas están habilitadas
-      const settings = await this.prisma.$queryRaw`
-        SELECT auto_notify_enabled as "autoNotifyEnabled"
-        FROM pqr_settings
-        WHERE schema_name = ${this.schema}
-        LIMIT 1
-      `;
+      const settings = await this.prisma.pQRSettings.findFirst({
+        where: {
+          schemaName: this.schema,
+        },
+        select: {
+          autoNotifyEnabled: true,
+        },
+      });
 
-      if (!settings || !settings[0] || !settings[0].autoNotifyEnabled) {
+      if (!settings || !settings.autoNotifyEnabled) {
         return false;
       }
 
@@ -325,14 +327,16 @@ export class PQRNotificationService {
       }
 
       // Verificar si las encuestas de satisfacción están habilitadas
-      const settings = await this.prisma.$queryRaw`
-        SELECT satisfaction_survey_enabled as "satisfactionSurveyEnabled"
-        FROM pqr_settings
-        WHERE schema_name = ${this.schema}
-        LIMIT 1
-      `;
+      const settings = await this.prisma.pQRSettings.findFirst({
+        where: {
+          schemaName: this.schema,
+        },
+        select: {
+          satisfactionSurveyEnabled: true,
+        },
+      });
 
-      if (!settings || !settings[0] || !settings[0].satisfactionSurveyEnabled) {
+      if (!settings || !settings.satisfactionSurveyEnabled) {
         return false;
       }
 
@@ -405,18 +409,17 @@ export class PQRNotificationService {
         ? `status_change_${previousStatus}_to_${newStatus}`
         : `status_change_to_${newStatus}`;
       
-      const customTemplate = await this.prisma.$queryRaw`
-        SELECT name, subject, content
-        FROM notification_templates
-        WHERE schema_name = ${this.schema}
-        AND name = ${templateName}
-        LIMIT 1
-      `;
+      const customTemplate = await this.prisma.notificationTemplate.findFirst({
+        where: {
+          schemaName: this.schema,
+          name: templateName,
+        },
+      });
 
-      if (customTemplate && customTemplate.length > 0) {
+      if (customTemplate) {
         return {
-          subject: customTemplate[0].subject,
-          content: customTemplate[0].content
+          subject: customTemplate.subject,
+          content: customTemplate.content
         };
       }
 

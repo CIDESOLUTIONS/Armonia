@@ -6,7 +6,7 @@
  */
 
 import { PrismaClient, PQRStatus, PQRPriority, PQRCategory } from '@prisma/client';
-import { getSchemaFromRequest } from '../../lib/prisma';
+import { getSchemaFromRequest } from '../lib/prisma';
 
 // Interfaces para métricas
 interface SummaryMetrics {

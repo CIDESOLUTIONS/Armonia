@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import PaymentService from '../../lib/services/payment-service';
+import { PaymentService } from '../../lib/services/payment-service';
 import { getPrisma } from '@/lib/prisma';
 import { encryptData, decryptData } from '../../lib/utils/encryption';
 
@@ -54,7 +54,8 @@ describe('PaymentService', () => {
     jest.clearAllMocks();
     
     // Instanciar el servicio y obtener las dependencias mockeadas
-    service = new PaymentService('public');
+    // Instanciar el servicio y obtener las dependencias mockeadas
+    // No se instancia el servicio ya que todos los métodos son estáticos
     prisma = getPrisma();
   });
   
@@ -99,7 +100,7 @@ describe('PaymentService', () => {
       prisma.transaction.create.mockResolvedValue(mockTransaction);
       
       // Ejecutar el método
-      const result = await service.createTransaction(transactionData);
+      const result = await PaymentService.createTransaction(transactionData);
       
       // Verificaciones
       expect(prisma.paymentMethod.findUnique).toHaveBeenCalledWith({
@@ -137,7 +138,7 @@ describe('PaymentService', () => {
       prisma.paymentMethod.findUnique.mockResolvedValue(null);
       
       // Ejecutar el método y verificar que lanza error
-      await expect(service.createTransaction(transactionData))
+      await expect(PaymentService.createTransaction(transactionData))
         .rejects
         .toThrow('Método de pago no encontrado');
     });
@@ -163,7 +164,7 @@ describe('PaymentService', () => {
       prisma.paymentGateway.findFirst.mockResolvedValue(null); // Pasarela no encontrada o inactiva
       
       // Ejecutar el método y verificar que lanza error
-      await expect(service.createTransaction(transactionData))
+      await expect(PaymentService.createTransaction(transactionData))
         .rejects
         .toThrow('Pasarela de pago no disponible');
     });
@@ -215,7 +216,7 @@ describe('PaymentService', () => {
       prisma.transaction.update.mockResolvedValue(mockUpdatedTransaction);
       
       // Mock del adaptador de pasarela (normalmente sería una clase separada)
-      service.getGatewayAdapter = jest.fn().mockReturnValue({
+      jest.spyOn(PaymentService as any, 'getGatewayAdapter').mockReturnValue({
         initializePayment: jest.fn().mockResolvedValue({
           success: true,
           redirectUrl: 'https://gateway.example.com/pay',
@@ -224,7 +225,7 @@ describe('PaymentService', () => {
       });
       
       // Ejecutar el método
-      const result = await service.processTransaction(transactionId);
+      const result = await PaymentService.processTransaction(transactionId);
       
       // Verificaciones
       expect(prisma.transaction.findUnique).toHaveBeenCalledWith({
@@ -232,7 +233,7 @@ describe('PaymentService', () => {
         include: { paymentMethod: true }
       });
       
-      expect(service.getGatewayAdapter).toHaveBeenCalledWith(mockGateway.type, {
+      expect(PaymentService.getGatewayAdapter).toHaveBeenCalledWith(mockGateway.type, {
         apiKey: 'test_api_key',
         apiSecret: 'test_api_secret',
         merchantId: 'test_merchant'
@@ -261,7 +262,7 @@ describe('PaymentService', () => {
       prisma.transaction.findUnique.mockResolvedValue(null);
       
       // Ejecutar el método y verificar que lanza error
-      await expect(service.processTransaction(transactionId))
+      await expect(PaymentService.processTransaction(transactionId))
         .rejects
         .toThrow('Transacción no encontrada');
     });
@@ -281,7 +282,7 @@ describe('PaymentService', () => {
       prisma.transaction.findUnique.mockResolvedValue(mockTransaction);
       
       // Ejecutar el método y verificar que lanza error
-      await expect(service.processTransaction(transactionId))
+      await expect(PaymentService.processTransaction(transactionId))
         .rejects
         .toThrow('La transacción no está en estado pendiente');
     });
@@ -305,42 +306,6 @@ describe('PaymentService', () => {
       };
       
       // Mock de respuestas de Prisma
-      const mockTransaction = {
-        id: 1,
-        amount: 100000,
-        status: 'PROCESSING',
-        gatewayReference: 'ref-123',
-        invoiceId: 5,
-        userId: 123
-      };
-      
-      const mockGateway = {
-        id: 1,
-        type: 'PAYU',
-        apiKey: 'encrypted_test_api_key',
-        apiSecret: 'encrypted_test_api_secret',
-        merchantId: 'test_merchant'
-      };
-      
-      const mockUpdatedTransaction = {
-        ...mockTransaction,
-        status: 'COMPLETED',
-        gatewayResponse: webhookData.body,
-        updatedAt: new Date()
-      };
-      
-      const mockInvoice = {
-        id: 5,
-        status: 'PENDING',
-        amount: 100000
-      };
-      
-      const mockUpdatedInvoice = {
-        ...mockInvoice,
-        status: 'PAID',
-        paymentDate: expect.any(Date)
-      };
-      
       prisma.transaction.findFirst.mockResolvedValue(mockTransaction);
       prisma.paymentGateway.findFirst.mockResolvedValue(mockGateway);
       prisma.transaction.update.mockResolvedValue(mockUpdatedTransaction);
@@ -348,20 +313,24 @@ describe('PaymentService', () => {
       prisma.invoice.update.mockResolvedValue(mockUpdatedInvoice);
       
       // Mock del adaptador de pasarela
-      service.getGatewayAdapter = jest.fn().mockReturnValue({
+      jest.spyOn(PaymentService as any, 'getGatewayAdapter').mockReturnValue({
         validateWebhook: jest.fn().mockReturnValue(true),
         parseWebhookStatus: jest.fn().mockReturnValue('COMPLETED')
       });
       
       // Ejecutar el método
-      const result = await service.processWebhook(webhookData);
+      const result = await PaymentService.processWebhook(
+        webhookData.gateway,
+        webhookData.body,
+        webhookData.headers['x-signature']
+      );
       
       // Verificaciones
       expect(prisma.transaction.findFirst).toHaveBeenCalledWith({
         where: { gatewayReference: 'ref-123' }
       });
       
-      expect(service.getGatewayAdapter).toHaveBeenCalledWith('PAYU', {
+      expect(PaymentService.getGatewayAdapter).toHaveBeenCalledWith('PAYU', {
         apiKey: 'test_api_key',
         apiSecret: 'test_api_secret',
         merchantId: 'test_merchant'
@@ -422,12 +391,16 @@ describe('PaymentService', () => {
       prisma.paymentGateway.findFirst.mockResolvedValue(mockGateway);
       
       // Mock del adaptador de pasarela con validación fallida
-      service.getGatewayAdapter = jest.fn().mockReturnValue({
+      jest.spyOn(PaymentService as any, 'getGatewayAdapter').mockReturnValue({
         validateWebhook: jest.fn().mockReturnValue(false)
       });
       
       // Ejecutar el método y verificar que lanza error
-      await expect(service.processWebhook(webhookData))
+      await expect(PaymentService.processWebhook(
+        webhookData.gateway,
+        webhookData.body,
+        webhookData.headers['x-signature']
+      ))
         .rejects
         .toThrow('Firma de webhook inválida');
     });
@@ -452,7 +425,7 @@ describe('PaymentService', () => {
       prisma.transaction.count.mockResolvedValue(2);
       
       // Ejecutar el método
-      const result = await service.getTransactions(filters);
+      const result = await PaymentService.getTransactions(filters);
       
       // Verificaciones
       expect(prisma.transaction.findMany).toHaveBeenCalledWith({
@@ -495,7 +468,7 @@ describe('PaymentService', () => {
       prisma.transaction.count.mockResolvedValue(0);
       
       // Ejecutar el método
-      await service.getTransactions(filters);
+      await PaymentService.getTransactions(filters);
       
       // Verificaciones
       expect(prisma.transaction.findMany).toHaveBeenCalledWith({
@@ -537,7 +510,7 @@ describe('PaymentService', () => {
       prisma.paymentToken.create.mockResolvedValue(mockToken);
       
       // Ejecutar el método
-      const result = await service.savePaymentToken(tokenData);
+      const result = await PaymentService.savePaymentToken(tokenData);
       
       // Verificaciones
       expect(encryptData).toHaveBeenCalledWith(tokenData.token);

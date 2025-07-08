@@ -4,6 +4,7 @@
 
 import { PQRMetricsService } from '../pqrMetricsService';
 import { PrismaClient, PQRCategory, PQRPriority, PQRStatus } from '@prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
 // Mock de PrismaClient
 jest.mock('@prisma/client', () => {
@@ -57,6 +58,42 @@ jest.mock('@prisma/client', () => {
   };
 });
 
+jest.mock('@/lib/prisma', () => ({
+  getPrisma: jest.fn(() => ({
+    pQR: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+      groupBy: jest.fn()
+    },
+    pQRStatusHistory: {
+      findMany: jest.fn()
+    },
+    user: {
+      findUnique: jest.fn(),
+      findMany: jest.fn()
+    }
+  })),
+  getSchemaFromRequest: jest.fn(() => ({
+    pQR: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+      groupBy: jest.fn()
+    },
+    pQRStatusHistory: {
+      findMany: jest.fn()
+    },
+    user: {
+      findUnique: jest.fn(),
+      findMany: jest.fn()
+    },
+    pQRSettings: {
+      findFirst: jest.fn()
+    }
+  })),
+}));
+
 describe('PQRMetricsService', () => {
   let service: PQRMetricsService;
   let prisma: any;
@@ -69,7 +106,7 @@ describe('PQRMetricsService', () => {
     service = new PQRMetricsService('test_schema');
     
     // Obtener la instancia de prisma para configurar mocks
-    prisma = (service as any).prisma;
+    prisma = getPrisma();
   });
   
   describe('getSummaryMetrics', () => {

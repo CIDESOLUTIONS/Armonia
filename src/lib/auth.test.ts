@@ -3,9 +3,19 @@ import { generateToken, verifyToken, extractTokenFromHeader } from './auth';
 import jwt from 'jsonwebtoken';
 
 // Mock de jwt
-jest.mock('jsonwebtoken', () => ({
-  sign: jest.fn(),
-  verify: jest.fn(),
+jest.mock('jose', () => ({
+  jwtVerify: jest.fn((token, secret) => {
+    if (token === 'valid-token' && secret) {
+      return Promise.resolve({ payload: { id: 1, email: 'test@example.com', role: 'ADMIN', name: 'Test User' } });
+    }
+    throw new Error('Invalid token');
+  }),
+  SignJWT: jest.fn().mockImplementation(() => ({
+    setProtectedHeader: jest.fn().mockReturnThis(),
+    setIssuedAt: jest.fn().mockReturnThis(),
+    setExpirationTime: jest.fn().mockReturnThis(),
+    sign: jest.fn().mockResolvedValue('mock-token'),
+  })),
 }));
 
 const mockJwtSecret = 'test-secret';
@@ -65,7 +75,7 @@ describe('Funciones de autenticación', () => {
     });
     
     it('debe rechazar con un error si el token es inválido', async () => {
-      (jwt.verify as jest.Mock).mockImplementation(() => {
+      require('jose').jwtVerify.mockImplementation(() => {
         throw new Error('Token inválido');
       });
       
@@ -75,7 +85,7 @@ describe('Funciones de autenticación', () => {
   
   describe('extractTokenFromHeader', () => {
     it('debe extraer correctamente el token del header', () => {
-      const _token = extractTokenFromHeader('Bearer valid-token');
+      const token = extractTokenFromHeader('Bearer valid-token');
       expect(token).toBe('valid-token');
     });
     

@@ -47,14 +47,14 @@ jest.mock('../../lib/logging/activity-logger', () => {
 });
 
 // Mock de ServerLogger
-jest.mock('../../lib/logging/server-logger', () => {
-  return {
+jest.mock('../../lib/logging/server-logger', () => ({
+  ServerLogger: {
     error: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn()
-  };
-});
+  }
+}));
 
 describe('InvoiceRuleService', () => {
   let service;

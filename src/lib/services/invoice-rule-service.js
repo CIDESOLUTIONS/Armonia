@@ -7,7 +7,7 @@
 const { ServerLogger } = require('../logging/server-logger');
 const { PrismaClient } = require('@prisma/client');
 
-const logger = new ServerLogger('InvoiceRuleService');
+const logger = ServerLogger;
 
 /**
  * Clase que gestiona las reglas de facturación

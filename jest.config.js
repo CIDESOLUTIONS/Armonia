@@ -4,6 +4,7 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/lib/prisma$': '<rootDir>/src/lib/prisma',
     '^.+\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^.+\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js',
   },
@@ -11,9 +12,10 @@ const customJestConfig = {
     '^.+\.(ts|tsx|js|jsx|mjs)$' : 'babel-jest',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!lucide-react|jose)/^',
+    '/node_modules/(?!lucide-react|jose)/',
   ],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
+  testPathIgnorePatterns: ['/e2e/'],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
