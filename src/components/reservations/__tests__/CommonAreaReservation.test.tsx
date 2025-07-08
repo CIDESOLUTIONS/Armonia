@@ -47,6 +47,22 @@ global.fetch = jest.fn();
 describe('CommonAreaReservation Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.resetModules(); // Reset module registry to ensure fresh imports
+
+    // Mock useReservationsWithPayments inside beforeEach
+    jest.mock('@/hooks/useReservationsWithPayments', () => ({
+      useReservationsWithPayments: jest.fn(() => ({
+        commonAreas: [],
+        userReservations: [],
+        myReservations: [],
+        isLoading: false,
+        error: null,
+        fetchCommonAreas: jest.fn(),
+        fetchUserReservations: jest.fn(),
+        handleNewReservation: jest.fn(),
+        handlePaymentComplete: jest.fn(),
+      })),
+    }));
     
     // Mock successful fetch for common areas
     global.fetch.mockImplementation((url) => {

@@ -48,34 +48,7 @@ jest.mock('@prisma/client', () => {
   
   return {
     PrismaClient: jest.fn(() => mockPrismaClient),
-    PQRStatus: {
-      OPEN: 'OPEN',
-      CATEGORIZED: 'CATEGORIZED',
-      ASSIGNED: 'ASSIGNED',
-      IN_PROGRESS: 'IN_PROGRESS',
-      WAITING: 'WAITING',
-      RESOLVED: 'RESOLVED',
-      CLOSED: 'CLOSED',
-      REOPENED: 'REOPENED',
-      CANCELLED: 'CANCELLED'
-    },
-    PQRCategory: {
-      MAINTENANCE: 'MAINTENANCE',
-      SECURITY: 'SECURITY',
-      ADMINISTRATIVE: 'ADMINISTRATIVE',
-      FINANCIAL: 'FINANCIAL',
-      COMMUNITY: 'COMMUNITY',
-      SERVICES: 'SERVICES',
-      SUGGESTION: 'SUGGESTION',
-      COMPLAINT: 'COMPLAINT',
-      OTHER: 'OTHER'
-    },
-    PQRPriority: {
-      LOW: 'LOW',
-      MEDIUM: 'MEDIUM',
-      HIGH: 'HIGH',
-      URGENT: 'URGENT'
-    }
+    
   };
 });
 

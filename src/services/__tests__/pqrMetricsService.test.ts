@@ -72,7 +72,8 @@ jest.mock('@/lib/prisma', () => ({
     user: {
       findUnique: jest.fn(),
       findMany: jest.fn()
-    }
+    },
+    $queryRaw: jest.fn(),
   })),
   getSchemaFromRequest: jest.fn(() => ({
     pQR: {
@@ -90,7 +91,8 @@ jest.mock('@/lib/prisma', () => ({
     },
     pQRSettings: {
       findFirst: jest.fn()
-    }
+    },
+    $queryRaw: jest.fn(),
   })),
 }));
 

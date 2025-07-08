@@ -3,7 +3,8 @@
  */
 
 import { PQRNotificationService } from '../pqrNotificationService';
-import { PrismaClient, PQRStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { PQRStatus, PQRNotificationTemplate } from '@/constants/pqr-constants';
 import { sendEmail } from '@/lib/communications/email-service';
 import { sendPushNotification } from '@/lib/communications/push-notification-service';
 

@@ -37,24 +37,7 @@ jest.mock('@prisma/client', () => {
   
   return {
     PrismaClient: jest.fn(() => mockPrismaClient),
-    PQRStatus: {
-      OPEN: 'OPEN',
-      CATEGORIZED: 'CATEGORIZED',
-      ASSIGNED: 'ASSIGNED',
-      IN_PROGRESS: 'IN_PROGRESS',
-      WAITING: 'WAITING',
-      RESOLVED: 'RESOLVED',
-      CLOSED: 'CLOSED',
-      REOPENED: 'REOPENED',
-      CANCELLED: 'CANCELLED'
-    },
-    NotificationChannel: {
-      EMAIL: 'EMAIL',
-      PUSH: 'PUSH',
-      SMS: 'SMS',
-      WHATSAPP: 'WHATSAPP',
-      IN_APP: 'IN_APP'
-    }
+    
   };
 });
 

@@ -9,7 +9,6 @@ import { getPrisma } from '@/lib/prisma';
 // Mock de PrismaClient
 jest.mock('@prisma/client', () => {
   const mockPrismaClient = {
-    $queryRaw: jest.fn(),
     pQR: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -57,6 +56,7 @@ jest.mock('@prisma/client', () => {
 
 jest.mock('@/lib/prisma', () => ({
   getPrisma: jest.fn(() => ({
+    $queryRaw: jest.fn(),
     pQRSettings: {
       findFirst: jest.fn(),
     },
