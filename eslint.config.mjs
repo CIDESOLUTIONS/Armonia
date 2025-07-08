@@ -1,7 +1,9 @@
+
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import pluginReact from "eslint-plugin-react";
+import nextPlugin from "@next/eslint-plugin-next";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -32,16 +34,15 @@ export default [
   { 
     ignores: [
       // Archivos de configuración
-      "tailwind.config.js",
       "tailwind.config.ts",
-      "jest.config.js",
-      "next.config.js",
-      "babel.config.js",
-      "postcss.config.js",
+      "jest.config.ts",
+      "next.config.mjs",
+      "babel.config.cjs",
+      "postcss.config.mjs",
       
       // Scripts de utilidad
       "scripts/**",
-      "prisma/seed.js",
+      "prisma/seed.ts",
       "seedUsers.js",
       "analyze-project.js",
       "createTestUsers.js",
@@ -77,14 +78,36 @@ export default [
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   {
+    plugins: {
+      "@next/next": nextPlugin,
+    },
     rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
       // Reglas de React
-      "react/react-in-jsx-scope": "off", // Desactiva la necesidad de importar React
-      "react/jsx-uses-react": "off",     // Opcional, para consistencia
+      "react/react-in-jsx-scope": "off",
+      "react/jsx-uses-react": "off",
+      "react/no-unescaped-entities": "off",
+      "react-hooks/exhaustive-deps": "warn",
       
-      // Reglas de TypeScript para reducir errores críticos
-      "@typescript-eslint/no-explicit-any": "warn", // Cambiar de error a advertencia
-      "@typescript-eslint/no-unused-vars": "warn"  // Cambiar de error a advertencia
+      // Reglas de TypeScript
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          "selector": "variable",
+          "format": ["camelCase", "PascalCase", "UPPER_CASE"]
+        },
+        {
+          "selector": "function",
+          "format": ["camelCase", "PascalCase"]
+        },
+        {
+          "selector": "typeLike",
+          "format": ["PascalCase"]
+        }
+      ]
     },
   },
 ];

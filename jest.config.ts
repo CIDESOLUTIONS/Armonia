@@ -1,4 +1,6 @@
-const customJestConfig = {
+import type { Config } from 'jest';
+
+const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleDirectories: ['node_modules', '<rootDir>/'],
   testEnvironment: 'jest-environment-jsdom',
@@ -32,4 +34,4 @@ const customJestConfig = {
   },
 };
 
-module.exports = customJestConfig;
+export default config;
