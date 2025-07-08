@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { getPrisma } from '@/lib/prisma';
-import { inventoryService, VehicleCreateSchema } from '@/lib/services/inventory-service-refactored';
+import { inventoryService } from '@/lib/services/inventory-service-refactored';
+import { VehicleCreateSchema } from '@/lib/schemas/inventory-schemas';
 import { z } from 'zod';
 
 // Schema para parámetros de búsqueda

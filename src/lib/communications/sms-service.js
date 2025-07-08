@@ -1,12 +1,19 @@
 /**
  * Servicio de SMS para la aplicación Armonía
  * Proporciona funcionalidades para envío de mensajes SMS
- * Adaptado a CommonJS para compatibilidad con Jest
  */
 
 const { ServerLogger } = require('../logging/server-logger');
+const twilio = require('twilio');
 
 const logger = new ServerLogger('SMSService');
+
+// Configuración de Twilio
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER; // Tu número de Twilio
+
+const client = twilio(accountSid, authToken);
 
 /**
  * Envía un mensaje SMS a un número específico
@@ -21,15 +28,29 @@ async function sendSMS(options) {
     if (!options || !options.to || !options.message) {
       throw new Error('Datos de SMS incompletos');
     }
+
+    if (!accountSid || !authToken || !twilioPhoneNumber) {
+      logger.warn('Credenciales de Twilio no configuradas. Usando mock de SMS.');
+      // Fallback a mock si las credenciales no están configuradas
+      return {
+        success: true,
+        messageId: `mock_sms_${Date.now()}`,
+        to: options.to,
+        timestamp: new Date().toISOString()
+      };
+    }
     
     logger.info(`Enviando SMS a ${options.to}`);
     
-    // En una implementación real, aquí se integraría con Twilio, AWS SNS, etc.
+    const message = await client.messages.create({
+      body: options.message,
+      from: options.from || twilioPhoneNumber,
+      to: options.to,
+    });
     
-    // Simulación de envío exitoso para desarrollo y pruebas
     const result = {
       success: true,
-      messageId: `mock_sms_${Date.now()}`,
+      messageId: message.sid,
       to: options.to,
       timestamp: new Date().toISOString()
     };

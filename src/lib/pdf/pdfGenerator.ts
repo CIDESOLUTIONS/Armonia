@@ -1,22 +1,10 @@
 // src/lib/pdf/pdfGenerator.ts
-/**
- * Módulo para generación de PDFs
- * Este archivo sirve como stub para las pruebas unitarias
- */
-
-/**
- * Genera un PDF a partir de una plantilla y datos
- * @param template Nombre de la plantilla a utilizar
- * @param data Datos para la plantilla
- * @param outputPath Ruta donde se guardará el PDF
- * @returns Ruta del archivo PDF generado
- */
+// Este archivo ahora está vacío ya que la lógica de generación de PDF se ha centralizado en receipt-service.ts
 export async function generatePDF(
   template: string,
   data: any,
   outputPath: string
 ): Promise<string> {
-  console.log(`Generando PDF con plantilla ${template} en ${outputPath}`);
-  // En una implementación real, aquí se generaría el PDF
+  console.warn('generatePDF en pdfGenerator.ts es un stub. Usa generateReceipt de receipt-service.ts en su lugar.');
   return outputPath;
 }

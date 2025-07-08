@@ -1,7 +1,8 @@
 // src/app/api/inventory/properties/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
-import { inventoryService, PropertyCreateSchema } from '@/lib/services/inventory-service-refactored';
+import { inventoryService } from '@/lib/services/inventory-service-refactored';
+import { PropertyCreateSchema } from '@/lib/schemas/inventory-schemas';
 import { z } from 'zod';
 
 // Schema para parámetros de búsqueda

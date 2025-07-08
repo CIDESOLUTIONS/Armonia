@@ -13,13 +13,13 @@ describe('Prisma Client Configuration', () => {
     // Explicitly clear the global Prisma instance to ensure a fresh mock is used
     (globalThis as any).prisma = undefined;
 
-    // Define the mock for PrismaClient
-    MockPrismaClient = jest.fn().mockImplementation(() => ({
-      $disconnect: jest.fn(),
-      // Add any other methods used by your application that need to be mocked
-    }));
+    // Define the mock for PrismaClient as a constructor function
+    MockPrismaClient = jest.fn(function(this: any) {
+      this.$disconnect = jest.fn();
+      // Add other mocked methods/properties as needed
+    });
 
-    // Mock the @prisma/client module using jest.doMock
+    // Mock the @prisma/client module to export our mock class
     jest.doMock('@prisma/client', () => ({
       PrismaClient: MockPrismaClient,
     }));
@@ -29,11 +29,6 @@ describe('Prisma Client Configuration', () => {
     const prismaModule = require('@/lib/prisma');
     getPrisma = prismaModule.getPrisma;
     getSchemaFromRequest = prismaModule.getSchemaFromRequest;
-
-    // Reset the mock implementation for MockPrismaClient for each test
-    MockPrismaClient.mockImplementation(() => ({
-      $disconnect: jest.fn(),
-    }));
   });
 
   test('getPrisma should return a PrismaClient instance', () => {

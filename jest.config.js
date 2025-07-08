@@ -1,9 +1,3 @@
-const nextJest = require('next/jest');
-
-const createJestConfig = nextJest({
-  dir: './',
-});
-
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleDirectories: ['node_modules', '<rootDir>/'],
@@ -13,13 +7,13 @@ const customJestConfig = {
     '^.+\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^.+\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js',
   },
+  transform: {
+    '^.+\.(ts|tsx|js|jsx|mjs)$' : 'babel-jest',
+  },
   transformIgnorePatterns: [
-    '/node_modules/(?!(lucide-react|jose)/)',
+    '/node_modules/(?!lucide-react|jose)/^',
   ],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/e2e/',
-  ],
+  testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
@@ -36,4 +30,4 @@ const customJestConfig = {
   },
 };
 
-module.exports = createJestConfig(customJestConfig);
+module.exports = customJestConfig;

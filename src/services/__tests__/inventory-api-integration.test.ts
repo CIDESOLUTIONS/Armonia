@@ -11,7 +11,6 @@ jest.mock('next/server', () => ({
   NextRequest: jest.fn().mockImplementation((input, init) => new Request(input, init)),
   NextResponse: {
     json: jest.fn((data, options) => {
-      // Simulate a Response object with a json method
       return {
         status: options?.status || 200,
         json: () => Promise.resolve(data),

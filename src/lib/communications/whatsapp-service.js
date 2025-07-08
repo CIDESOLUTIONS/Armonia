@@ -1,12 +1,19 @@
 /**
  * Servicio de WhatsApp para la aplicación Armonía
  * Proporciona funcionalidades para envío de mensajes WhatsApp
- * Adaptado a CommonJS para compatibilidad con Jest
  */
 
 const { ServerLogger } = require('../logging/server-logger');
+const twilio = require('twilio');
 
 const logger = new ServerLogger('WhatsAppService');
+
+// Configuración de Twilio
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioWhatsAppNumber = process.env.TWILIO_WHATSAPP_NUMBER; // Tu número de WhatsApp de Twilio
+
+const client = twilio(accountSid, authToken);
 
 /**
  * Envía un mensaje de WhatsApp a un número específico
@@ -21,15 +28,35 @@ async function sendWhatsAppMessage(options) {
     if (!options || !options.to || !options.message) {
       throw new Error('Datos de WhatsApp incompletos');
     }
+
+    if (!accountSid || !authToken || !twilioWhatsAppNumber) {
+      logger.warn('Credenciales de Twilio para WhatsApp no configuradas. Usando mock de WhatsApp.');
+      // Fallback a mock si las credenciales no están configuradas
+      return {
+        success: true,
+        messageId: `mock_whatsapp_${Date.now()}`,
+        to: options.to,
+        timestamp: new Date().toISOString()
+      };
+    }
     
     logger.info(`Enviando WhatsApp a ${options.to}`);
     
-    // En una implementación real, aquí se integraría con Twilio, Meta Business API, etc.
+    const messageOptions = {
+      body: options.message,
+      from: `whatsapp:${twilioWhatsAppNumber}`,
+      to: `whatsapp:${options.to}`,
+    };
+
+    if (options.media && options.media.url) {
+      messageOptions.mediaUrl = [options.media.url];
+    }
+
+    const message = await client.messages.create(messageOptions);
     
-    // Simulación de envío exitoso para desarrollo y pruebas
     const result = {
       success: true,
-      messageId: `mock_whatsapp_${Date.now()}`,
+      messageId: message.sid,
       to: options.to,
       timestamp: new Date().toISOString()
     };

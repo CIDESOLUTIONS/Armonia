@@ -1,7 +1,8 @@
 // src/app/api/inventory/pets/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
-import { inventoryService, PetCreateSchema } from '@/lib/services/inventory-service-refactored';
+import { inventoryService } from '@/lib/services/inventory-service-refactored';
+import { PetCreateSchema } from '@/lib/schemas/inventory-schemas';
 import { z } from 'zod';
 
 // Schema para parámetros de búsqueda

@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
+import nodemailer from 'nodemailer';
 
 interface ReceiptData {
   transactionId: string;
@@ -121,8 +122,34 @@ export async function sendReceiptByEmail(data: ReceiptData, email: string): Prom
   try {
     const pdfBuffer = await generateReceipt(data);
     
-    // Aquí iría la lógica para enviar el correo con el PDF adjunto
-    // Usando alguna librería como nodemailer
+    // Configurar el transportador de correo
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      secure: process.env.EMAIL_SECURE === 'true',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Definir las opciones del correo
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: data.language === 'en' ? englishTexts.receiptTitle : spanishTexts.receiptTitle,
+      html: `<p>${data.language === 'en' ? englishTexts.emailBody : spanishTexts.emailBody}</p>`,
+      attachments: [
+        {
+          filename: `receipt_${data.transactionId}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    };
+
+    // Enviar el correo
+    await transporter.sendMail(mailOptions);
     
     console.log(`Recibo enviado a ${email} (simulado)`);
     return true;
@@ -147,7 +174,8 @@ const spanishTexts = {
   tax: 'IVA',
   total: 'Total',
   paymentMethod: 'Método de Pago',
-  legalNote: 'Este es un recibo generado automáticamente. Para cualquier consulta, contacte con soporte@armonia.com'
+  legalNote: 'Este es un recibo generado automáticamente. Para cualquier consulta, contacte con soporte@armonia.com',
+  emailBody: 'Adjunto encontrarás tu recibo de pago.'
 };
 
 // Textos en inglés
@@ -165,5 +193,6 @@ const englishTexts = {
   tax: 'VAT',
   total: 'Total',
   paymentMethod: 'Payment Method',
-  legalNote: 'This is an automatically generated receipt. For any inquiries, please contact support@armonia.com'
+  legalNote: 'This is an automatically generated receipt. For any inquiries, please contact support@armonia.com',
+  emailBody: 'Attached is your payment receipt.'
 };
