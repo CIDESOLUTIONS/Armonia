@@ -171,10 +171,6 @@ export default function UnifiedLandingPage() {
 
   const t = language === "Español" ? texts.es : texts.en;
 
-  const scrollToSection = (sectionId: string) => {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   import { FadeIn } from '@/components/animations/FadeIn';
 
 // ... (el resto del código permanece igual)

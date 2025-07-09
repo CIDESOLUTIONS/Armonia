@@ -102,4 +102,107 @@ export async function POST(request: NextRequest) {
 
     console.log(`[TEMPLATE NOTIFICATION] ${type} enviado por ${payload.email} a complejo ${payload.complexId}`);
 
-    return NextResponse.json({\n      success: true,\n      message: `Notificación '${type}' enviada exitosamente`,\n      messageId: result.messageId,\n      stats: {\n        successCount: result.successCount,\n        failureCount: result.failureCount\n      }\n    });\n\n  } catch (error) {\n    console.error('[TEMPLATE NOTIFICATION] Error:', error);\n    return NextResponse.json({ \n      message: error instanceof Error ? error.message : 'Error interno del servidor' \n    }, { status: 500 });\n  }\n}\n\n/**\n * Verifica permisos para diferentes tipos de plantillas\n */\nfunction checkTemplatePermissions(type: string, userRole: string): { allowed: boolean; message?: string } {\n  const permissions = {\n    payment_reminder: ['ADMIN', 'COMPLEX_ADMIN'],\n    assembly_invitation: ['ADMIN', 'COMPLEX_ADMIN'],\n    incident_update: ['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'],\n    pqr_response: ['ADMIN', 'COMPLEX_ADMIN'],\n    general_announcement: ['ADMIN', 'COMPLEX_ADMIN']\n  };\n\n  const allowedRoles = permissions[type as keyof typeof permissions];\n  \n  if (!allowedRoles || !allowedRoles.includes(userRole)) {\n    return {\n      allowed: false,\n      message: `Rol '${userRole}' no autorizado para notificaciones de tipo '${type}'`\n    };\n  }\n\n  return { allowed: true };\n}\n\n// GET: Obtener plantillas disponibles\nexport async function GET(request: NextRequest) {\n  try {\n    const { auth, payload } = await verifyAuth(request);\n    if (!auth || !payload) {\n      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });\n    }\n\n    // Definir plantillas disponibles según el rol\n    const allTemplates = {\n      payment_reminder: {\n        name: 'Recordatorio de Pago',\n        description: 'Notifica a residentes sobre pagos pendientes',\n        requiredData: ['amount', 'dueDate'],\n        roles: ['ADMIN', 'COMPLEX_ADMIN']\n      },\n      assembly_invitation: {\n        name: 'Invitación a Asamblea',\n        description: 'Invita a residentes a asambleas',\n        requiredData: ['date', 'topic'],\n        roles: ['ADMIN', 'COMPLEX_ADMIN']\n      },\n      incident_update: {\n        name: 'Actualización de Incidente',\n        description: 'Informa sobre cambios en incidentes',\n        requiredData: ['incidentId', 'status'],\n        roles: ['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION']\n      },\n      pqr_response: {\n        name: 'Respuesta a PQR',\n        description: 'Notifica respuestas a solicitudes',\n        requiredData: ['pqrId', 'status'],\n        roles: ['ADMIN', 'COMPLEX_ADMIN']\n      },\n      general_announcement: {\n        name: 'Anuncio General',\n        description: 'Comunicaciones generales a residentes',\n        requiredData: ['title', 'message'],\n        roles: ['ADMIN', 'COMPLEX_ADMIN']\n      }\n    };\n\n    // Filtrar plantillas según el rol del usuario\n    const availableTemplates = Object.entries(allTemplates)\n      .filter(([_, template]) => template.roles.includes(payload.role))\n      .reduce((acc, [key, template]) => {\n        acc[key] = template;\n        return acc;\n      }, {} as Record<string, any>);\n\n    return NextResponse.json({\n      success: true,\n      templates: availableTemplates\n    });\n\n  } catch (error) {\n    console.error('[TEMPLATE LIST] Error:', error);\n    return NextResponse.json({ \n      message: 'Error obteniendo plantillas' \n    }, { status: 500 });\n  }\n}\n
+    return NextResponse.json({
+      success: true,
+      message: `Notificación '${type}' enviada exitosamente`,
+      messageId: result.messageId,
+      stats: {
+        successCount: result.successCount,
+        failureCount: result.failureCount
+      }
+    });
+
+  } catch (error) {
+    console.error('[TEMPLATE NOTIFICATION] Error:', error);
+    return NextResponse.json({ 
+      message: error instanceof Error ? error.message : 'Error interno del servidor' 
+    }, { status: 500 });
+  }
+}
+
+/**
+ * Verifica permisos para diferentes tipos de plantillas
+ */
+function checkTemplatePermissions(type: string, userRole: string): { allowed: boolean; message?: string } {
+  const permissions = {
+    payment_reminder: ['ADMIN', 'COMPLEX_ADMIN'],
+    assembly_invitation: ['ADMIN', 'COMPLEX_ADMIN'],
+    incident_update: ['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'],
+    pqr_response: ['ADMIN', 'COMPLEX_ADMIN'],
+    general_announcement: ['ADMIN', 'COMPLEX_ADMIN']
+  };
+
+  const allowedRoles = permissions[type as keyof typeof permissions];
+  
+  if (!allowedRoles || !allowedRoles.includes(userRole)) {
+    return {
+      allowed: false,
+      message: `Rol '${userRole}' no autorizado para notificaciones de tipo '${type}'`
+    };
+  }
+
+  return { allowed: true };
+}
+
+// GET: Obtener plantillas disponibles
+export async function GET(request: NextRequest) {
+  try {
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    }
+
+    // Definir plantillas disponibles según el rol
+    const allTemplates = {
+      payment_reminder: {
+        name: 'Recordatorio de Pago',
+        description: 'Notifica a residentes sobre pagos pendientes',
+        requiredData: ['amount', 'dueDate'],
+        roles: ['ADMIN', 'COMPLEX_ADMIN']
+      },
+      assembly_invitation: {
+        name: 'Invitación a Asamblea',
+        description: 'Invita a residentes a asambleas',
+        requiredData: ['date', 'topic'],
+        roles: ['ADMIN', 'COMPLEX_ADMIN']
+      },
+      incident_update: {
+        name: 'Actualización de Incidente',
+        description: 'Informa sobre cambios en incidentes',
+        requiredData: ['incidentId', 'status'],
+        roles: ['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION']
+      },
+      pqr_response: {
+        name: 'Respuesta a PQR',
+        description: 'Notifica respuestas a solicitudes',
+        requiredData: ['pqrId', 'status'],
+        roles: ['ADMIN', 'COMPLEX_ADMIN']
+      },
+      general_announcement: {
+        name: 'Anuncio General',
+        description: 'Comunicaciones generales a residentes',
+        requiredData: ['title', 'message'],
+        roles: ['ADMIN', 'COMPLEX_ADMIN']
+      }
+    };
+
+    // Filtrar plantillas según el rol del usuario
+    const availableTemplates = Object.entries(allTemplates)
+      .filter(([_, template]) => template.roles.includes(payload.role))
+      .reduce((acc, [key, template]) => {
+        acc[key] = template;
+        return acc;
+      }, {} as Record<string, any>);
+
+    return NextResponse.json({
+      success: true,
+      templates: availableTemplates
+    });
+
+  } catch (error) {
+    console.error('[TEMPLATE LIST] Error:', error);
+    return NextResponse.json({ 
+      message: 'Error obteniendo plantillas' 
+    }, { status: 500 });
+  }
+}
