@@ -1,9 +1,10 @@
-const { generateToken, verifyToken } = require('../src/lib/auth');
+import { generateToken, verifyToken } from '../src/lib/auth';
+import jwt from 'jsonwebtoken'; // Importar jwt para mockearlo
 
 // Mock de las dependencias
 jest.mock('jsonwebtoken', () => ({
   sign: jest.fn().mockReturnValue('mocked-token'),
-  verify: jest.fn().mockImplementation((token) => {
+  verify: jest.fn((token: string) => {
     if (token === 'valid-token') {
       return { id: 1, email: 'test@example.com' };
     }

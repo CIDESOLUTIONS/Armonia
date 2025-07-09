@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
+import { FreemiumService } from '@/lib/services/freemium-service';
 
 export async function POST(req: Request) {
   try {
@@ -34,6 +35,9 @@ export async function POST(req: Request) {
       planCode,
       transactionId
     });
+
+    const freemiumService = new FreemiumService(prisma); // Instanciar el servicio
+    const planDetails = freemiumService.getPlanDetails(planCode);
 
     // Validación de campos requeridos
     if (!complexName || !totalUnits || !adminName || !adminEmail || !adminPassword) {
@@ -145,18 +149,13 @@ export async function POST(req: Request) {
       // No interrumpimos el flujo si ocurre un error aquí
     }
 
-    // Validar el plan según el tipo - hardcodeamos los límites en lugar de consultar la tabla Plan
-    let maxUnits = 30; // Por defecto, plan básico
-    let planName = 'Plan Básico';
-    
-    if (planCode === 'standard') {
-      maxUnits = 50;
-      planName = 'Plan Estándar';
-    } else if (planCode === 'premium') {
-      maxUnits = 120;
-      planName = 'Plan Premium';
+    if (!planDetails) {
+      return NextResponse.json({ message: 'Plan no válido.' }, { status: 400 });
     }
-    
+
+    const maxUnits = planDetails.maxUnits;
+    const planName = planCode.charAt(0).toUpperCase() + planCode.slice(1); // Capitalizar el nombre del plan
+
     // Verificar que el número de unidades no exceda el límite del plan
     if (parseInt(String(totalUnits)) > maxUnits) {
       console.log('[API Register-Complex] Error: Límite de unidades excedido');
@@ -255,12 +254,11 @@ export async function POST(req: Request) {
             console.warn(`[API Register-Complex] Advertencia: El plan pagado (${payment.planCode}) no coincide con el solicitado (${planCode})`);
             // Para desarrollo: permitir continuar con el plan que realmente se pagó
             planCode = payment.planCode;
-            if (planCode === 'premium') {
-              maxUnits = 120;
-              planName = 'Plan Premium';
-            } else if (planCode === 'standard') {
-              maxUnits = 50;
-              planName = 'Plan Estándar';
+            const updatedPlanDetails = freemiumService.getPlanDetails(planCode);
+            if (updatedPlanDetails) {
+              maxUnits = updatedPlanDetails.maxUnits;
+              planName = planCode.charAt(0).toUpperCase() + planCode.slice(1);
+            }
             }
           }
         }
@@ -309,10 +307,16 @@ export async function POST(req: Request) {
           state, 
           country, 
           "propertyTypes", 
+          "planType",
+          "planStartDate",
+          "planEndDate",
+          "trialEndDate",
+          "isTrialActive",
+          "maxUnits",
           "createdAt", 
           "updatedAt"
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, NOW(), NOW()
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15, $16, NOW(), NOW()
         ) RETURNING *
       `, 
         complexName,
@@ -325,7 +329,13 @@ export async function POST(req: Request) {
         city || null,
         state || null,
         country || 'Colombia',
-        propertyTypesJson
+        propertyTypesJson,
+        planCode.toUpperCase(), // Asegurar que el planType esté en mayúsculas
+        new Date(), // planStartDate
+        planCode === 'BASIC' ? null : new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // planEndDate (1 año para pagados)
+        planCode === 'BASIC' ? new Date(new Date().setDate(new Date().getDate() + 60)) : null, // trialEndDate (60 días para BASIC)
+        planCode === 'BASIC', // isTrialActive
+        maxUnits
       );
 
       console.log('[API Register-Complex] Complejo creado con ID:', complex[0].id);

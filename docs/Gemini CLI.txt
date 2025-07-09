@@ -1,7 +1,7 @@
 Gemini CLI
 prompt
 
-Estas ubicado en el directorio raíz del proyecto llamado armonía; es el desarrollo de una aplicación para ser usada en  web y móvil, las especificaciones técnicas se encuentran ubicadas en la carpeta docs, revisa en profundidad las especificaciones y compárala con los desarrollos que se encuentra en este directorio del proyecto. genera un resumen técnico, funcional y de estilo de lo que entendiste, revisa lo que se debes ajustar o cambiar, si se requiere desarrollar nuevo código para cumplir con las especificaciones técnicas, debes buscar primero en la carpeta .git, debido a que mucho código fue elaborado pero pudo haber sido descartado por error, si definitivamente no esta, se debe desarrollar teniendo en cuenta las especificaciones técnicas y el estilo que se viene manejando; si es necesario incluye la reorganización de la estructura del proyecto para que sea eficiente, conversión de .JS a .TS, eliminar dependencias, funciones y código que no se necesitan, optimiza el código; después se debe realizar las pruebas individuales y las pruebas e2e; después se debe preparar la aplicación para el despliegue en producción. por ultimo, genera un plan de ajuste con todas las tareas detalladas que se deban realizar para alcanzar el objetivo y esta será la guía de trabajo. debes mantener en la memoria el plan para seguirlo y ejecutarlo en su totalidad.
+Estas ubicado en el directorio raíz del proyecto llamado armonía; es el desarrollo de una aplicación para ser usada en  web y móvil, las especificaciones técnicas se encuentran ubicadas en la carpeta docs, revisa en profundidad las especificaciones y compárala con los desarrollos que se encuentra en este directorio del proyecto. genera un resumen técnico, funcional y de estilo de lo que entendiste. revisa lo que se debes ajustar o cambiar usando las mejores prácticas de desarrollo, si se requiere desarrollar nuevo código para cumplir con las especificaciones técnicas, debes buscar primero en la carpeta .git, debido a que mucho código fue elaborado pero pudo haber sido descartado por error, si definitivamente no esta, se debe desarrollar teniendo en cuenta las especificaciones técnicas y el estilo que se viene manejando; si es necesario incluye la reorganización de la estructura del proyecto para que sea eficiente, conversión de .JS a .TS, eliminar dependencias, funciones y código que no se necesitan, optimiza el código; después se debe realizar las pruebas individuales y las pruebas e2e; después se debe preparar la aplicación para el despliegue en producción. por ultimo, genera un plan de ajuste con todas las tareas detalladas que se deban realizar para alcanzar el objetivo y esta será la guía de trabajo. debes mantener en la memoria el plan para seguirlo y ejecutarlo en su totalidad.
 
 resumen
  Resumen Técnico y Funcional del Proyecto "Armonía"
@@ -191,9 +191,7 @@ Segunda iteración de ajustes.
 Resumen Técnico, Funcional y de Estilo
 
 
-   * Análisis Técnico: El proyecto utiliza un stack tecnológico moderno y alineado con las especificaciones (Next.js, TypeScript, Tailwind CSS). Sin embargo, la estructura de directorios en
-     src/app presenta duplicados (admin y (admin), resident y (resident)) que deben ser unificados para seguir las convenciones de Next.js. La configuración de la base de datos con Prisma y
-     el enfoque multi-tenant son correctos, pero se debe verificar su implementación en detalle.
+   * Análisis Técnico: El proyecto utiliza un stack tecnológico moderno y alineado con las especificaciones (Next.js, TypeScript, Tailwind CSS). Sin embargo, la estructura de directorios en src/app presenta duplicados (admin y (admin), resident y (resident)) que deben ser unificados para seguir las convenciones de Next.js. La configuración de la base de datos con Prisma y el enfoque multi-tenant son correctos, pero se debe verificar su implementación en detalle.
    * Análisis Funcional: Existe una base para los portales de admin, resident, reception y public, pero se requiere un análisis profundo para determinar el porcentaje de cumplimiento de las
      funcionalidades especificadas. Es probable que falten módulos completos, como la gestión financiera avanzada, el sistema de votaciones en tiempo real para asambleas y la integración con
      IoT.
@@ -242,4 +240,61 @@ Plan de Ajuste y Desarrollo
    1. Optimización de Build: Generar una build de producción optimizada.
    2. Revisión de Scripts de Despliegue: Asegurar que los scripts en .github/workflows y deploy.sh estén actualizados y listos para un despliegue en producción.
    3. Variables de Entorno: Validar que la gestión de secretos y variables de entorno para producción sea segura.
+
+
+Tercera iteración
+
+ Resumen de Entendimiento
+
+   1. Resumen Técnico: El proyecto es una aplicación web/móvil moderna construida con un stack tecnológico claro: Next.js para el frontend y backend (API Routes), TypeScript, Prisma como ORM para una base de datos PostgreSQL, y Tailwind CSS (probablemente con Shadcn/UI como se especifica) para el estilo. Las pruebas E2E se realizan con Playwright. La arquitectura está pensada para ser multi-tenant, lo cual es crucial para el modelo de negocio.
+
+   2. Resumen Funcional: "Armonía" es una plataforma SaaS (Software as a Service) integral para la administración de conjuntos residenciales. Contempla múltiples roles (Administrador de la App, Administrador del Conjunto, Residente, Personal de Seguridad) con portales y funcionalidades específicas para cada uno. El core del negocio incluye gestión de inventario, finanzas, asambleas, PQR, comunicaciones y seguridad. El modelo de negocio Freemium (Básico, Estándar, Premium) es un pilar fundamental.
+
+   3. Resumen de Estilo y Arquitectura: Las especificaciones exigen un diseño limpio, moderno y "mobile-first", con una paleta de colores definida (Índigo y blanco) y soporte para modo oscuro/claro. Se debe usar Shadcn/UI para los componentes, garantizando consistencia y accesibilidad (WCAG 2.1 AA). La estructura del código debe seguir convenciones estrictas (PascalCase para componentes, camelCase para funciones, etc.) y la arquitectura de carpetas en src/app debe estar organizada por roles.
+
+  
+Plan de Ajuste y Optimización para "Armonía"
+
+  Este es el plan de trabajo detallado que seguiré para llevar el proyecto a su máximo potencial, alineado con las especificaciones y listo para producción.
+
+  Fase 1: Auditoría y Refactorización Inicial (Puesta a Punto)
+
+  ok  * 1.1. Análisis de Dependencias: Revisaré package.json y requirements.txt para identificar y eliminar librerías obsoletas o no utilizadas, y actualizar las críticas a las versiones  especificadas (Next.js, React, Prisma).
+ ok  * 1.2. Conversión Total a TypeScript: Migraré sistemáticamente los archivos .js restantes a .ts o .tsx para garantizar la consistencia y seguridad de tipos en todo el proyecto. Esto incluye archivos de configuración, scripts de seeding (seedUsers.js) y mocks (jest.mocks.js).
+   * 1.3. Reorganización y Estructura de Archivos: Reorganizaré la estructura de src/app para que coincida con la arquitectura de portales definida en las especificaciones (por roles: admin, resident, reception). Moveré los scripts de Python (app.py, project_evaluator.py) a una carpeta dedicada como scripts/python/ para mayor orden.
+   * 1.4. Variables de Entorno: Consolidaré y documentaré el uso de las variables de entorno (.env.*), asegurando que no haya secretos expuestos y que la configuración sea clara para cada ambiente (desarrollo, test, producción).
+
+  
+Fase 2: Desarrollo y Alineación Funcional
+
+   * 2.1. Verificación de Cobertura Funcional: Realizaré un cruce detallado entre las funcionalidades descritas en las especificaciones y el código existente. Identificaré y listaré los
+     módulos o características faltantes (ej. Módulo Financiero Avanzado, Dashboard de Admin de la App, etc.).
+   * 2.2. Búsqueda de Código Previo: Como se solicitó, antes de desarrollar funcionalidades faltantes desde cero, buscaré en el historial del repositorio y en carpetas como backup/ por
+     implementaciones previas que puedan haber sido descartadas, para acelerar el desarrollo.
+   * 2.3. Desarrollo de Funcionalidades Faltantes: Implementaré los módulos faltantes, siguiendo estrictamente el estilo de código, la arquitectura y las tecnologías ya establecidas.
+     Priorizaré el modelo Freemium y los diferentes paneles de rol.
+   * 2.4. Optimización de Código Existente: Refactorizaré componentes y lógica de negocio clave para mejorar el rendimiento, la legibilidad y la mantenibilidad, aplicando principios como la
+     responsabilidad única.
+
+  Fase 3: Pruebas Exhaustivas y Garantía de Calidad
+
+   * 3.1. Pruebas Unitarias y de Integración: Fortaleceré la suite de pruebas unitarias (con Jest) para cubrir los componentes de UI y la lógica de negocio crítica. Crearé pruebas de
+     integración para validar la correcta comunicación entre el frontend y el backend.
+   * 3.2. Pruebas End-to-End (E2E): Actualizaré y ejecutaré la suite completa de pruebas E2E con Playwright para simular los flujos de usuario de cada rol (registro, pago, reserva, etc.) y
+     garantizar que la aplicación funciona como un todo.
+   * 3.3. Pruebas de Seguridad: Realizaré una auditoría de seguridad básica, verificando la implementación de JWT, protección contra ataques comunes (XSS, CSRF) y el correcto manejo de la
+     autorización por roles.
+
+  Fase 4: Preparación para Producción y Despliegue
+
+   * 4.1. Build de Producción: Generaré una build de producción optimizada de la aplicación (npm run build) y resolveré cualquier error o advertencia que surja.
+   * 4.2. Contenerización (Recomendación): Crearé un Dockerfile para empaquetar la aplicación, facilitando un despliegue consistente y escalable en cualquier proveedor de nube, como se
+     sugiere en las especificaciones.
+   * 4.3. Scripts y CI/CD: Revisaré y ajustaré los scripts de despliegue (deploy.sh) y los flujos de trabajo de GitHub Actions (.github/workflows/) para automatizar el proceso de despliegue
+     en los diferentes entornos (staging, producción).
+   * 4.4. Documentación Final: Generaré o actualizaré la documentación técnica clave del proyecto, incluyendo un README.md robusto con instrucciones de instalación, configuración y
+     despliegue.
+
+
+  He guardado este plan en mi memoria para guiar nuestras próximas interacciones.
 
