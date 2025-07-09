@@ -1,106 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import communicationService from '@/services/communicationService';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { serverLogger } from '@/lib/logging/server-logger';
+import { getPrisma } from '@/lib/prisma';
+import { authMiddleware } from '@/lib/auth';
+import { z } from 'zod';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
-/**
- * GET /api/communications/notifications
- * Obtiene las notificaciones del usuario actual
- */
-export async function GET(req: NextRequest) {
+const NotificationSchema = z.object({
+  title: z.string().min(1, "El título es requerido."),
+  message: z.string().min(1, "El mensaje es requerido."),
+  recipientType: z.enum(['ALL', 'RESIDENT', 'PROPERTY', 'USER']).default('ALL'),
+  recipientId: z.string().optional(), // ID of specific recipient if type is not ALL
+});
+
+export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticación
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const body = await request.json();
+    const validatedData = NotificationSchema.parse(body);
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+
+    let usersToNotify: any[] = [];
+
+    switch (validatedData.recipientType) {
+      case 'ALL':
+        usersToNotify = await tenantPrisma.user.findMany({ where: { complexId: payload.complexId } });
+        break;
+      case 'RESIDENT':
+        // Assuming recipientId is a resident ID, find associated user
+        const resident = await tenantPrisma.resident.findUnique({ where: { id: parseInt(validatedData.recipientId as string) }, include: { user: true } });
+        if (resident?.user) usersToNotify.push(resident.user);
+        break;
+      case 'PROPERTY':
+        // Assuming recipientId is a property ID, find associated residents/owners
+        const propertyUsers = await tenantPrisma.user.findMany({ where: { propertyId: parseInt(validatedData.recipientId as string) } });
+        usersToNotify = propertyUsers;
+        break;
+      case 'USER':
+        // Assuming recipientId is a user ID
+        const user = await tenantPrisma.user.findUnique({ where: { id: parseInt(validatedData.recipientId as string) } });
+        if (user) usersToNotify.push(user);
+        break;
+      default:
+        break;
     }
 
-    // Obtener parámetros de consulta
-    const searchParams = req.nextUrl.searchParams;
-    const read = searchParams.get('read') === 'true' ? true : 
-                searchParams.get('read') === 'false' ? false : undefined;
-    const type = searchParams.get('type') || undefined;
-    const sourceType = searchParams.get('sourceType') || undefined;
-    const priority = searchParams.get('priority') || undefined;
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
+    if (usersToNotify.length === 0) {
+      return NextResponse.json({ message: 'No se encontraron destinatarios para la notificación.' }, { status: 404 });
+    }
 
-    // Obtener notificaciones del usuario
-    const notifications = await communicationService.getUserNotifications(
-      session.user.id,
-      { read, type, sourceType, priority, limit }
+    // Create notifications for each user
+    const notificationPromises = usersToNotify.map(user =>
+      tenantPrisma.notification.create({
+        data: {
+          title: validatedData.title,
+          message: validatedData.message,
+          userId: user.id,
+          type: 'GENERAL',
+          sentBy: payload.id,
+        },
+      })
     );
 
-    return NextResponse.json(notifications);
+    await Promise.all(notificationPromises);
+
+    ServerLogger.info(`Notificación enviada a ${usersToNotify.length} usuarios por ${payload.email} en complejo ${payload.complexId}`);
+    return NextResponse.json({ message: 'Notificación enviada exitosamente' }, { status: 200 });
   } catch (error) {
-    serverLogger.error('Error al obtener notificaciones', { error });
-    return NextResponse.json(
-      { error: 'Error al obtener notificaciones' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * POST /api/communications/notifications
- * Crea una nueva notificación (solo para administradores)
- */
-export async function POST(req: NextRequest) {
-  try {
-    // Verificar autenticación
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
     }
-
-    // Verificar permisos de administrador
-    if (session.user.role !== 'admin' && session.user.role !== 'super_admin') {
-      return NextResponse.json(
-        { error: 'No tiene permisos para crear notificaciones' },
-        { status: 403 }
-      );
-    }
-
-    // Obtener datos de la solicitud
-    const data = await req.json();
-    
-    // Validar datos requeridos
-    if (!data.recipientId || !data.type || !data.title || !data.message) {
-      return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
-        { status: 400 }
-      );
-    }
-
-    // Crear notificación
-    const notification = await communicationService.notifyUser(
-      data.recipientId,
-      {
-        type: data.type,
-        title: data.title,
-        message: data.message,
-        link: data.link,
-        data: data.data,
-        sourceType: data.sourceType || 'system',
-        sourceId: data.sourceId,
-        priority: data.priority,
-        requireConfirmation: data.requireConfirmation,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined
-      }
-    );
-
-    return NextResponse.json(notification, { status: 201 });
-  } catch (error) {
-    serverLogger.error('Error al crear notificación', { error });
-    return NextResponse.json(
-      { error: 'Error al crear notificación' },
-      { status: 500 }
-    );
+    ServerLogger.error('Error al enviar notificación:', error);
+    return NextResponse.json({ message: 'Error al enviar notificación' }, { status: 500 });
   }
 }

@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Building2, 
-  Users, 
-  DollarSign, 
+import {
+  Building2,
+  Users,
+  DollarSign,
   Calendar,
   MessageSquare,
   TrendingUp,
@@ -21,7 +21,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { getDashboardStats, getRecentActivity, getUpcomingEvents } from '@/services/dashboardService'; // Added getUpcomingEvents
-import { DashboardCharts } from './DashboardCharts'; // Importar el nuevo componente de gráficos
 
 interface DashboardStats {
   totalProperties: number;

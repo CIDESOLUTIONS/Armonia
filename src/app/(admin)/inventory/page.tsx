@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import AdminHeader from '@/components/admin/layout/AdminHeader';
 import AdminSidebar from '@/components/admin/layout/AdminSidebar';
-import { Loader2, Building2, Users, Car, PawPrint, Plus, Search, Filter } from 'lucide-react';
+import { Loader2, Building2, Users, Car, PawPrint, Plus, Search, Filter, Home, Settings } from 'lucide-react';
 import { getDashboardStats } from '@/services/dashboardService';
+import Link from 'next/link';
 
 interface DashboardStats {
   totalProperties: number;
@@ -121,41 +122,68 @@ export default function InventoryPage() {
 
             {/* Acciones rápidas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <Link href="/admin/inventory/properties" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="flex items-center justify-between mb-4">
                   <Building2 className="h-8 w-8 text-blue-600" />
                   <Plus className="h-5 w-5 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Propiedades</h3>
                 <p className="text-gray-600 text-sm">Gestionar apartamentos, casas y locales comerciales</p>
-              </div>
+              </Link>
 
-              <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <Link href="/admin/inventory/residents" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="flex items-center justify-between mb-4">
                   <Users className="h-8 w-8 text-green-600" />
                   <Plus className="h-5 w-5 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Residentes</h3>
                 <p className="text-gray-600 text-sm">Administrar información de propietarios e inquilinos</p>
-              </div>
+              </Link>
 
-              <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <Link href="/admin/inventory/vehicles" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="flex items-center justify-between mb-4">
                   <Car className="h-8 w-8 text-purple-600" />
                   <Plus className="h-5 w-5 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Vehículos</h3>
                 <p className="text-gray-600 text-sm">Registro y control de vehículos autorizados</p>
-              </div>
+              </Link>
 
-              <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <Link href="/admin/inventory/pets" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
                 <div className="flex items-center justify-between mb-4">
                   <PawPrint className="h-8 w-8 text-orange-600" />
                   <Plus className="h-5 w-5 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Mascotas</h3>
                 <p className="text-gray-600 text-sm">Control de mascotas registradas en el conjunto</p>
-              </div>
+              </Link>
+
+              <Link href="/admin/inventory/amenities" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <Home className="h-8 w-8 text-red-600" />
+                  <Plus className="h-5 w-5 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Amenidades</h3>
+                <p className="text-gray-600 text-sm">Gestionar áreas comunes y servicios recreativos</p>
+              </Link>
+
+              <Link href="/admin/inventory/common-assets" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <Building2 className="h-8 w-8 text-teal-600" />
+                  <Plus className="h-5 w-5 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Bienes Comunes</h3>
+                <p className="text-gray-600 text-sm">Inventario de activos y propiedades del conjunto</p>
+              </Link>
+
+              <Link href="/admin/inventory/complex-setup" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <Settings className="h-8 w-8 text-gray-600" />
+                  <Plus className="h-5 w-5 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Configuración del Conjunto</h3>
+                <p className="text-gray-600 text-sm">Configurar detalles generales del conjunto residencial</p>
+              </Link>
             </div>
           </div>
         </main>

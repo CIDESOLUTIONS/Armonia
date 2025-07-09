@@ -1,199 +1,222 @@
-// src/app/api/pqr/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
-import { withValidation, validateRequest } from '@/lib/validation';
-import { verifyAuth } from '@/lib/auth';
-import { 
-  CreatePQRSchema, 
-  GetPQRsSchema,
-  type CreatePQRRequest,
-  type GetPQRsRequest 
-} from '@/validators/pqr/pqr.validator';
+import { authMiddleware } from '@/lib/auth';
+import { z } from 'zod';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
-// GET: Obtener PQRs con filtros y paginación
+const PQRSchema = z.object({
+  subject: z.string().min(1, "El asunto es requerido."),
+  description: z.string().min(1, "La descripción es requerida."),
+  status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED', 'REJECTED']).default('OPEN'),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+  category: z.string().min(1, "La categoría es requerida."),
+  reportedById: z.number().int().positive("ID de reportante inválido."),
+  assignedToId: z.number().int().positive("ID de asignado inválido.").optional(),
+});
+
+const PQRCommentSchema = z.object({
+  pqrId: z.number().int().positive("ID de PQR inválido."),
+  comment: z.string().min(1, "El comentario no puede estar vacío."),
+});
+
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticación
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json(
-        { message: 'Token de autorización requerido' },
-        { status: 401 }
-      );
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN', 'STAFF', 'RESIDENT']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
+    const { payload } = authResult;
 
-    // Extraer y validar parámetros de consulta
-    const { searchParams } = new URL(request.url);
-    const queryParams = {
-      filter: searchParams.get('filter') || 'all',
-      priority: searchParams.get('priority') || undefined,
-      type: searchParams.get('type') || undefined,
-      assignedTo: searchParams.get('assignedTo') ? parseInt(searchParams.get('assignedTo')!) : undefined,
-      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 20,
-      search: searchParams.get('search') || undefined
-    };
+    const tenantPrisma = getPrisma(payload.schemaName);
+    let where: any = { complexId: payload.complexId };
 
-    // Validar parámetros
-    const validation = validateRequest(GetPQRsSchema, queryParams);
-    if (!validation.success) {
-      return validation.response;
-    }
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get('status');
+    const priority = searchParams.get('priority');
+    const search = searchParams.get('search');
+    const pqrId = searchParams.get('id');
 
-    const validatedParams = validation.data;
-    
-    if (!payload.complexId) {
-      return NextResponse.json(
-        { message: 'Usuario no está asociado a un complejo residencial' },
-        { status: 400 }
-      );
-    }
+    if (status) where.status = status;
+    if (priority) where.priority = priority;
+    if (pqrId) where.id = parseInt(pqrId);
 
-    const prisma = getPrisma();
-
-    // Construir consulta con filtros multi-tenant
-    const where: any = { 
-      complexId: payload.complexId // CRÍTICO: Filtro multi-tenant
-    };
-
-    // Aplicar filtros adicionales
-    if (validatedParams.filter !== 'all') {
-      where.status = validatedParams.filter;
-    }
-    
-    if (validatedParams.priority) {
-      where.priority = validatedParams.priority;
-    }
-    
-    if (validatedParams.type) {
-      where.type = validatedParams.type;
-    }
-    
-    if (validatedParams.assignedTo) {
-      where.assignedTo = validatedParams.assignedTo;
-    }
-    
-    if (validatedParams.search) {
+    if (search) {
       where.OR = [
-        { title: { contains: validatedParams.search, mode: 'insensitive' } },
-        { description: { contains: validatedParams.search, mode: 'insensitive' } }
+        { subject: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
       ];
     }
 
-    // Aplicar filtro de autorización por rol
+    // Si es residente, solo mostrar sus PQRs
     if (payload.role === 'RESIDENT') {
-      where.userId = payload.id; // Los residentes solo ven sus propios PQRs
+      where.reportedById = payload.id;
     }
 
-    // Calcular offset para paginación
-    const offset = (validatedParams.page - 1) * validatedParams.limit;
-
-    // Ejecutar consulta con include de relaciones
-    const [pqrs, total] = await Promise.all([
-      prisma.pQR.findMany({
-        where,
-        skip: offset,
-        take: validatedParams.limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: { id: true, name: true, email: true }
-          },
-          assignedUser: {
-            select: { id: true, name: true, email: true }
-          }
-        }
-      }),
-      prisma.pQR.count({ where })
-    ]);
-
-    return NextResponse.json({
-      data: pqrs,
-      pagination: {
-        page: validatedParams.page,
-        limit: validatedParams.limit,
-        total,
-        totalPages: Math.ceil(total / validatedParams.limit)
-      }
-    });
-
-  } catch (error) {
-    console.error('[PQR GET] Error:', error);
-    return NextResponse.json(
-      { message: 'Error interno del servidor' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST: Crear nuevo PQR
-async function createPQRHandler(validatedData: CreatePQRRequest, request: NextRequest) {
-  try {
-    // Verificar autenticación
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json(
-        { message: 'Token de autorización requerido' },
-        { status: 401 }
-      );
-    }
-
-    if (!payload.complexId) {
-      return NextResponse.json(
-        { message: 'Usuario no está asociado a un complejo residencial' },
-        { status: 400 }
-      );
-    }
-
-    const prisma = getPrisma();
-
-    // Verificar que el usuario pertenece al complejo
-    const user = await prisma.user.findFirst({
-      where: {
-        id: payload.id,
-        complexId: payload.complexId,
-        active: true
-      }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { message: 'Usuario no encontrado o inactivo en este complejo' },
-        { status: 404 }
-      );
-    }
-
-    // Crear PQR con datos validados y sanitizados
-    const pqr = await prisma.pQR.create({
-      data: {
-        type: validatedData.type,
-        title: validatedData.title,
-        description: validatedData.description,
-        priority: validatedData.priority,
-        status: 'OPEN', // Estado inicial fijo
-        unitNumber: validatedData.unitNumber || null,
-        userId: payload.id, // Del token autenticado
-        complexId: payload.complexId, // Del token autenticado (multi-tenant)
-      },
+    const pqrs = await tenantPrisma.pQR.findMany({
+      where,
       include: {
-        user: {
-          select: { id: true, name: true, email: true }
-        }
-      }
+        reportedBy: { select: { name: true } },
+        assignedTo: { select: { name: true } },
+        comments: { include: { author: { select: { name: true } } } },
+      },
+      orderBy: { createdAt: 'desc' },
     });
 
-    console.log(`[PQR] Nuevo PQR creado: ${pqr.id} por usuario ${payload.email} en complejo ${payload.complexId}`);
+    const formattedPQRs = pqrs.map(pqr => ({
+      ...pqr,
+      reportedByName: pqr.reportedBy?.name || 'N/A',
+      assignedToName: pqr.assignedTo?.name || 'N/A',
+      comments: pqr.comments.map(comment => ({
+        ...comment,
+        authorName: comment.author?.name || 'N/A',
+      })),
+    }));
 
-    return NextResponse.json(pqr, { status: 201 });
-
+    ServerLogger.info(`PQRs listadas para el complejo ${payload.complexId}`);
+    return NextResponse.json(formattedPQRs, { status: 200 });
   } catch (error) {
-    console.error('[PQR POST] Error:', error);
-    return NextResponse.json(
-      { message: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    ServerLogger.error('Error al obtener PQRs:', error);
+    return NextResponse.json({ message: 'Error al obtener PQRs' }, { status: 500 });
   }
 }
 
-// Exportar POST con validación
-export const POST = withValidation(CreatePQRSchema, createPQRHandler);
+export async function POST(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN', 'RESIDENT']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const body = await request.json();
+    const validatedData = PQRSchema.parse({ ...body, reportedById: payload.id });
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const newPQR = await tenantPrisma.pQR.create({ data: validatedData });
+
+    ServerLogger.info(`PQR creada: ${newPQR.subject} por ${payload.email} en complejo ${payload.complexId}`);
+    return NextResponse.json(newPQR, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al crear PQR:', error);
+    return NextResponse.json({ message: 'Error al crear PQR' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN', 'STAFF']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { id, ...updateData } = await request.json();
+    const validatedData = PQRSchema.partial().parse(updateData); // Partial para actualizaciones
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de PQR requerido para actualizar' }, { status: 400 });
+    }
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const updatedPQR = await tenantPrisma.pQR.update({
+      where: { id: parseInt(id) },
+      data: validatedData,
+    });
+
+    ServerLogger.info(`PQR actualizada: ${updatedPQR.subject} en complejo ${payload.complexId}`);
+    return NextResponse.json(updatedPQR, { status: 200 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al actualizar PQR:', error);
+    return NextResponse.json({ message: 'Error al actualizar PQR' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de PQR requerido para eliminar' }, { status: 400 });
+    }
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    await tenantPrisma.pQR.delete({ where: { id: parseInt(id) } });
+
+    ServerLogger.info(`PQR eliminada: ID ${id} en complejo ${payload.complexId}`);
+    return NextResponse.json({ message: 'PQR eliminada exitosamente' }, { status: 200 });
+  } catch (error) {
+    ServerLogger.error('Error al eliminar PQR:', error);
+    return NextResponse.json({ message: 'Error al eliminar PQR' }, { status: 500 });
+  }
+}
+
+export async function POST_COMMENT(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN', 'STAFF', 'RESIDENT']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const body = await request.json();
+    const validatedData = PQRCommentSchema.parse(body);
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const newComment = await tenantPrisma.pQRComment.create({
+      data: {
+        pqrId: validatedData.pqrId,
+        comment: validatedData.comment,
+        authorId: payload.id,
+      },
+    });
+
+    ServerLogger.info(`Comentario añadido a PQR ${validatedData.pqrId} por ${payload.email}`);
+    return NextResponse.json(newComment, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al añadir comentario a PQR:', error);
+    return NextResponse.json({ message: 'Error al añadir comentario' }, { status: 500 });
+  }
+}
+
+export async function PUT_ASSIGN(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { pqrId, assignedToId } = await request.json();
+
+    if (!pqrId || !assignedToId) {
+      return NextResponse.json({ message: 'ID de PQR y ID de asignado son requeridos' }, { status: 400 });
+    }
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const updatedPQR = await tenantPrisma.pQR.update({
+      where: { id: parseInt(pqrId) },
+      data: { assignedToId: parseInt(assignedToId) },
+    });
+
+    ServerLogger.info(`PQR ${pqrId} asignada a ${assignedToId} por ${payload.email}`);
+    return NextResponse.json(updatedPQR, { status: 200 });
+  } catch (error) {
+    ServerLogger.error('Error al asignar PQR:', error);
+    return NextResponse.json({ message: 'Error al asignar PQR' }, { status: 500 });
+  }
+}
