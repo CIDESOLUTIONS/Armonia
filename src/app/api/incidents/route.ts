@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { incidentService } from '@/services/incidentService';
 import { validateCsrfToken } from '@/lib/security/csrf-protection';
 import { sanitizeData } from '@/lib/security/xss-protection';
-import { logAuditAction } from '@/lib/security/audit-trail';
+import { logAuditAction } => '@/lib/security/audit-trail';
 import { getServerSession } from 'next-auth';
 import { withValidation, validateRequest } from '@/lib/validation';
 import { 

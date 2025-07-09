@@ -127,49 +127,22 @@ const mockPrismaClient = createPrismaClientMock({
     ],
     count: 3
   },
-  pQRNotification: {
-    create: {
-      id: 1,
-      pqrId: 1,
-      userId: 1,
-      type: 'STATUS_CHANGE',
-      title: 'Cambio de estado',
-      content: 'El PQR ha cambiado de estado',
-      sentAt: new Date()
-    },
-    findMany: [
-      {
-        id: 1,
-        pqrId: 1,
-        userId: 1,
-        type: 'STATUS_CHANGE',
-        title: 'Cambio de estado',
-        content: 'El PQR ha cambiado de estado',
-        sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 2,
-        pqrId: 1,
-        userId: 2,
-        type: 'COMMENT_ADDED',
-        title: 'Nuevo comentario',
-        content: 'Se ha añadido un comentario al PQR',
-        sentAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-      }
-    ],
-    count: 2
-  }
+  pQRNotification: createPrismaModelMock(defaultData.pQRNotification || {}),
+  assembly: createPrismaModelMock(defaultData.assembly || {
+    findUnique: { id: 1, title: 'Asamblea de Prueba', date: new Date() },
+    findMany: [],
+    create: { id: 1, title: 'Nueva Asamblea', date: new Date() },
+  }),
 });
 
 // Configurar mock para getSchemaFromRequest
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
-  getPrisma: () => mockPrismaClient,
+  prisma: mockPrismaClient, // Exportar la instancia global
+  getPrisma: () => mockPrismaClient, // Exportar la función que devuelve la instancia
   getSchemaFromRequest: jest.fn((schemaName) => {
-    // Return a new mock PrismaClient configured for the specific schema
     return mockPrismaClient;
   }),
-  default: () => mockPrismaClient, // Mock the default export as well
 }));
 
 // Configuración global para pruebas
