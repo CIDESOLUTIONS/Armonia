@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
 import { ServerLogger } from './logging/server-logger';
+import { authOptions } from './authOptions'; // Importar authOptions
 
 // Interfaz para el payload del token JWT
 export interface JWTPayload {
@@ -14,6 +15,7 @@ export interface JWTPayload {
   isGlobalAdmin?: boolean;
   iat?: number;
   exp?: number;
+  type?: string; // Añadir tipo para diferenciar tokens (ej. 'auth', 'password-reset')
 }
 
 // Obtener secreto JWT
@@ -45,7 +47,7 @@ export async function generateToken(payload: Partial<JWTPayload>): Promise<strin
     const encodedSecret = getJwtSecret();
     
     // Crear token con jose
-    const token = await new SignJWT({ ...payload })
+    const token = await new SignJWT({ ...payload, type: 'auth' })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('24h')
@@ -55,6 +57,27 @@ export async function generateToken(payload: Partial<JWTPayload>): Promise<strin
   } catch (error) {
     ServerLogger.error('Error generando token JWT:', error);
     throw new Error('Error en la generación del token');
+  }
+}
+
+// Generar token de restablecimiento de contraseña
+export async function generatePasswordResetToken(userId: number, email: string, schemaName?: string): Promise<string> {
+  try {
+    const encodedSecret = getJwtSecret();
+    const token = await new SignJWT({
+      id: userId,
+      email: email,
+      schemaName: schemaName,
+      type: 'password-reset',
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('1h') // Token válido por 1 hora
+      .sign(encodedSecret);
+    return token;
+  } catch (error) {
+    ServerLogger.error('Error generando token de restablecimiento de contraseña:', error);
+    throw new Error('Error en la generación del token de restablecimiento');
   }
 }
 
@@ -73,6 +96,29 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     return payload as JWTPayload;
   } catch (error) {
     ServerLogger.warn('Token JWT inválido', { error });
+    return null;
+  }
+}
+
+// Función para verificar token de restablecimiento de contraseña
+export async function verifyPasswordResetToken(token: string): Promise<JWTPayload | null> {
+  try {
+    const secretKey = getJwtSecret();
+    const { payload } = await jwtVerify(token, secretKey);
+
+    if (payload.type !== 'password-reset') {
+      ServerLogger.warn('Token de restablecimiento de contraseña inválido: tipo incorrecto');
+      return null;
+    }
+
+    if (!payload.id || !payload.email) {
+      ServerLogger.warn('Token de restablecimiento de contraseña con datos incompletos');
+      return null;
+    }
+
+    return payload as JWTPayload;
+  } catch (error) {
+    ServerLogger.warn('Token de restablecimiento de contraseña inválido o expirado', { error });
     return null;
   }
 }
@@ -139,3 +185,5 @@ export async function authMiddleware(
 export function authError(message = 'No autorizado') {
   return NextResponse.json({ error: message }, { status: 401 });
 }
+
+export { authOptions }; // Exportar authOptions

@@ -1,16 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import AdminHeader from '@/components/admin/layout/AdminHeader';
 import AdminSidebar from '@/components/admin/layout/AdminSidebar';
 import { Loader2, Building2, Users, Car, PawPrint, Plus, Search, Filter } from 'lucide-react';
+import { getDashboardStats } from '@/services/dashboardService';
+
+interface DashboardStats {
+  totalProperties: number;
+  totalResidents: number;
+  totalVehicles: number;
+  totalPets: number;
+}
 
 export default function InventoryPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  if (loading) {
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const fetchedStats = await getDashboardStats();
+        setStats(fetchedStats);
+      } catch (error) {
+        console.error('Error fetching inventory stats:', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (authLoading || loadingStats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -59,7 +83,7 @@ export default function InventoryPage() {
                   <Building2 className="h-8 w-8 text-blue-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Propiedades</p>
-                    <p className="text-2xl font-bold text-gray-900">120</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalProperties ?? 0}</p>
                   </div>
                 </div>
               </div>
@@ -69,7 +93,7 @@ export default function InventoryPage() {
                   <Users className="h-8 w-8 text-green-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Residentes</p>
-                    <p className="text-2xl font-bold text-gray-900">340</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalResidents ?? 0}</p>
                   </div>
                 </div>
               </div>
@@ -79,7 +103,7 @@ export default function InventoryPage() {
                   <Car className="h-8 w-8 text-purple-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Vehículos</p>
-                    <p className="text-2xl font-bold text-gray-900">185</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalVehicles ?? 0}</p>
                   </div>
                 </div>
               </div>
@@ -89,7 +113,7 @@ export default function InventoryPage() {
                   <PawPrint className="h-8 w-8 text-orange-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Mascotas</p>
-                    <p className="text-2xl font-bold text-gray-900">67</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalPets ?? 0}</p>
                   </div>
                 </div>
               </div>
@@ -139,4 +163,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-

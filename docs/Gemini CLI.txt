@@ -1,7 +1,7 @@
 Gemini CLI
 prompt
 
-Estas ubicado en el directorio raíz del proyecto llamado armonía; es el desarrollo de una aplicación para ser usada en  web y móvil, las especificaciones técnicas se encuentran ubicadas en la carpeta docs, revisa en profundidad las especificaciones y compárala con los desarrollos que se encuentra en este directorio del proyecto. genera un resumen técnico, funcional y de estilo de lo que entendiste, revisa lo que se debes ajustar o cambiar, si se requiere desarrollar nuevo código para cumplir con las especificaciones técnicas, debes buscar primero en la carpeta .git, debido a que mucho código fue elaborado pero pudo haber sido descartado por error, si definitivamente no esta, se debe desarrollar teniendo en cuenta las especificaciones técnicas y el estilo que se viene manejando; si es necesario incluye la reorganización de la estructura del proyecto para que sea eficiente, conversión de .JS a .TS, eliminar dependencias, funciones y código que no se necesitan; después se debe realizar las pruebas individuales y las pruebas e2e; después se debe preparar la aplicación para el despliegue en producción. por ultimo, genera un plan de ajuste con todas las tareas detalladas que se deban realizar para alcanzar el objetivo y esta será la guía de trabajo. debes mantener en la memoria el plan para seguirlo y ejecutarlo en su totalidad. Cada vez que hagas un arreglo avísame para sincronizar con el repositorio de GitHub del proyecto.
+Estas ubicado en el directorio raíz del proyecto llamado armonía; es el desarrollo de una aplicación para ser usada en  web y móvil, las especificaciones técnicas se encuentran ubicadas en la carpeta docs, revisa en profundidad las especificaciones y compárala con los desarrollos que se encuentra en este directorio del proyecto. genera un resumen técnico, funcional y de estilo de lo que entendiste, revisa lo que se debes ajustar o cambiar, si se requiere desarrollar nuevo código para cumplir con las especificaciones técnicas, debes buscar primero en la carpeta .git, debido a que mucho código fue elaborado pero pudo haber sido descartado por error, si definitivamente no esta, se debe desarrollar teniendo en cuenta las especificaciones técnicas y el estilo que se viene manejando; si es necesario incluye la reorganización de la estructura del proyecto para que sea eficiente, conversión de .JS a .TS, eliminar dependencias, funciones y código que no se necesitan, optimiza el código; después se debe realizar las pruebas individuales y las pruebas e2e; después se debe preparar la aplicación para el despliegue en producción. por ultimo, genera un plan de ajuste con todas las tareas detalladas que se deban realizar para alcanzar el objetivo y esta será la guía de trabajo. debes mantener en la memoria el plan para seguirlo y ejecutarlo en su totalidad.
 
 resumen
  Resumen Técnico y Funcional del Proyecto "Armonía"
@@ -214,7 +214,7 @@ Plan de Ajuste y Desarrollo
   ok  2. Análisis de Dependencias: Revisar package.json para identificar dependencias innecesarias y asegurar que las versiones de las librerías principales (Next.js, React, Prisma) sean las
       especificadas.
   ok  3. Conversión a TypeScript: Identificar archivos .js críticos (ej. server.js, seed.js) y planificar su conversión a .ts.
-   4. Configuración de Calidad de Código: Configurar eslint.config.mjs y .eslintrc.json para que se ajusten a las reglas de estilo definidas en las especificaciones.
+  ok  4. Configuración de Calidad de Código: Configurar eslint.config.mjs y .eslintrc.json para que se ajusten a las reglas de estilo definidas en las especificaciones.
 
 
   Fase 2: Desarrollo y Completitud de Funcionalidades (Iterativo por Módulo)
@@ -222,9 +222,9 @@ Plan de Ajuste y Desarrollo
   Para cada portal (Administrador, Residente, Recepción) y módulo principal (Autenticación, Landing Page):
 
 
-   1. Análisis de Brechas (Gap Analysis): Comparar la funcionalidad existente con la especificada.
-   2. Búsqueda en Historial Git: Buscar en el historial de .git código relevante que haya sido descartado.
-   3. Desarrollo de Funcionalidades Faltantes: Implementar las características faltantes, siguiendo el estilo y la arquitectura existentes.
+  ok  1. Análisis de Brechas (Gap Analysis): Comparar la funcionalidad existente con la especificada.
+  ok  2. Búsqueda en Historial Git: Buscar en el historial de .git código relevante que haya sido descartado.
+      3. Desarrollo de Funcionalidades Faltantes: Implementar las características faltantes, siguiendo el estilo y la arquitectura existentes.
    4. Pruebas Unitarias y de Integración: Crear pruebas para los nuevos componentes y servicios.
    5. Sincronización: Notificarte al final de la implementación de cada módulo para que puedas sincronizar los cambios con el repositorio.
 

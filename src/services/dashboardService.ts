@@ -16,7 +16,9 @@ export async function getDashboardStats() {
       resolvedPQRs: 0,
       commonAreaUsage: 0,
       budgetExecution: 0,
-      activeProjects: 0
+      activeProjects: 0,
+      revenueTrend: [],
+      commonAreaUsageTrend: [],
     };
   }
 }
@@ -27,6 +29,16 @@ export async function getRecentActivity() {
     return activity;
   } catch (error) {
     console.error('Error fetching recent activity:', error);
+    return [];
+  }
+}
+
+export async function getUpcomingEvents() {
+  try {
+    const response = await fetchApi('/api/dashboard/upcoming-events');
+    return response.events;
+  } catch (error) {
+    console.error('Error fetching upcoming events:', error);
     return [];
   }
 }

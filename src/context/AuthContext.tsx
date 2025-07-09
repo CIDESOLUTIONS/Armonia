@@ -15,6 +15,23 @@ interface User {
   isGlobalAdmin?: boolean;
 }
 
+'use client';
+
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { ServerLogger } from '@/lib/logging/server-logger';
+
+interface User {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  complexId?: number;
+  schemaName?: string;
+  complexName?: string;
+  isGlobalAdmin?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -28,6 +45,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   forceLogin: (userData: User, authToken: string) => void; // Método para test-login
+  changeUserRole: (newRole: string) => Promise<void>; // Nueva función para cambiar el rol
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -251,6 +269,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const changeUserRole = async (newRole: string) => {
+    if (!user || !token) {
+      console.warn('[AuthContext] No hay usuario o token para cambiar el rol.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/change-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newRole, targetUserId: user.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al cambiar el rol.');
+      }
+
+      const updatedUser = { ...user, role: newRole };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('[AuthContext] Rol de usuario actualizado a:', newRole);
+
+      // Redirigir al dashboard correspondiente al nuevo rol
+      if (newRole === 'RECEPTION') {
+        router.push('/reception-dashboard');
+      } else if (newRole === 'COMPLEX_ADMIN') {
+        router.push('/admin/admin-dashboard');
+      } else if (newRole === 'RESIDENT') {
+        router.push('/resident-dashboard');
+      } else {
+        router.push('/admin/admin-dashboard');
+      }
+
+    } catch (err) {
+      console.error('[AuthContext] Error al cambiar el rol:', err);
+      setError(err instanceof Error ? err.message : 'Error desconocido al cambiar el rol.');
+      throw err;
+    }
+  };
+
   const contextValue: AuthContextType = {
     user,
     loading,
@@ -264,6 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     forceLogin,
+    changeUserRole,
   };
 
   return (

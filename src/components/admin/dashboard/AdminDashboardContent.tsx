@@ -15,11 +15,13 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  BarChart3
+  BarChart3,
+  BellRing // Added BellRing icon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { getDashboardStats, getRecentActivity } from '@/services/dashboardService';
+import { getDashboardStats, getRecentActivity, getUpcomingEvents } from '@/services/dashboardService'; // Added getUpcomingEvents
+import { DashboardCharts } from './DashboardCharts'; // Importar el nuevo componente de gráficos
 
 interface DashboardStats {
   totalProperties: number;
@@ -32,6 +34,8 @@ interface DashboardStats {
   commonAreaUsage: number;
   budgetExecution: number;
   activeProjects: number;
+  revenueTrend: { month: string; value: number }[];
+  commonAreaUsageTrend: { month: string; value: number }[];
 }
 
 interface RecentActivity {
@@ -43,9 +47,20 @@ interface RecentActivity {
   status: 'success' | 'warning' | 'error' | 'info';
 }
 
+// New interface for UpcomingEvent
+interface UpcomingEvent {
+  id: string;
+  type: 'assembly' | 'fee';
+  title: string;
+  description: string;
+  date: string;
+  status: 'upcoming' | 'overdue';
+}
+
 export function AdminDashboardContent() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]); // New state for upcoming events
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,11 +69,15 @@ export function AdminDashboardContent() {
 
   const fetchDashboardData = async () => {
     try {
-      const fetchedStats = await getDashboardStats();
-      const fetchedActivity = await getRecentActivity();
+      const [fetchedStats, fetchedActivity, fetchedUpcomingEvents] = await Promise.all([ // Modified to fetch upcoming events
+        getDashboardStats(),
+        getRecentActivity(),
+        getUpcomingEvents(), // Fetch upcoming events
+      ]);
 
       setStats(fetchedStats);
       setRecentActivity(fetchedActivity);
+      setUpcomingEvents(fetchedUpcomingEvents); // Set upcoming events state
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -91,6 +110,23 @@ export function AdminDashboardContent() {
       case 'error': return 'bg-red-100 text-red-800';
       case 'info': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // New helper functions for upcoming events
+  const getEventIcon = (type: string) => {
+    switch (type) {
+      case 'assembly': return <Calendar className="h-4 w-4 text-blue-600" />;
+      case 'fee': return <DollarSign className="h-4 w-4 text-green-600" />;
+      default: return <BellRing className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getEventBadge = (status: string) => {
+    switch (status) {
+      case 'upcoming': return <Badge variant="outline">Próxima</Badge>;
+      case 'overdue': return <Badge variant="destructive">Vencida</Badge>;
+      default: return <Badge variant="secondary">Info</Badge>;
     }
   };
 
@@ -255,6 +291,11 @@ export function AdminDashboardContent() {
         </Card>
       </div>
 
+      {/* Charts Section */}
+      {stats.revenueTrend && stats.commonAreaUsageTrend && (
+        <DashboardCharts revenueTrend={stats.revenueTrend} commonAreaUsageTrend={stats.commonAreaUsageTrend} />
+      )}
+
       {/* Recent Activity & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
@@ -342,36 +383,27 @@ export function AdminDashboardContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+            {upcomingEvents.length > 0 ? (
+              upcomingEvents.map((event) => (
+                <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-full">
+                      {getEventIcon(event.type)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{event.title}</p>
+                      <p className="text-sm text-gray-500">{new Date(event.date).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                  {getEventBadge(event.status)}
                 </div>
-                <div>
-                  <p className="font-medium">Asamblea Ordinaria</p>
-                  <p className="text-sm text-gray-500">15 de junio, 2025 - 7:00 PM</p>
-                </div>
-              </div>
-              <Badge variant="outline">Próxima</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium">Vencimiento Cuotas</p>
-                  <p className="text-sm text-gray-500">30 de junio, 2025</p>
-                </div>
-              </div>
-              <Badge variant="outline">Recordatorio</Badge>
-            </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center">No hay próximos eventos.</p>
+            )}
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-
-

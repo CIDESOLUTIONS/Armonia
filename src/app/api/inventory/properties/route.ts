@@ -1,187 +1,117 @@
-// src/app/api/inventory/properties/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
-import { inventoryService } from '@/lib/services/inventory-service-refactored';
-import { PropertyCreateSchema } from '@/lib/schemas/inventory-schemas';
+import { getPrisma } from '@/lib/prisma';
+import { authMiddleware } from '@/lib/auth';
 import { z } from 'zod';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
-// Schema para parámetros de búsqueda
-const PropertySearchSchema = z.object({
-  complexId: z.string().transform(val => parseInt(val)).pipe(z.number().positive())
+const PropertySchema = z.object({
+  unitNumber: z.string().min(1, "El número de unidad es requerido."),
+  address: z.string().min(1, "La dirección es requerida."),
+  type: z.string().min(1, "El tipo es requerido."),
+  area: z.number().min(0, "El área debe ser un número positivo."),
+  bedrooms: z.number().int().min(0, "El número de habitaciones debe ser un entero positivo."),
+  bathrooms: z.number().min(0, "El número de baños debe ser un número positivo."),
+  parkingSpaces: z.number().int().min(0, "El número de parqueaderos debe ser un entero positivo."),
+  isActive: z.boolean().default(true),
 });
 
-// GET: Obtener propiedades de un complejo
 export async function GET(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
+    const { payload } = authResult;
 
-    const { searchParams } = new URL(request.url);
-    const queryParams = {
-      complexId: searchParams.get('complexId') || ''
-    };
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const properties = await tenantPrisma.property.findMany();
 
-    // Validar parámetros
-    const validation = PropertySearchSchema.safeParse(queryParams);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Parámetros inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
-    }
-
-    const { complexId } = validation.data;
-
-    // Verificar acceso al complejo
-    if (payload.complexId && payload.complexId !== complexId) {
-      return NextResponse.json({ 
-        message: 'Sin acceso a este complejo' 
-      }, { status: 403 });
-    }
-
-    // Obtener propiedades usando el servicio refactorizado
-    const properties = await inventoryService.getProperties(complexId);
-
-    console.log(`[INVENTORY PROPERTIES] ${properties.length} propiedades obtenidas para complejo ${complexId}`);
-
-    return NextResponse.json({ 
-      success: true,
-      properties,
-      total: properties.length
-    });
-
+    ServerLogger.info(`Propiedades listadas para el complejo ${payload.complexId}`);
+    return NextResponse.json(properties, { status: 200 });
   } catch (error) {
-    console.error('[INVENTORY PROPERTIES GET] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al obtener propiedades' 
-      },
-      { status: 500 }
-    );
+    ServerLogger.error('Error al obtener propiedades:', error);
+    return NextResponse.json({ message: 'Error al obtener propiedades' }, { status: 500 });
   }
 }
 
-// POST: Crear nueva propiedad
 export async function POST(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
-
-    // Solo admins pueden crear propiedades
-    if (!['ADMIN', 'COMPLEX_ADMIN'].includes(payload.role)) {
-      return NextResponse.json({ 
-        message: 'Solo administradores pueden crear propiedades' 
-      }, { status: 403 });
-    }
+    const { payload } = authResult;
 
     const body = await request.json();
-    
-    // Validar datos de entrada
-    const validation = PropertyCreateSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Datos inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
-    }
+    const validatedData = PropertySchema.parse(body);
 
-    const propertyData = validation.data;
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const newProperty = await tenantPrisma.property.create({ data: validatedData });
 
-    // Verificar acceso al complejo
-    if (payload.complexId && payload.complexId !== propertyData.complexId) {
-      return NextResponse.json({ 
-        message: 'Sin acceso a este complejo' 
-      }, { status: 403 });
-    }
-
-    // Crear propiedad usando el servicio refactorizado
-    const property = await inventoryService.createProperty(propertyData);
-
-    console.log(`[INVENTORY PROPERTIES] Propiedad ${property.unitNumber} creada por ${payload.email}`);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Propiedad creada exitosamente',
-      property
-    });
-
+    ServerLogger.info(`Propiedad creada: ${newProperty.unitNumber} en complejo ${payload.complexId}`);
+    return NextResponse.json(newProperty, { status: 201 });
   } catch (error) {
-    console.error('[INVENTORY PROPERTIES POST] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al crear propiedad' 
-      },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al crear propiedad:', error);
+    return NextResponse.json({ message: 'Error al crear propiedad' }, { status: 500 });
   }
 }
 
-// PUT: Actualizar propiedad existente
 export async function PUT(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
+    const { payload } = authResult;
 
-    // Solo admins pueden actualizar propiedades
-    if (!['ADMIN', 'COMPLEX_ADMIN'].includes(payload.role)) {
-      return NextResponse.json({ 
-        message: 'Solo administradores pueden actualizar propiedades' 
-      }, { status: 403 });
-    }
-
-    const body = await request.json();
-    const { id, ...updateData } = body;
+    const { id, ...updateData } = await request.json();
+    const validatedData = PropertySchema.partial().parse(updateData); // Partial para actualizaciones
 
     if (!id) {
-      return NextResponse.json({ 
-        message: 'ID de propiedad requerido' 
-      }, { status: 400 });
+      return NextResponse.json({ message: 'ID de propiedad requerido para actualizar' }, { status: 400 });
     }
 
-    // Validar datos de actualización
-    const validation = PropertyCreateSchema.partial().safeParse(updateData);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Datos inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
-    }
-
-    const validatedData = validation.data;
-
-    // Actualizar propiedad usando el servicio refactorizado
-    const property = await inventoryService.updateProperty(id, validatedData);
-
-    console.log(`[INVENTORY PROPERTIES] Propiedad ${property.unitNumber} actualizada por ${payload.email}`);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Propiedad actualizada exitosamente',
-      property
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const updatedProperty = await tenantPrisma.property.update({
+      where: { id: parseInt(id) },
+      data: validatedData,
     });
 
+    ServerLogger.info(`Propiedad actualizada: ${updatedProperty.unitNumber} en complejo ${payload.complexId}`);
+    return NextResponse.json(updatedProperty, { status: 200 });
   } catch (error) {
-    console.error('[INVENTORY PROPERTIES PUT] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al actualizar propiedad' 
-      },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al actualizar propiedad:', error);
+    return NextResponse.json({ message: 'Error al actualizar propiedad' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de propiedad requerido para eliminar' }, { status: 400 });
+    }
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    await tenantPrisma.property.delete({ where: { id: parseInt(id) } });
+
+    ServerLogger.info(`Propiedad eliminada: ID ${id} en complejo ${payload.complexId}`);
+    return NextResponse.json({ message: 'Propiedad eliminada exitosamente' }, { status: 200 });
+  } catch (error) {
+    ServerLogger.error('Error al eliminar propiedad:', error);
+    return NextResponse.json({ message: 'Error al eliminar propiedad' }, { status: 500 });
   }
 }

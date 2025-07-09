@@ -4,6 +4,7 @@ import { getPrisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { ActivityLogger } from '@/lib/logging/activity-logger';
+import { addMonths, format, startOfMonth, endOfMonth, subMonths } from 'date-fns'; // Import date-fns
 
 const logger = new ActivityLogger();
 
@@ -48,8 +49,24 @@ export async function GET(req: Request) {
       return (queryResult as any)[0].exists;
     };
 
-    // Obtener estadísticas del tenant
-    const [totalProperties, totalResidents, pendingPayments, totalRevenue, upcomingAssemblies, pendingPQRs, resolvedPQRs, activeProjects] = await Promise.all([
+    // --- KPI Calculations ---
+    const [
+      totalProperties,
+      totalResidents,
+      pendingPayments,
+      totalRevenue,
+      upcomingAssemblies,
+      pendingPQRs,
+      resolvedPQRs,
+      activeProjects,
+      totalVehicles,
+      totalPets,
+      // New for commonAreaUsage and budgetExecution
+      allCommonAreas,
+      completedReservationsLastMonth,
+      currentBudget,
+      totalExpensesCurrentBudget
+    ] = await Promise.all([
       (await tableExists('Property')) ? tenantPrisma.property.count() : 0,
       (await tableExists('Resident')) ? tenantPrisma.resident.count() : 0,
       (await tableExists('Fee')) ? tenantPrisma.fee.aggregate({
@@ -95,7 +112,72 @@ export async function GET(req: Request) {
           status: 'ACTIVE',
         },
       }) : 0,
+      (await tableExists('Vehicle')) ? tenantPrisma.vehicle.count() : 0,
+      (await tableExists('Pet')) ? tenantPrisma.pet.count() : 0,
+      // Fetch data for commonAreaUsage
+      (await tableExists('CommonArea')) ? tenantPrisma.commonArea.findMany({
+        include: {
+          availabilityConfig: true,
+        },
+      }) : [],
+      (await tableExists('Reservation')) ? tenantPrisma.reservation.findMany({
+        where: {
+          status: 'COMPLETED',
+          createdAt: {
+            gte: subMonths(new Date(), 1), // Last month
+          },
+        },
+      }) : [],
+      // Fetch data for budgetExecution
+      (await tableExists('Budget')) ? tenantPrisma.budget.findFirst({
+        where: {
+          status: {
+            in: ['APPROVED', 'ACTIVE'],
+          },
+          year: new Date().getFullYear(), // Current year's budget
+        },
+        include: {
+          budgetItems: true,
+        },
+      }) : null,
+      (await tableExists('Expense')) ? tenantPrisma.expense.aggregate({
+        _sum: {
+          amount: true,
+        },
+        where: {
+          expenseDate: {
+            gte: startOfMonth(new Date()), // Expenses for current month
+            lte: endOfMonth(new Date()),
+          },
+        },
+      }).then((result: any) => result._sum.amount || 0) : 0,
     ]);
+
+    // Calculate commonAreaUsage
+    let commonAreaUsage = 0;
+    if (allCommonAreas.length > 0 && completedReservationsLastMonth.length > 0) {
+      let totalReservedMinutes = 0;
+      completedReservationsLastMonth.forEach(res => {
+        totalReservedMinutes += (res.endDateTime.getTime() - res.startDateTime.getTime()) / (1000 * 60);
+      });
+
+      // Simplified total available minutes: assume 12 hours/day for 30 days for each common area
+      const totalPossibleMinutesPerArea = 12 * 60 * 30;
+      const totalAvailableMinutes = allCommonAreas.length * totalPossibleMinutesPerArea;
+
+      if (totalAvailableMinutes > 0) {
+        commonAreaUsage = parseFloat(((totalReservedMinutes / totalAvailableMinutes) * 100).toFixed(2));
+      }
+    }
+
+    // Calculate budgetExecution
+    let budgetExecution = 0;
+    if (currentBudget) {
+      const totalBudgeted = currentBudget.budgetItems.reduce((sum, item) => sum + item.budgetedAmount.toNumber(), 0);
+      if (totalBudgeted > 0) {
+        budgetExecution = parseFloat(((totalExpensesCurrentBudget / totalBudgeted) * 100).toFixed(2));
+      }
+    }
 
     const stats = {
       totalProperties,
@@ -105,10 +187,66 @@ export async function GET(req: Request) {
       upcomingAssemblies,
       pendingPQRs,
       resolvedPQRs,
-      commonAreaUsage: Math.floor(Math.random() * 100), // Simulado, reemplazar con datos reales después
-      budgetExecution: Math.floor(Math.random() * 100), // Simulado, reemplazar con datos reales después
+      commonAreaUsage, // Calculated
+      budgetExecution, // Calculated
       activeProjects,
+      totalVehicles,
+      totalPets,
     };
+
+    // --- Trend Data (Last 12 months) ---
+    const revenueTrend = [];
+    const commonAreaUsageTrend = [];
+    const today = new Date();
+
+    for (let i = 11; i >= 0; i--) {
+      const month = subMonths(today, i);
+      const monthStart = startOfMonth(month);
+      const monthEnd = endOfMonth(month);
+      const monthLabel = format(month, 'MMM yyyy');
+
+      // Revenue for the month
+      const monthlyRevenue = (await tableExists('Payment')) ? await tenantPrisma.payment.aggregate({
+        _sum: {
+          amount: true,
+        },
+        where: {
+          status: 'COMPLETED',
+          createdAt: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+      }).then((result: any) => result._sum.amount || 0) : 0;
+      revenueTrend.push({ month: monthLabel, value: monthlyRevenue });
+
+      // Common Area Usage for the month (simplified calculation)
+      const monthlyReservations = (await tableExists('Reservation')) ? await tenantPrisma.reservation.findMany({
+        where: {
+          status: 'COMPLETED',
+          createdAt: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+      }) : [];
+
+      let monthlyReservedMinutes = 0;
+      monthlyReservations.forEach(res => {
+        monthlyReservedMinutes += (res.endDateTime.getTime() - res.startDateTime.getTime()) / (1000 * 60);
+      });
+
+      let monthlyCommonAreaUsage = 0;
+      if (allCommonAreas.length > 0) {
+        const monthlyPossibleMinutesPerArea = 12 * 60 * (monthEnd.getDate() - monthStart.getDate() + 1); // Days in month
+        const monthlyTotalAvailableMinutes = allCommonAreas.length * monthlyPossibleMinutesPerArea;
+        if (monthlyTotalAvailableMinutes > 0) {
+          monthlyCommonAreaUsage = parseFloat(((monthlyReservedMinutes / monthlyTotalAvailableMinutes) * 100).toFixed(2));
+        }
+      }
+      commonAreaUsageTrend.push({ month: monthLabel, value: monthlyCommonAreaUsage });
+    }
+
 
     // Obtener actividad reciente del tenant
     const [recentPayments, recentPQRs, recentAssemblies, recentIncidents] = await Promise.all([
@@ -176,7 +314,7 @@ export async function GET(req: Request) {
       details: { stats, activityCount: recentActivity.length },
     });
 
-    return NextResponse.json({ stats, recentActivity, complexName: complex.name }, { status: 200 });
+    return NextResponse.json({ stats, recentActivity, complexName: complex.name, revenueTrend, commonAreaUsageTrend }, { status: 200 });
   } catch (error) {
     logger.error('[API Dashboard] Error:', error);
     return NextResponse.json(

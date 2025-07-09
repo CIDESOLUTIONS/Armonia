@@ -3,9 +3,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Sun, Moon, DollarSign, User, LogOut, Menu } from 'lucide-react';
+import { Globe, Sun, Moon, DollarSign, User, LogOut, Menu, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
+import { useAuth } from '@/context/AuthContext';
 
 // Traducciones para el header
 const headerTexts = {
@@ -14,14 +15,16 @@ const headerTexts = {
     plans: "Planes",
     contact: "Contáctenos",
     login: "Iniciar Sesión",
-    logout: "Cerrar Sesión"
+    logout: "Cerrar Sesión",
+    roleSelector: "Seleccionar Rol"
   },
   en: {
     features: "Features",
     plans: "Plans",
     contact: "Contact Us",
     login: "Login",
-    logout: "Logout"
+    logout: "Logout",
+    roleSelector: "Select Role"
   }
 };
 
@@ -53,8 +56,10 @@ export function Header({
   hideNavLinks = false,
 }: HeaderProps) {
   const router = useRouter();
+  const { user, changeUserRole } = useAuth(); // Obtener el usuario y la función changeUserRole
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(user?.role || '');
   
   // Obtenemos las traducciones según el idioma
   const t = langlanguage === 'Español' ? headerTexts.es : headerTexts.en;
@@ -86,6 +91,20 @@ export function Header({
       element.scrollIntoView({ behavior: 'smooth' });
     }
     setIsMobileMenuOpen(false);
+  };
+
+  const handleRoleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newRole = event.target.value;
+    setSelectedRole(newRole);
+    if (user && user.id) {
+      try {
+        await changeUserRole(newRole);
+      } catch (error) {
+        console.error('Error al cambiar el rol desde el Header:', error);
+        // Revertir el rol seleccionado en caso de error
+        setSelectedRole(user.role);
+      }
+    }
   };
 
   return (
@@ -144,27 +163,44 @@ export function Header({
             </button>
           </div>
           {isLoggedIn ? (
-            <div className="relative">
-              <button
-                className="text-white hover:text-indigo-200 focus:outline-none"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <User className="w-6 h-6" />
-              </button>
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg">
-                  <button
-                    className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-700 flex items-center"
-                    onClick={() => {
-                      if (logout) logout();
-                      setIsDropdownOpen(false);
-                    }}
+            <div className="relative flex items-center gap-4">
+              {user && user.isGlobalAdmin && (
+                <div className="relative">
+                  <select
+                    value={selectedRole}
+                    onChange={handleRoleChange}
+                    className="bg-indigo-700 text-white text-sm py-1 px-2 rounded-md appearance-none pr-8 cursor-pointer"
                   >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    {t.logout}
-                  </button>
+                    <option value="ADMIN">Administrador</option>
+                    <option value="RESIDENT">Residente</option>
+                    <option value="STAFF">Recepción/Vigilancia</option>
+                    <option value="APP_ADMIN">Admin App</option>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" />
                 </div>
               )}
+              <div className="relative">
+                <button
+                  className="text-white hover:text-indigo-200 focus:outline-none"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <User className="w-6 h-6" />
+                </button>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg">
+                    <button
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-700 flex items-center"
+                      onClick={() => {
+                        if (logout) logout();
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {t.logout}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <Link 
