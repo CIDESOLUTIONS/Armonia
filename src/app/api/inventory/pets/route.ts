@@ -1,122 +1,124 @@
-// src/app/api/inventory/pets/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
-import { inventoryService } from '@/lib/services/inventory-service-refactored';
-import { PetCreateSchema } from '@/lib/schemas/inventory-schemas';
+import { getPrisma } from '@/lib/prisma';
+import { authMiddleware } from '@/lib/auth';
 import { z } from 'zod';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
-// Schema para parámetros de búsqueda
-const PetSearchSchema = z.object({
-  complexId: z.string().transform(val => parseInt(val)).pipe(z.number().positive()),
-  propertyId: z.string().transform(val => parseInt(val)).pipe(z.number().positive()).optional()
+const PetSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido."),
+  species: z.string().min(1, "La especie es requerida."),
+  breed: z.string().min(1, "La raza es requerida."),
+  ownerName: z.string().min(1, "El nombre del propietario es requerido."),
+  propertyId: z.number().int().positive("ID de propiedad inválido."),
+  isActive: z.boolean().default(true),
 });
 
-// GET: Obtener mascotas de un complejo
 export async function GET(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
+    const { payload } = authResult;
 
-    const { searchParams } = new URL(request.url);
-    const queryParams = {
-      complexId: searchParams.get('complexId') || '',
-      propertyId: searchParams.get('propertyId') || undefined
-    };
-
-    // Validar parámetros
-    const validation = PetSearchSchema.safeParse(queryParams);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Parámetros inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
-    }
-
-    const { complexId, propertyId } = validation.data;
-
-    // Verificar acceso al complejo
-    if (payload.complexId && payload.complexId !== complexId) {
-      return NextResponse.json({ 
-        message: 'Sin acceso a este complejo' 
-      }, { status: 403 });
-    }
-
-    // Obtener mascotas usando el servicio refactorizado
-    const pets = await inventoryService.getPets(complexId, propertyId);
-
-    console.log(`[INVENTORY PETS] ${pets.length} mascotas obtenidas para complejo ${complexId}`);
-
-    return NextResponse.json({ 
-      success: true,
-      pets,
-      total: pets.length
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const pets = await tenantPrisma.pet.findMany({
+      include: {
+        property: { select: { unitNumber: true } },
+      },
     });
 
+    const petsWithUnitNumber = pets.map(pet => ({
+      ...pet,
+      unitNumber: pet.property?.unitNumber || 'N/A',
+    }));
+
+    ServerLogger.info(`Mascotas listadas para el complejo ${payload.complexId}`);
+    return NextResponse.json(petsWithUnitNumber, { status: 200 });
   } catch (error) {
-    console.error('[INVENTORY PETS GET] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al obtener mascotas' 
-      },
-      { status: 500 }
-    );
+    ServerLogger.error('Error al obtener mascotas:', error);
+    return NextResponse.json({ message: 'Error al obtener mascotas' }, { status: 500 });
   }
 }
 
-// POST: Crear nueva mascota
 export async function POST(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
-
-    // Solo admins y personal autorizado pueden crear mascotas
-    if (!['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'].includes(payload.role)) {
-      return NextResponse.json({ 
-        message: 'Sin permisos para registrar mascotas' 
-      }, { status: 403 });
-    }
+    const { payload } = authResult;
 
     const body = await request.json();
-    
-    // Validar datos de entrada
-    const validation = PetCreateSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Datos inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
+    const validatedData = PetSchema.parse(body);
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const newPet = await tenantPrisma.pet.create({ data: validatedData });
+
+    ServerLogger.info(`Mascota creada: ${newPet.name} en complejo ${payload.complexId}`);
+    return NextResponse.json(newPet, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al crear mascota:', error);
+    return NextResponse.json({ message: 'Error al crear mascota' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { id, ...updateData } = await request.json();
+    const validatedData = PetSchema.partial().parse(updateData); // Partial para actualizaciones
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de mascota requerido para actualizar' }, { status: 400 });
     }
 
-    const petData = validation.data;
-
-    // Crear mascota usando el servicio refactorizado
-    const pet = await inventoryService.createPet(petData);
-
-    console.log(`[INVENTORY PETS] Mascota ${pet.name} creada por ${payload.email}`);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Mascota registrada exitosamente',
-      pet
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const updatedPet = await tenantPrisma.pet.update({
+      where: { id: parseInt(id) },
+      data: validatedData,
     });
 
+    ServerLogger.info(`Mascota actualizada: ${updatedPet.name} en complejo ${payload.complexId}`);
+    return NextResponse.json(updatedPet, { status: 200 });
   } catch (error) {
-    console.error('[INVENTORY PETS POST] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al registrar mascota' 
-      },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al actualizar mascota:', error);
+    return NextResponse.json({ message: 'Error al actualizar mascota' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de mascota requerido para eliminar' }, { status: 400 });
+    }
+
+    const tenantPrisma = getPrisma(payload.schemaName);
+    await tenantPrisma.pet.delete({ where: { id: parseInt(id) } });
+
+    ServerLogger.info(`Mascota eliminada: ID ${id} en complejo ${payload.complexId}`);
+    return NextResponse.json({ message: 'Mascota eliminada exitosamente' }, { status: 200 });
+  } catch (error) {
+    ServerLogger.error('Error al eliminar mascota:', error);
+    return NextResponse.json({ message: 'Error al eliminar mascota' }, { status: 500 });
   }
 }

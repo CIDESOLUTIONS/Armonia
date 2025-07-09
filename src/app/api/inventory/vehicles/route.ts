@@ -1,241 +1,126 @@
-// src/app/api/inventory/vehicles/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
 import { getPrisma } from '@/lib/prisma';
-import { inventoryService } from '@/lib/services/inventory-service-refactored';
-import { VehicleCreateSchema } from '@/lib/schemas/inventory-schemas';
+import { authMiddleware } from '@/lib/auth';
 import { z } from 'zod';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
-// Schema para parámetros de búsqueda
-const VehicleSearchSchema = z.object({
-  complexId: z.string().transform(val => parseInt(val)).pipe(z.number().positive()),
-  propertyId: z.string().transform(val => parseInt(val)).pipe(z.number().positive()).optional()
+const VehicleSchema = z.object({
+  licensePlate: z.string().min(1, "La placa es requerida."),
+  brand: z.string().min(1, "La marca es requerida."),
+  model: z.string().min(1, "El modelo es requerido."),
+  color: z.string().min(1, "El color es requerido."),
+  ownerName: z.string().min(1, "El nombre del propietario es requerido."),
+  propertyId: z.number().int().positive("ID de propiedad inválido."),
+  parkingSpace: z.string().optional(),
+  isActive: z.boolean().default(true),
 });
 
-// Schema para actualización de vehículo
-const VehicleUpdateSchema = VehicleCreateSchema.partial().extend({
-  id: z.number()
-});
-
-// GET: Obtener vehículos de un complejo
 export async function GET(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
+    const { payload } = authResult;
 
-    const { searchParams } = new URL(request.url);
-    const queryParams = {
-      complexId: searchParams.get('complexId') || '',
-      propertyId: searchParams.get('propertyId') || undefined
-    };
-
-    // Validar parámetros
-    const validation = VehicleSearchSchema.safeParse(queryParams);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Parámetros inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
-    }
-
-    const { complexId, propertyId } = validation.data;
-
-    // Verificar acceso al complejo
-    if (payload.complexId && payload.complexId !== complexId) {
-      return NextResponse.json({ 
-        message: 'Sin acceso a este complejo' 
-      }, { status: 403 });
-    }
-
-    // Obtener vehículos usando el servicio refactorizado
-    const vehicles = await inventoryService.getVehicles(complexId, propertyId);
-
-    console.log(`[INVENTORY VEHICLES] ${vehicles.length} vehículos obtenidos para complejo ${complexId}`);
-
-    return NextResponse.json({ 
-      success: true,
-      vehicles,
-      total: vehicles.length
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const vehicles = await tenantPrisma.vehicle.findMany({
+      include: {
+        property: { select: { unitNumber: true } },
+      },
     });
 
+    const vehiclesWithUnitNumber = vehicles.map(vehicle => ({
+      ...vehicle,
+      unitNumber: vehicle.property?.unitNumber || 'N/A',
+    }));
+
+    ServerLogger.info(`Vehículos listados para el complejo ${payload.complexId}`);
+    return NextResponse.json(vehiclesWithUnitNumber, { status: 200 });
   } catch (error) {
-    console.error('[INVENTORY VEHICLES GET] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al obtener vehículos' 
-      },
-      { status: 500 }
-    );
+    ServerLogger.error('Error al obtener vehículos:', error);
+    return NextResponse.json({ message: 'Error al obtener vehículos' }, { status: 500 });
   }
 }
 
-// POST: Crear nuevo vehículo
 export async function POST(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
     }
-
-    // Solo admins y personal autorizado pueden crear vehículos
-    if (!['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'].includes(payload.role)) {
-      return NextResponse.json({ 
-        message: 'Sin permisos para registrar vehículos' 
-      }, { status: 403 });
-    }
+    const { payload } = authResult;
 
     const body = await request.json();
-    
-    // Validar datos de entrada
-    const validation = VehicleCreateSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Datos inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
-    }
+    const validatedData = VehicleSchema.parse(body);
 
-    const vehicleData = validation.data;
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const newVehicle = await tenantPrisma.vehicle.create({ data: validatedData });
 
-    // Crear vehículo usando el servicio refactorizado
-    const vehicle = await inventoryService.createVehicle(vehicleData);
-
-    console.log(`[INVENTORY VEHICLES] Vehículo ${vehicle.licensePlate} creado por ${payload.email}`);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Vehículo registrado exitosamente',
-      vehicle
-    });
-
+    ServerLogger.info(`Vehículo creado: ${newVehicle.licensePlate} en complejo ${payload.complexId}`);
+    return NextResponse.json(newVehicle, { status: 201 });
   } catch (error) {
-    console.error('[INVENTORY VEHICLES POST] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al registrar vehículo' 
-      },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al crear vehículo:', error);
+    return NextResponse.json({ message: 'Error al crear vehículo' }, { status: 500 });
   }
 }
 
-// PUT: Actualizar vehículo existente
 export async function PUT(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { id, ...updateData } = await request.json();
+    const validatedData = VehicleSchema.partial().parse(updateData); // Partial para actualizaciones
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de vehículo requerido para actualizar' }, { status: 400 });
     }
 
-    // Solo admins y personal autorizado pueden actualizar vehículos
-    if (!['ADMIN', 'COMPLEX_ADMIN', 'RECEPTION'].includes(payload.role)) {
-      return NextResponse.json({ 
-        message: 'Sin permisos para actualizar vehículos' 
-      }, { status: 403 });
-    }
-
-    const body = await request.json();
-    
-    // Validar datos de entrada
-    const validation = VehicleUpdateSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { 
-          message: 'Datos inválidos',
-          errors: validation.error.format()
-        },
-        { status: 400 }
-      );
-    }
-
-    const { id, ...updateData } = validation.data;
-
-    // Actualizar vehículo usando Prisma directo (no implementado en servicio aún)
-    const prisma = getPrisma();
-    const vehicle = await prisma.vehicle.update({
-      where: { id },
-      data: updateData,
-      include: {
-        property: {
-          select: { unitNumber: true }
-        },
-        resident: {
-          select: { name: true }
-        }
-      }
+    const tenantPrisma = getPrisma(payload.schemaName);
+    const updatedVehicle = await tenantPrisma.vehicle.update({
+      where: { id: parseInt(id) },
+      data: validatedData,
     });
 
-    console.log(`[INVENTORY VEHICLES] Vehículo ${vehicle.licensePlate} actualizado por ${payload.email}`);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Vehículo actualizado exitosamente',
-      vehicle
-    });
-
+    ServerLogger.info(`Vehículo actualizado: ${updatedVehicle.licensePlate} en complejo ${payload.complexId}`);
+    return NextResponse.json(updatedVehicle, { status: 200 });
   } catch (error) {
-    console.error('[INVENTORY VEHICLES PUT] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al actualizar vehículo' 
-      },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ message: 'Error de validación', errors: error.errors }, { status: 400 });
+    }
+    ServerLogger.error('Error al actualizar vehículo:', error);
+    return NextResponse.json({ message: 'Error al actualizar vehículo' }, { status: 500 });
   }
 }
 
-// DELETE: Eliminar vehículo
 export async function DELETE(request: NextRequest) {
   try {
-    const { auth, payload } = await verifyAuth(request);
-    if (!auth || !payload) {
-      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    const authResult = await authMiddleware(request, ['ADMIN', 'COMPLEX_ADMIN']);
+    if (!authResult.proceed) {
+      return authResult.response;
+    }
+    const { payload } = authResult;
+
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de vehículo requerido para eliminar' }, { status: 400 });
     }
 
-    // Solo admins pueden eliminar vehículos
-    if (!['ADMIN', 'COMPLEX_ADMIN'].includes(payload.role)) {
-      return NextResponse.json({ 
-        message: 'Solo administradores pueden eliminar vehículos' 
-      }, { status: 403 });
-    }
+    const tenantPrisma = getPrisma(payload.schemaName);
+    await tenantPrisma.vehicle.delete({ where: { id: parseInt(id) } });
 
-    const { searchParams } = new URL(request.url);
-    const vehicleId = searchParams.get('id');
-
-    if (!vehicleId || isNaN(Number(vehicleId))) {
-      return NextResponse.json({ 
-        message: 'ID de vehículo requerido' 
-      }, { status: 400 });
-    }
-
-    // Eliminar vehículo
-    const prisma = getPrisma();
-    await prisma.vehicle.delete({
-      where: { id: Number(vehicleId) }
-    });
-
-    console.log(`[INVENTORY VEHICLES] Vehículo ${vehicleId} eliminado por ${payload.email}`);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Vehículo eliminado exitosamente'
-    });
-
+    ServerLogger.info(`Vehículo eliminado: ID ${id} en complejo ${payload.complexId}`);
+    return NextResponse.json({ message: 'Vehículo eliminado exitosamente' }, { status: 200 });
   } catch (error) {
-    console.error('[INVENTORY VEHICLES DELETE] Error:', error);
-    return NextResponse.json(
-      { 
-        message: error instanceof Error ? error.message : 'Error al eliminar vehículo' 
-      },
-      { status: 500 }
-    );
+    ServerLogger.error('Error al eliminar vehículo:', error);
+    return NextResponse.json({ message: 'Error al eliminar vehículo' }, { status: 500 });
   }
 }
