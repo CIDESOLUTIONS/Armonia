@@ -1,110 +1,92 @@
-import { fetcher } from '@/lib/fetcher';
+import { fetchApi } from '@/lib/api';
 
-export interface Project {
-  id: string;
+interface Project {
+  id: number;
   name: string;
-  description: string;
-  budget: number;
-  startDate: Date | string;
-  endDate: Date | string | null;
-  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-  progress: number;
+  description?: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  startDate: string;
+  endDate?: string;
+  assignedToId?: number;
+  assignedToName?: string;
+  createdBy: number;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ProjectFormData {
+interface GetProjectsParams {
+  status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  search?: string;
+}
+
+interface CreateProjectData {
   name: string;
-  description: string;
-  budget: number;
-  startDate: Date | string;
-  endDate: Date | string | null;
-  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-  progress: number;
+  description?: string;
+  status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  startDate: string;
+  endDate?: string;
+  assignedToId?: number;
 }
 
-/**
- * Obtiene todos los proyectos
- */
-export async function getAllProjects(): Promise<Project[]> {
+interface UpdateProjectData {
+  id: number;
+  name?: string;
+  description?: string;
+  status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  startDate?: string;
+  endDate?: string;
+  assignedToId?: number;
+}
+
+export async function getProjects(params?: GetProjectsParams): Promise<Project[]> {
   try {
-    const _response = await fetcher.get('/api/projects');
-    
-    // Convertir las fechas a objetos Date
-    return response.map((project: unknown) => ({
-      ...project,
-      startDate: new Date(project.startDate),
-      endDate: project.endDate ? new Date(project.endDate) : null,
-    }));
+    const query = new URLSearchParams();
+    if (params?.status) query.append('status', params.status);
+    if (params?.search) query.append('search', params.search);
+
+    const response = await fetchApi(`/api/projects?${query.toString()}`);
+    return response;
   } catch (error) {
-    console.error('Error al obtener proyectos:', error);
+    console.error('Error fetching projects:', error);
     throw error;
   }
 }
 
-/**
- * Obtiene un proyecto por su ID
- */
-export async function getProjectById(id: string): Promise<Project> {
+export async function createProject(data: CreateProjectData): Promise<Project> {
   try {
-    const project = await fetcher.get(`/api/projects/${id}`);
-    
-    // Convertir las fechas a objetos Date
-    return {
-      ...project,
-      startDate: new Date(project.startDate),
-      endDate: project.endDate ? new Date(project.endDate) : null,
-    };
+    const response = await fetchApi('/api/projects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response;
   } catch (error) {
-    console.error(`Error al obtener proyecto ${id}:`, error);
+    console.error('Error creating project:', error);
     throw error;
   }
 }
 
-/**
- * Crea un nuevo proyecto
- */
-export async function createProject(data: ProjectFormData): Promise<Project> {
+export async function updateProject(data: UpdateProjectData): Promise<Project> {
   try {
-    const project = await fetcher.post('/api/projects', data);
-    
-    // Convertir las fechas a objetos Date
-    return {
-      ...project,
-      startDate: new Date(project.startDate),
-      endDate: project.endDate ? new Date(project.endDate) : null,
-    };
+    const response = await fetchApi('/api/projects', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response;
   } catch (error) {
-    console.error('Error al crear proyecto:', error);
+    console.error('Error updating project:', error);
     throw error;
   }
 }
 
-/**
- * Actualiza un proyecto existente
- */
-export async function updateProject(id: string, data: Partial<ProjectFormData>): Promise<Project> {
+export async function deleteProject(id: number): Promise<void> {
   try {
-    const project = await fetcher.put(`/api/projects/${id}`, data);
-    
-    // Convertir las fechas a objetos Date
-    return {
-      ...project,
-      startDate: new Date(project.startDate),
-      endDate: project.endDate ? new Date(project.endDate) : null,
-    };
+    await fetchApi('/api/projects', {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
+    });
   } catch (error) {
-    console.error(`Error al actualizar proyecto ${id}:`, error);
-    throw error;
-  }
-}
-
-/**
- * Elimina un proyecto
- */
-export async function deleteProject(id: string): Promise<void> {
-  try {
-    await fetcher.delete(`/api/projects/${id}`);
-  } catch (error) {
-    console.error(`Error al eliminar proyecto ${id}:`, error);
+    console.error('Error deleting project:', error);
     throw error;
   }
 }
