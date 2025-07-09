@@ -262,10 +262,9 @@ export async function POST(req: Request) {
             }
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error al verificar pago:', err);
-        // En ambiente de desarrollo, permitimos simular un pago exitoso
-        console.log('[API Register-Complex] Simulando pago exitoso en desarrollo');
+        return NextResponse.json({ message: 'Error al verificar el pago' }, { status: 500 });
       }
     }
 

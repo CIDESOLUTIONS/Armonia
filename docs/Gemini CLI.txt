@@ -261,8 +261,8 @@ Plan de Ajuste y Optimización para "Armonía"
 
   ok  * 1.1. Análisis de Dependencias: Revisaré package.json y requirements.txt para identificar y eliminar librerías obsoletas o no utilizadas, y actualizar las críticas a las versiones  especificadas (Next.js, React, Prisma).
  ok  * 1.2. Conversión Total a TypeScript: Migraré sistemáticamente los archivos .js restantes a .ts o .tsx para garantizar la consistencia y seguridad de tipos en todo el proyecto. Esto incluye archivos de configuración, scripts de seeding (seedUsers.js) y mocks (jest.mocks.js).
-   * 1.3. Reorganización y Estructura de Archivos: Reorganizaré la estructura de src/app para que coincida con la arquitectura de portales definida en las especificaciones (por roles: admin, resident, reception). Moveré los scripts de Python (app.py, project_evaluator.py) a una carpeta dedicada como scripts/python/ para mayor orden.
-   * 1.4. Variables de Entorno: Consolidaré y documentaré el uso de las variables de entorno (.env.*), asegurando que no haya secretos expuestos y que la configuración sea clara para cada ambiente (desarrollo, test, producción).
+  ok * 1.3. Reorganización y Estructura de Archivos: Reorganizaré la estructura de src/app para que coincida con la arquitectura de portales definida en las especificaciones (por roles: admin, resident, reception). Moveré los scripts de Python (app.py, project_evaluator.py) a una carpeta dedicada como scripts/python/ para mayor orden.
+  ok * 1.4. Variables de Entorno: Consolidaré y documentaré el uso de las variables de entorno (.env.*), asegurando que no haya secretos expuestos y que la configuración sea clara para cada ambiente (desarrollo, test, producción).
 
   
 Fase 2: Desarrollo y Alineación Funcional
@@ -288,12 +288,9 @@ Fase 2: Desarrollo y Alineación Funcional
   Fase 4: Preparación para Producción y Despliegue
 
    * 4.1. Build de Producción: Generaré una build de producción optimizada de la aplicación (npm run build) y resolveré cualquier error o advertencia que surja.
-   * 4.2. Contenerización (Recomendación): Crearé un Dockerfile para empaquetar la aplicación, facilitando un despliegue consistente y escalable en cualquier proveedor de nube, como se
-     sugiere en las especificaciones.
-   * 4.3. Scripts y CI/CD: Revisaré y ajustaré los scripts de despliegue (deploy.sh) y los flujos de trabajo de GitHub Actions (.github/workflows/) para automatizar el proceso de despliegue
-     en los diferentes entornos (staging, producción).
-   * 4.4. Documentación Final: Generaré o actualizaré la documentación técnica clave del proyecto, incluyendo un README.md robusto con instrucciones de instalación, configuración y
-     despliegue.
+   * 4.2. Contenerización (Recomendación): Crearé un Dockerfile para empaquetar la aplicación, facilitando un despliegue consistente y escalable en cualquier proveedor de nube, como se sugiere en las especificaciones.
+   * 4.3. Scripts y CI/CD: Revisaré y ajustaré los scripts de despliegue (deploy.sh) y los flujos de trabajo de GitHub Actions (.github/workflows/) para automatizar el proceso de despliegue en los diferentes entornos (staging, producción).
+   * 4.4. Documentación Final: Generaré o actualizaré la documentación técnica clave del proyecto, incluyendo un README.md robusto con instrucciones de instalación, configuración y despliegue.
 
 
   He guardado este plan en mi memoria para guiar nuestras próximas interacciones.

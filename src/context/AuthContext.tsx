@@ -15,23 +15,6 @@ interface User {
   isGlobalAdmin?: boolean;
 }
 
-'use client';
-
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { ServerLogger } from '@/lib/logging/server-logger';
-
-interface User {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
-  complexId?: number;
-  schemaName?: string;
-  complexName?: string;
-  isGlobalAdmin?: boolean;
-}
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
