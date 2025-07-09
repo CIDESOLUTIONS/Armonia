@@ -8,6 +8,7 @@ module.exports = {
   ],
   plugins: [
     ['@babel/plugin-transform-runtime', { regenerator: true }],
-    'istanbul'
+    'istanbul',
+    '@babel/plugin-syntax-import-attributes'
   ]
 };

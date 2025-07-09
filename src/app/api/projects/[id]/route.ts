@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { getCurrentSchemaClient } from '@/lib/db';
+import { getPrisma } from '@/lib/prisma';
 import { withValidation, validateRequest } from '@/lib/validation';
 import { 
   ProjectIdSchema,

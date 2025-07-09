@@ -10,6 +10,7 @@ import { Testimonials } from '@/components/landing/Testimonials';
 import { BlogSection } from '@/components/landing/BlogSection';
 import { ChevronDown, Building, Check, DollarSign, Users, Shield, Phone, MessageSquare, Calendar } from 'lucide-react';
 import Image from "next/image";
+import { FadeIn } from '@/components/animations/FadeIn';
 
 // Textos unificados para toda la landing page
 const texts = {
@@ -171,9 +172,9 @@ export default function UnifiedLandingPage() {
 
   const t = language === "Español" ? texts.es : texts.en;
 
-  import { FadeIn } from '@/components/animations/FadeIn';
+  // ... (el resto del código permanece igual)
 
-// ... (el resto del código permanece igual)
+  // ... (el resto del código permanece igual)
 
   return (
     <div className={`flex flex-col min-h-screen overflow-hidden ${theme === "Oscuro" ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>

@@ -280,8 +280,7 @@ Fase 2: Desarrollo y Alineación Funcional
 
    * 3.1. Pruebas Unitarias y de Integración: Fortaleceré la suite de pruebas unitarias (con Jest) para cubrir los componentes de UI y la lógica de negocio crítica. Crearé pruebas de
      integración para validar la correcta comunicación entre el frontend y el backend.
-   * 3.2. Pruebas End-to-End (E2E): Actualizaré y ejecutaré la suite completa de pruebas E2E con Playwright para simular los flujos de usuario de cada rol (registro, pago, reserva, etc.) y
-     garantizar que la aplicación funciona como un todo.
+   * 3.2. Pruebas End-to-End (E2E): Actualizaré y ejecutaré la suite completa de pruebas E2E con Playwright para simular los flujos de usuario de cada rol (registro, pago, reserva, etc.) y garantizar que la aplicación funciona como un todo.
    * 3.3. Pruebas de Seguridad: Realizaré una auditoría de seguridad básica, verificando la implementación de JWT, protección contra ataques comunes (XSS, CSRF) y el correcto manejo de la
      autorización por roles.
 

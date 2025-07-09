@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { accessPassService } from '@/services/accessPassService';
 import { validateCsrfToken } from '@/lib/security/csrf-protection';
-import { sanitizeInput } from '@/lib/security/xss-protection';
-import { logAuditEvent } from '@/lib/security/audit-trail';
+import { sanitizeData } from '@/lib/security/xss-protection';
+import { logAuditAction } from '@/lib/security/audit-trail';
 
 /**
  * GET /api/visitors/access-pass

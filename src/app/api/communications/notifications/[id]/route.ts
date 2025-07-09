@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import communicationService from '@/services/communicationService';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { serverLogger } from '@/lib/logging/server-logger';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
 /**
  * GET /api/communications/notifications/[id]

@@ -4,7 +4,7 @@ import { FinancialService } from '@/services/financialService';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { ServerLogger } from '@/lib/logging/server-logger';
-import { getSchemaFromHeaders } from '@/lib/multi-tenant/schema-resolver';
+import { getSchemaFromRequest } from '@/lib/multi-tenant/schema-resolver';
 import { withValidation } from '@/lib/validation';
 import { 
   BulkReceiptsSchema,

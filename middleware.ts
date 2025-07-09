@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
-import { ServerLogger } from './src/lib/logging/server-logger';
+import { ServerLogger } from '@/lib/logging/server-logger';
 
 // Función para obtener el token de diferentes fuentes (autorización o cookies)
 function getToken(request: NextRequest): string | null {
@@ -33,22 +33,17 @@ export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
     
-    // Registrar la solicitud HTTP
-    ServerLogger.httpRequest({
-      method: request.method,
-      url: request.url,
-      ip: ip
-    });
-    
-    ServerLogger.debug('[Middleware] Verificando ruta:', path);
+    console.log('[Middleware] Verificando ruta:', path);
 
     // Determinar si es una ruta protegida
     const isProtectedRoute = 
-      path.startsWith('/dashboard') || 
-      path.startsWith('/resident');
+      path.startsWith('/admin') || 
+      path.startsWith('/resident') ||
+      path.startsWith('/reception') ||
+      path.startsWith('/app-admin');
       
     // Ruta de redirección por defecto
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL('/auth/login', request.url);
     
     // Si es una ruta protegida, verificar autenticación
     if (isProtectedRoute) {
@@ -56,8 +51,8 @@ export async function middleware(request: NextRequest) {
       const token = getToken(request);
       
       if (!token) {
-        ServerLogger.security('Intento de acceso no autorizado', { path, ip });
-        ServerLogger.debug('[Middleware] Redirigiendo a login - no autenticado');
+        console.warn('Intento de acceso no autorizado', { path, ip });
+        console.log('[Middleware] Redirigiendo a login - no autenticado');
         return NextResponse.redirect(loginUrl);
       }
       
@@ -68,14 +63,14 @@ export async function middleware(request: NextRequest) {
         
         // Registrar información del usuario autenticado (opcional)
         if (jwtVerification.payload.email) {
-          ServerLogger.debug(`Usuario autenticado: ${jwtVerification.payload.email}`);
+          console.log(`Usuario autenticado: ${jwtVerification.payload.email}`);
         }
         
         // Token válido, continuar
         return NextResponse.next();
       } catch (error) {
-        ServerLogger.security('Token inválido', { path, ip, error: (error as Error).message });
-        ServerLogger.debug('[Middleware] Token inválido - redirigiendo a login');
+        console.warn('Token inválido', { path, ip, error: (error as Error).message });
+        console.log('[Middleware] Token inválido - redirigiendo a login');
         
         // Crear una respuesta de redirección
         const response = NextResponse.redirect(loginUrl);
@@ -91,7 +86,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     // Capturar cualquier error que pueda ocurrir en el middleware
-    ServerLogger.error('[Middleware] Error inesperado:', (error as Error).message);
+    console.error('[Middleware] Error inesperado:', (error as Error).message);
     
     // En caso de error, permitir que la solicitud continúe
     // El manejo específico del error se puede hacer en el controlador de la ruta
@@ -102,7 +97,9 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Proteger todas las rutas de dashboard y resident
-    '/dashboard/:path*',
+    '/admin/:path*',
     '/resident/:path*',
+    '/reception/:path*',
+    '/app-admin/:path*',
   ],
 };

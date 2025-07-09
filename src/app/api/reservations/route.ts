@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import reservationService from '@/services/reservationService';
+import * as reservationService from '@/services/reservationService';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { serverLogger } from '@/lib/logging/server-logger';
+import { ServerLogger } from '@/lib/logging/server-logger';
 import { withValidation, validateRequest } from '@/lib/validation';
 import { 
   GetReservationsSchema, 

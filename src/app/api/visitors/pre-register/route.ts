@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { preRegistrationService } from '@/services/preRegistrationService';
 import { validateCsrfToken } from '@/lib/security/csrf-protection';
-import { sanitizeInput } from '@/lib/security/xss-protection';
-import { logAuditEvent } from '@/lib/security/audit-trail';
+import { sanitizeData } from '@/lib/security/xss-protection';
+import { logAuditAction } from '@/lib/security/audit-trail';
 
 /**
  * GET /api/visitors/pre-register

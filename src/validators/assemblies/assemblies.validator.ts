@@ -23,3 +23,5 @@ export const GetAssembliesSchema = z.object({
 export type CreateAssemblyRequest = z.infer<typeof CreateAssemblySchema>;
 export type UpdateAssemblyRequest = z.infer<typeof UpdateAssemblySchema>;
 export type GetAssembliesRequest = z.infer<typeof GetAssembliesSchema>;
+
+export const DeleteAssemblySchema = z.object({ id: z.number() });

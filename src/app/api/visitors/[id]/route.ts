@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { visitorService } from '@/services/visitorService';
 import { validateCsrfToken } from '@/lib/security/csrf-protection';
-import { sanitizeInput } from '@/lib/security/xss-protection';
-import { logAuditEvent } from '@/lib/security/audit-trail';
+import { sanitizeData } from '@/lib/security/xss-protection';
+import { logAuditAction } from '@/lib/security/audit-trail';
 import { withValidation, validateRequest } from '@/lib/validation';
 import { 
   VisitorIdSchema,

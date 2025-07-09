@@ -7,8 +7,8 @@ import { prisma } from '@/lib/prisma';
 import { ServerLogger } from '@/lib/logging/server-logger';
 import { ActivityLogger } from '@/lib/logging/activity-logger';
 import { NotificationService } from '@/lib/communications/notification-service';
-import { ReceiptService } from '@/lib/pdf/receipt-service';
-import { EncryptionService } from '@/lib/security/encryption-service';
+import { generateReceipt, sendReceiptByEmail } from '@/lib/pdf/receipt-service';
+import { encrypt, decrypt } from '@/lib/security/encryption-service';
 import { 
   TransactionStatus,
   DiscountType
