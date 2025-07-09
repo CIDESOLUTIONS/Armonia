@@ -5,8 +5,12 @@ import { verifyAuth } from '@/lib/auth';
 import {
   GetAssembliesSchema,
   CreateAssemblySchema,
+  UpdateAssemblySchema,
+  DeleteAssemblySchema,
   type GetAssembliesRequest,
-  type CreateAssemblyRequest
+  type CreateAssemblyRequest,
+  type UpdateAssemblyRequest,
+  type DeleteAssemblyRequest
 } from '@/validators/assemblies/assemblies.validator';
 
 // GET: Obtener asambleas con filtros
@@ -111,3 +115,76 @@ async function createAssemblyHandler(validatedData: CreateAssemblyRequest, reque
 }
 
 export const POST = withValidation(CreateAssemblySchema, createAssemblyHandler);
+
+// PUT: Actualizar asamblea
+export async function PUT(request: NextRequest) {
+  try {
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    }
+
+    if (!['ADMIN', 'COMPLEX_ADMIN'].includes(payload.role)) {
+      return NextResponse.json({ message: 'Permisos insuficientes' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const validatedData = UpdateAssemblySchema.parse(body);
+
+    if (!validatedData.id) {
+      return NextResponse.json({ message: 'ID de asamblea requerido para actualizar' }, { status: 400 });
+    }
+
+    const prisma = getPrisma();
+    const updatedAssembly = await prisma.assembly.update({
+      where: { id: validatedData.id, complexId: payload.complexId },
+      data: {
+        title: validatedData.title,
+        description: validatedData.description,
+        scheduledDate: validatedData.scheduledDate ? new Date(validatedData.scheduledDate) : undefined,
+        location: validatedData.location,
+        type: validatedData.type,
+        agenda: validatedData.agenda,
+        status: validatedData.status,
+      },
+    });
+
+    console.log(`[ASSEMBLIES] Asamblea actualizada: ${updatedAssembly.id} por ${payload.email}`);
+    return NextResponse.json(updatedAssembly, { status: 200 });
+  } catch (error) {
+    console.error('[ASSEMBLIES PUT] Error:', error);
+    return NextResponse.json({ message: 'Error interno' }, { status: 500 });
+  }
+}
+
+// DELETE: Eliminar asamblea
+export async function DELETE(request: NextRequest) {
+  try {
+    const { auth, payload } = await verifyAuth(request);
+    if (!auth || !payload) {
+      return NextResponse.json({ message: 'Token requerido' }, { status: 401 });
+    }
+
+    if (!['ADMIN', 'COMPLEX_ADMIN'].includes(payload.role)) {
+      return NextResponse.json({ message: 'Permisos insuficientes' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const validatedData = DeleteAssemblySchema.parse(body);
+
+    if (!validatedData.id) {
+      return NextResponse.json({ message: 'ID de asamblea requerido para eliminar' }, { status: 400 });
+    }
+
+    const prisma = getPrisma();
+    await prisma.assembly.delete({
+      where: { id: validatedData.id, complexId: payload.complexId },
+    });
+
+    console.log(`[ASSEMBLIES] Asamblea eliminada: ${validatedData.id} por ${payload.email}`);
+    return NextResponse.json({ message: 'Asamblea eliminada exitosamente' }, { status: 200 });
+  } catch (error) {
+    console.error('[ASSEMBLIES DELETE] Error:', error);
+    return NextResponse.json({ message: 'Error interno' }, { status: 500 });
+  }
+}
